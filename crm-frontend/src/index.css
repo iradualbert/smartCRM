@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .sidebar-icon {
+    @apply relative flex items-center justify-center h-12 w-12 mx-auto mt-2 mb-2;
+  }
+  .sidebar-tooltip {
+    @apply absolute w-auto p-2 m-2 min-w-max left-14 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left;
+  }
+
+  .btn {
+    @apply bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center
+  }
+  
+  .input {
+    @apply p-2 border border-gray-300 rounded mb-4
+  }
+
+  .label {
+    @apply text-sm font-medium text-gray-600 mb-2 w-32 text-start
+  }
+}

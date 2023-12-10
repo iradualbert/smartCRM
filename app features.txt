@@ -1,0 +1,17 @@
+AI powered All-In-One Platform & Confirmation is required to not annoy people 
+
+- Social Media Post Scheduler
+- Email Sender & Reader & Scheduler
+- Newsletter & Forms. SDK subscribe & unsubscribe(hostnames) - subscribers
+- Forms within the chat bots
+- ChatBot Intergration to your website. - add your name and email or chat anonymously 
+- Multiple Email Sending with chrome extension
+- Calendar & Meeting Appointment: schedule a meeting automatically upon selecting your preferred meeting app 
+- Triggers
+
+- CRM - Manage leads, send emails, fetch fedbacks automatically, leads conversation history: status historys
+      - Fields: source, products, related_leads, company
+
+- Ads Campains Management
+
+- todos & due date alarm 
