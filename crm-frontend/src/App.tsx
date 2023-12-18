@@ -1,4 +1,7 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import store from "./redux/store";
+import { checkAuthToken } from "./redux/actions/userActions";
 import SideBar from './components/SideBar';
 import EmailManagerPage from './pages/EmailManagerPage';
 import BookingCalendar from "./pages/BookingCalendar";
@@ -8,32 +11,44 @@ import ContactsManagerPage from "./pages/ContactsPage";
 import SocialManagerPage from "./pages/SocialManagerPage";
 import NewsletterManagerPage from "./pages/NewsletterManagerPage";
 import MailTemplatesPage from "./pages/MailTemplatesPage";
-import SettingsPage from "./pages/SettingsPage"; 
+import SettingsPage from "./pages/SettingsPage";
 import SendMultipleEmails from "./pages/SendMultipleEmails";
 import EmailIntergration from "./components/EmailIntergration";
+import { AuthRoute, PrivateRoute } from "./routes";
+import { Provider } from "react-redux";
+import LoginPage from "./pages/auth/LoginPage";
 
 const dev = "http://127.0.0.1:8000/api";
 axios.defaults.baseURL = dev;
 
 function App() {
+  useEffect(() => {
+    store.dispatch(checkAuthToken())
+  }, [])
+
   return (
-    <div className="flex flex-col">
-      <Router>
-        <SideBar />
-        <div className="m-16 p-10">
-          <Routes>
-            <Route path="/mail-manager" element={<EmailManagerPage />} />
-            <Route path="/mail-manager/templates" element={<MailTemplatesPage />} />
-            <Route path="/mail-manager/send-multiple" element={<SendMultipleEmails />} />
-            <Route path="/social-manager" element={<SocialManagerPage />} />
-            <Route path="/schedule-manager" element={<BookingCalendar />} />
-            <Route path="/contacts-manager" element={<ContactsManagerPage />} />
-            <Route path="/newsletter-manager" element={<NewsletterManagerPage />} />
-            <Route path="/settings/intergration" element={<EmailIntergration />} />
-           </Routes>
-        </div>
-      </Router>
-    </div>
+    <Provider store={store}>
+      <div className="flex flex-col">
+        <Router>
+            <Routes>
+              <Route path="" element={<PrivateRoute />}>
+                <Route path="/mail-manager" element={<EmailManagerPage />} />
+                <Route path="/mail-manager/templates" element={<MailTemplatesPage />} />
+                <Route path="/mail-manager/send-multiple" element={<SendMultipleEmails />} />
+                <Route path="/social-manager" element={<SocialManagerPage />} />
+                <Route path="/schedule-manager" element={<BookingCalendar />} />
+                <Route path="/contacts-manager" element={<ContactsManagerPage />} />
+                <Route path="/newsletter-manager" element={<NewsletterManagerPage />} />
+                <Route path="/settings/intergration" element={<EmailIntergration />} />
+              </Route>
+              <Route path="" element={<AuthRoute />}>
+                <Route path="/login" element={<LoginPage />} />
+              </Route>
+            </Routes>
+        </Router>
+      </div>
+    </Provider>
+
   )
 }
 

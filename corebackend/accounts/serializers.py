@@ -6,13 +6,13 @@ from django.contrib.auth import authenticate
 class UserSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
-    fields = ('id', 'username', 'email')
+    fields = ('id', 'email', 'first_name', 'last_name')
 
 # Register Serializer
 class RegisterSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
-    fields = ('id', 'username', 'email', 'password')
+    fields = ('id', 'email', 'password')
     extra_kwargs = {'password': {'write_only': True}}
 
   def create(self, validated_data):
@@ -22,7 +22,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 # Login Serializer
 class LoginSerializer(serializers.Serializer):
-  username = serializers.CharField()
+  email = serializers.EmailField()
   password = serializers.CharField()
 
   def validate(self, data):

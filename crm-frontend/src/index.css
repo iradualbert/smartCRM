@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+html,
+body,
+:root {
+  height: 100%;
+}
+
 @layer components {
   .sidebar-icon {
     @apply relative flex items-center justify-center h-12 w-12 mx-auto mt-2 mb-2;

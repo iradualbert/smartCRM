@@ -2,11 +2,10 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import 'react-quill/dist/quill.snow.css';
 import MailForm from "../components/forms/MailForm";
-import Button from "../components/ui/Button";
+import { Button } from "@/components/ui/button";
 import dompurify from "dompurify";
 import { TableContainer, Table, TableHead, Checkbox, TableBody, TableCell, TableRow, Typography } from "@mui/material";
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 
