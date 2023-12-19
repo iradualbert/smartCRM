@@ -1,8 +1,9 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
- 
+import axios from "axios";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 type SaveMailTemplateParams = {
@@ -22,6 +23,11 @@ export const saveMailTemplate = async ({ data, onSuccess, onError }: SaveMailTem
 }
 
 export const getTemplates = (setTemplates) => {
+  axios.get('/templates/')
+  .then(res => {
+    setTemplates(res.data)
+  })
+  .catch(err => console.error(err))
 }
 
 export function extractParameters(message) {

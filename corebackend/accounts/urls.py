@@ -4,8 +4,8 @@ from knox import views as knox_views
 from .views import (
   update_google_account,
   get_google_api_authorization_url,
-  auth2callback
-  
+  auth2callback,
+  view_email_provider
 )
 
 urlpatterns = [
@@ -17,4 +17,5 @@ urlpatterns = [
   path('api/accounts/google', update_google_account),
   path('api/accounts/get_google_api_authorization_url', get_google_api_authorization_url),
   path("api/accounts/auth2callback", auth2callback),
+  path("api/accounts/email_provider", view_email_provider)
 ]

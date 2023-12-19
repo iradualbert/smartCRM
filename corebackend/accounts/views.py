@@ -1,10 +1,13 @@
 import json
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import generics, permissions
 from rest_framework.response import Response
+from django.http import JsonResponse
 from knox.models import AuthToken
+from knox.auth import TokenAuthentication
+from knox.settings import CONSTANTS
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
 from .models import Account
 from django.utils import timezone
@@ -24,9 +27,12 @@ def credentials_to_dict(credentials):
           'client_secret': credentials.client_secret,
           'scopes': credentials.scopes}
 
-@api_view(['GET'])
+
 def get_google_api_authorization_url(request):
-    scopes = request.GET.get("scopes")
+    user_token = request.GET.get('token')
+    scopes = request.GET.get('scopes')
+    if(not scopes):
+      return JsonResponse({ "error": "The scope was not provided"}, status=400)
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
       CLIENT_SECRETS_FILE, scopes=scopes)
     
@@ -37,24 +43,27 @@ def get_google_api_authorization_url(request):
       include_granted_scopes='true')
     
     request.session["state"] = state
-    
+    request.session["user_token"] = user_token  
     return redirect(authorization_url)
     
 
 def auth2callback(request):
-    state = request.session["state"]
-    SCOPES = request.GET.get("scopes")
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-      CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
-    flow.redirect_uri = redirect_uri
-    full_url = request.build_absolute_uri()
-    import os 
-    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-    flow.fetch_token(authorization_response=full_url)
-    credentials = flow.credentials
-    #credentials = credentials_to_dict(credentials)
-    #send_test_email(credentials)
-    return redirect("http://localhost:5173/settings/intergration")
+      state = request.session["state"]
+      user_token = request.session["user_token"]
+      auth = TokenAuthentication()
+      user, _= auth.authenticate_credentials(token=bytes(user_token,  'utf-8'))
+      SCOPES = request.GET.get("scope")
+      flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
+      flow.redirect_uri = redirect_uri
+      full_url = request.build_absolute_uri()
+      import os 
+      os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+      flow.fetch_token(authorization_response=full_url)
+      credentials = flow.credentials
+      user.account.google_account = credentials_to_dict(credentials)
+      user.account.save()
+      return redirect("http://localhost:5173/settings/intergration")
   
 
 def send_test_email(credentials):
@@ -100,7 +109,19 @@ def send_test_email(credentials):
     send_message = None
   return send_message
 
-
+@api_view(['GET', 'POST', 'DELETE'])
+def view_email_provider(request):
+    user = request.user
+    if request.method == "GET":
+        return Response({
+          "email_provider": user.account.get_connected_email_provider()
+        })
+    
+    if request.method == "DELETE":
+        user.account.disconnect_email_provider()
+        return Response({
+          "message": "Email Disconnected"
+        })
 
 @api_view(["POST"])
 def update_google_account(request):
@@ -122,6 +143,7 @@ def update_google_account(request):
 # Register API
 class RegisterAPI(generics.GenericAPIView):
   serializer_class = RegisterSerializer
+  permission_classes=[permissions.AllowAny]
 
   def post(self, request, *args, **kwargs):
     serializer = self.get_serializer(data=request.data)
@@ -135,6 +157,7 @@ class RegisterAPI(generics.GenericAPIView):
 # Login API
 class LoginAPI(generics.GenericAPIView):
   serializer_class = LoginSerializer
+  permission_classes = [permissions.AllowAny]
 
   def post(self, request, *args, **kwargs):
     serializer = self.get_serializer(data=request.data)
@@ -155,3 +178,5 @@ class UserAPI(generics.RetrieveAPIView):
 
   def get_object(self):
     return self.request.user
+  
+  

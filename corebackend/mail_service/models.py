@@ -8,11 +8,60 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from django.core.validators import MaxValueValidator
 from django.contrib.auth.models import User
+import base64
+from googleapiclient.errors import HttpError
+import google
+from googleapiclient.discovery import build
+
+
+def send_test_email(credentials):
+  import base64
+  from email.message import EmailMessage
+  from googleapiclient.errors import HttpError
+  subject = "Connected Gmail to Smart CRM"
+  body = "Thank you for connecting your gmail to smart-crm"
+  """Create and send an email message
+  Print the returned  message id
+  Returns: Message object, including message id
+
+  Load pre-authorized user credentials from the environment.
+  TODO(developer) - See https://developers.google.com/identity
+  for guides on implementing OAuth2 for the application.
+  """
+  #creds, _ = google.auth.default()
+
+  try:
+    service = build("gmail", "v1", credentials=credentials)
+    message = EmailMessage()
+
+    message.set_content(body)
+
+    message["To"] = "albertiradu19@gmail.com"
+    message["From"] = "albertiradu19@gmail.com"
+    message["Subject"] = subject
+
+    # encoded message
+    encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+    create_message = {"raw": encoded_message}
+    # pylint: disable=E1101
+    send_message = (
+        service.users()
+        .messages()
+        .send(userId="me", body=create_message)
+        .execute()
+    )
+    print(f'Message Id: {send_message["id"]}')
+  except HttpError as error:
+    print(f"An error occurred: {error}")
+    send_message = None
+  return send_message
 
 class Mail(models.Model):
-    to = models.EmailField()
-    cc = models.EmailField(blank=True, null=True)
-    bcc = models.EmailField(blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    to = models.TextField()
+    cc = models.TextField(blank=True, null=True)
+    bcc = models.TextField(blank=True, null=True)
     subject = models.CharField(max_length=255)
     body = models.TextField()
     schedule_datetime = models.DateTimeField(blank=True, null=True)
@@ -21,20 +70,86 @@ class Mail(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     failed = models.BooleanField(default=False)
     failure_reason = models.TextField(blank=True)
+    message_id = models.CharField(max_length=100, null=True, blank=True)
+    
 
     def __str__(self):
         return self.subject
     
     class Meta:
         ordering = ["-created_at"]
-    
+        
+    def set_has_sent(self, message_id=None):
+        self.is_sent = True
+        self.sent_datetime = timezone.now()
+        self.failed = False
+        self.failure_reason = ''
+        self.message_id = message_id
+        self.save()
+        
+        
+    def set_has_failed(self, e):
+        self.failed = True
+        self.failure_reason = e
+        self.save()
+        
     def get_user_credentials(self):
         return {
             "signature": "",
             "email": "",
             "password": ''
         }
-
+        
+    def build(self):
+        message = MIMEMultipart()
+        message_body= MIMEText(self.body,'html')            
+        message.attach(message_body)
+        message["To"] = self.to
+        message["From"] = self.user.email
+        message["Cc"] = self.cc
+        message["Subject"] = self.subject
+        for attach in self.attachments.all():
+            _file = attach.attachment_file
+            filepath = _file.path
+            
+            with open(filepath, "rb") as attachment:
+                # Add file as application/octet-stream
+                # Email client can usually download this automatically as attachment
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                
+                part.add_header(
+                    "Content-Disposition",
+                    f"attachment; filename= {os.path.basename(filepath)}",
+                    )
+                message.attach(part)   
+        return message
+        
+    def send_with_google_oauth(self):
+        credentials =google.oauth2.credentials.Credentials(**self.user.account.google_account)
+        #credentials =google.auth.external_account_authorized_user.Credentials(**self.user.account.google_account)
+        send_message = None
+        try:
+            service = build("gmail", "v1", credentials=credentials)
+            message = self.build()
+            encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+            create_message = {"raw": encoded_message}
+            send_message = (
+                service.users()
+                .messages()
+                .send(userId="me", body=create_message)
+                .execute()
+            )
+            print(f'Message Id: {send_message["id"]}')
+            self.set_has_sent(send_message["id"])
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            send_message = None
+            self.set_has_failed(error)
+        except google.auth.exceptions.RefreshError as error:
+            self.set_has_failed(error)
+        return send_message
     
     def send(self):
         credentials = self.get_user_credentials()

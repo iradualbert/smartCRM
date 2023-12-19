@@ -50,7 +50,7 @@ const EmailManagerPage = () => {
 
   return (
     <div>
-      <div className="flex gap-10">
+      {/* <div className="flex gap-10">
         <Button>Send An Email</Button>
         <Button>Schedule Email</Button>
         <Button>Multiple Email</Button>
@@ -60,9 +60,9 @@ const EmailManagerPage = () => {
             {"Send Email To users & Import Exel file & use Templates & add and remove recipients"}
           </span></Button>
         <Button>Create Email Template</Button>
-      </div>
+      </div> */}
       <MailForm onSubmit={() => { }} />
-      <div>
+      {/* <div>
         <button>Send Email</button>
         <button>Schedule an Email</button>
         <button>Multiple Email</button>
@@ -74,7 +74,7 @@ const EmailManagerPage = () => {
         </div>
         <h1>User One - type: Lead</h1>
         <h1>User Two - type: Customer</h1>
-      </div>
+      </div> */}
       <div className="flex flex-col">
         <FormControl sx={{ m: 2, width: 180 }} size="small">
           <Select
