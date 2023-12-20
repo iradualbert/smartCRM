@@ -1,102 +1,126 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogActions, Button, TextField } from "@mui/material";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogActions, Button } from "@mui/material";
 import ModalTitle from "./ui/ModalTitle";
+import ContactForm, { ContactFormProps, ContactType } from "./forms/ContactForm";
+import axios from "axios";
 
+interface ContactViewProps extends ContactFormProps {
+    children?: React.ReactNode;
+    onCreate?: (contact: ContactType) => void;
+    onUpdate?: (contact: ContactType) => void;
+    onDelete?: (id: number | string ) => void;
+}
 
-const ContactView = ({ contact, children, isAddContact }) => {
+const ContactView = ({ children, onUpdate, onCreate, onDelete, contact: _contact, isReadOnly, ...formProps }: ContactViewProps) => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [readOnly, setReadOnly] = useState(!isAddContact);
+    const [contact, setContact] = useState<ContactType>(_contact || {} as ContactType);
+    const [isSaving, setIsSaving] = useState(false);
+    const [errors, setErrors] = useState(null);
+
+    const isCreate = formProps.type === "create";
 
     const toggleShowDialog = () => {
+        setErrors(null);
+        if(!isCreate) setContact(_contact);
         setIsDialogOpen(prev => !prev)
     }
 
-    const handleSubmit = event => {
-        event.preventDefault();
+    const handleChange = (e: any) => {
+        setContact(prev => ({
+            ...prev,
+            [e.target.name]: e.target.value,
 
+        }))
     }
+
+    const handleCreate = () => {
+        setErrors(null);
+        setIsSaving(true);
+        axios.post("/contacts/", contact)
+            .then((res) => {
+                if(onCreate) onCreate(res.data as ContactType);
+                setContact({} as ContactType);
+                setIsDialogOpen(false);
+            })
+            .catch(err => {
+                setErrors(err.response?.data)
+            })
+            .finally(() => {
+                setIsSaving(false);
+            })
+    }
+
+    const handleUpdate = () => {
+        setErrors(null);
+        setIsSaving(true);
+        axios.put(`/contacts/${contact.id}/`, contact)
+            .then((res) => {
+                if(onUpdate) onUpdate(res.data as ContactType);
+                setContact(res.data as ContactType);
+                setIsDialogOpen(false);
+            })
+            .catch(err => {
+                setErrors(err.response?.data)
+            })
+            .finally(() => {
+                setIsSaving(false);
+            })
+    }
+
+    const handleDelete = () => {
+        setIsSaving(true);
+        axios.delete(`/contacts/${contact.id}/`)
+        .then(() => {
+            if(onDelete) onDelete(contact.id as string)
+        })
+        .finally(() => setIsSaving(false))
+    }
+
 
     return (
         <>
-            <Button onClick={toggleShowDialog}>{children ? children : "View"}</Button>
+            <Button variant="outlined" onClick={toggleShowDialog}>{children ? children : "Update"}</Button>
             {isDialogOpen && (
                 <Dialog
                     open={isDialogOpen}
                     onClose={toggleShowDialog}
-                    
+                    fullWidth
                 >
-                     <ModalTitle onClose={toggleShowDialog}>Contact Details</ModalTitle>
-                     <DialogContent dividers>
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-3" style={{ padding: "14px 0px" }}>
-                            <TextField 
-                                fullWidth 
-                                value={contact.first_name}
-                                size="small"
-                                placeholder="First Name"
-                                InputProps={{
-                                    readOnly
-                                }}
-                                variant="standard"
-                            />
-                            <TextField 
-                                fullWidth 
-                                value={contact.last_name}
-                                size="small"
-                                placeholder="Last Name"
-                                InputProps={{
-                                    readOnly
-                                }}
-                                variant="standard"
-                            />
-                            <TextField 
-                                fullWidth 
-                                value={contact.email}
-                                size="small"
-                                placeholder="Email"
-                                InputProps={{
-                                    readOnly
-                                }}
-                                variant="standard"
-                            />
-                            <TextField 
-                                fullWidth 
-                                value={contact.company}
-                                size="small"
-                                placeholder="Company"
-                                InputProps={{
-                                    readOnly
-                                }}
-                                variant="standard"
-                            />
-                            <TextField 
-                                fullWidth 
-                                value={contact.phone_number}
-                                size="small"
-                                placeholder="Phone Number"
-                                InputProps={{
-                                    readOnly
-                                }}
-                                variant="standard"
-                            />
-                            <TextField 
-                                fullWidth 
-                                value={contact.address}
-                                multiline
-                                minRows={2}
-                                placeholder="Address"
-                                InputProps={{
-                                    readOnly
-                                }}
-                                variant="standard"
-                            />
-                            <Button variant="outlined">Edit</Button>
-                            <Button variant="contained" color="warning">Delete</Button>
-                        </form>
+                    <ModalTitle onClose={toggleShowDialog}>{isCreate? "Create a Contact" : "Update Contact"}</ModalTitle>
+                    <DialogContent dividers>
+                        <ContactForm errors={errors} onFieldChange={handleChange} isReadOnly={isReadOnly || isSaving} contact={contact} {...formProps} />
                     </DialogContent>
                     <DialogActions>
-                        <Button>Edit</Button>
-                        <Button>Send Email</Button>
-                        <Button>Meet</Button>
+                        {!isReadOnly && !isCreate && (
+                            <Button
+                                size="small"
+                                style={{ marginRight: "auto" }}
+                                variant="contained"
+                                color="error"
+                                disabled={isSaving}
+                                onClick={handleDelete}
+                            >
+                                Delete
+                            </Button>
+                        )}
+
+                        <Button
+                            size="small"
+                            disabled={isSaving}
+                            variant="outlined"
+                            color="warning"
+                            onClick={() => setIsDialogOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            size="small"
+                            variant="contained"
+                            onClick={isCreate ? handleCreate: handleUpdate}
+                            disabled={isSaving || isReadOnly}
+                        >
+                            {isCreate ? "Create" : "Save"}
+                        </Button>
                     </DialogActions>
                 </Dialog>
             )}

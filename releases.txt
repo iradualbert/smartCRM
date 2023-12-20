@@ -10,3 +10,4 @@ For now what you can accomplish with SMARTCrm:
 - Manage bulk emails,
 - Meeting Scheduling 
 - Newsletter Subscribe: send a newsletter
+- SMS & Phone Messages 

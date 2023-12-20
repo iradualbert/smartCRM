@@ -31,7 +31,7 @@ const ContactsImporter = ({ title = "Upload / Import from a file" }) => {
     <DialogButton modalTitle="Import Contacts" btnTitle="Import From A File">
       <Typography variant="h4">Upload a Excel Sheet, CSV</Typography>
       <input type="file" onChange={handleFileChange} />
-      <Button onClick={handleSubmit}>Submit</Button>
+      <Button onClick={handleSubmit} variant="outlined">Ok</Button>
       {excelData && (
         <TableContainer>
           <Table>

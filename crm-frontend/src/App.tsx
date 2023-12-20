@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import store from "./redux/store";
 import { checkAuthToken } from "./redux/actions/userActions";
-import SideBar from './components/SideBar';
 import EmailManagerPage from './pages/EmailManagerPage';
 import BookingCalendar from "./pages/BookingCalendar";
 import axios from 'axios';
@@ -17,6 +16,7 @@ import EmailIntergration from "./components/EmailIntergration";
 import { AuthRoute, PrivateRoute } from "./routes";
 import { Provider } from "react-redux";
 import LoginPage from "./pages/auth/LoginPage";
+import Dashboard from "@/pages/DashboardPage";
 
 const dev = "http://127.0.0.1:8000/api";
 axios.defaults.baseURL = dev;
@@ -32,6 +32,7 @@ function App() {
         <Router>
             <Routes>
               <Route path="" element={<PrivateRoute />}>
+                <Route path="" element={<Dashboard />} />
                 <Route path="/mail-manager" element={<EmailManagerPage />} />
                 <Route path="/mail-manager/templates" element={<MailTemplatesPage />} />
                 <Route path="/mail-manager/send-multiple" element={<SendMultipleEmails />} />

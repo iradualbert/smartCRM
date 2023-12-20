@@ -14,51 +14,10 @@ import google
 from googleapiclient.discovery import build
 
 
-def send_test_email(credentials):
-  import base64
-  from email.message import EmailMessage
-  from googleapiclient.errors import HttpError
-  subject = "Connected Gmail to Smart CRM"
-  body = "Thank you for connecting your gmail to smart-crm"
-  """Create and send an email message
-  Print the returned  message id
-  Returns: Message object, including message id
-
-  Load pre-authorized user credentials from the environment.
-  TODO(developer) - See https://developers.google.com/identity
-  for guides on implementing OAuth2 for the application.
-  """
-  #creds, _ = google.auth.default()
-
-  try:
-    service = build("gmail", "v1", credentials=credentials)
-    message = EmailMessage()
-
-    message.set_content(body)
-
-    message["To"] = "albertiradu19@gmail.com"
-    message["From"] = "albertiradu19@gmail.com"
-    message["Subject"] = subject
-
-    # encoded message
-    encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-
-    create_message = {"raw": encoded_message}
-    # pylint: disable=E1101
-    send_message = (
-        service.users()
-        .messages()
-        .send(userId="me", body=create_message)
-        .execute()
-    )
-    print(f'Message Id: {send_message["id"]}')
-  except HttpError as error:
-    print(f"An error occurred: {error}")
-    send_message = None
-  return send_message
+send_with_smartCRM = "<p><a href='smartcrm.com'>Sent With smartCRM<a/></p>"
 
 class Mail(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="mails")
     to = models.TextField()
     cc = models.TextField(blank=True, null=True)
     bcc = models.TextField(blank=True, null=True)
@@ -105,7 +64,7 @@ class Mail(models.Model):
         message_body= MIMEText(self.body,'html')            
         message.attach(message_body)
         message["To"] = self.to
-        message["From"] = self.user.email
+        message["From"] =self.user.email
         message["Cc"] = self.cc
         message["Subject"] = self.subject
         for attach in self.attachments.all():
@@ -224,7 +183,7 @@ class MailAttachment(models.Model):
         return self.attachment_file.name
     
 class MailTemplate(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mail_templates")
     name = models.CharField(max_length=200)
     subject = models.CharField(max_length=700, null=True, blank=True)
     body = models.TextField(blank=True)

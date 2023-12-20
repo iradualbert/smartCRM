@@ -31,3 +31,5 @@ class Account(models.Model):
             self.google_account = google_account
             self.save()
             return True
+        
+    

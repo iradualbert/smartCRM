@@ -11,7 +11,6 @@ from knox.settings import CONSTANTS
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
 from .models import Account
 from django.utils import timezone
-import google.oauth2.credentials
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 
@@ -65,49 +64,6 @@ def auth2callback(request):
       user.account.save()
       return redirect("http://localhost:5173/settings/intergration")
   
-
-def send_test_email(credentials):
-  import base64
-  from email.message import EmailMessage
-  from googleapiclient.errors import HttpError
-  subject = "Connected Gmail to Smart CRM"
-  body = "Thank you for connecting your gmail to smart-crm"
-  """Create and send an email message
-  Print the returned  message id
-  Returns: Message object, including message id
-
-  Load pre-authorized user credentials from the environment.
-  TODO(developer) - See https://developers.google.com/identity
-  for guides on implementing OAuth2 for the application.
-  """
-  #creds, _ = google.auth.default()
-
-  try:
-    service = build("gmail", "v1", credentials=credentials)
-    message = EmailMessage()
-
-    message.set_content(body)
-
-    message["To"] = "albertiradu19@gmail.com"
-    message["From"] = "albertiradu19@gmail.com"
-    message["Subject"] = subject
-
-    # encoded message
-    encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-
-    create_message = {"raw": encoded_message}
-    # pylint: disable=E1101
-    send_message = (
-        service.users()
-        .messages()
-        .send(userId="me", body=create_message)
-        .execute()
-    )
-    print(f'Message Id: {send_message["id"]}')
-  except HttpError as error:
-    print(f"An error occurred: {error}")
-    send_message = None
-  return send_message
 
 @api_view(['GET', 'POST', 'DELETE'])
 def view_email_provider(request):

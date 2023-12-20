@@ -15,3 +15,5 @@ AI powered All-In-One Platform & Confirmation is required to not annoy people
 - Ads Campains Management
 
 - todos & due date alarm 
+
+- SMS & Phone Messages 
