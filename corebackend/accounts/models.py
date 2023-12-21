@@ -14,7 +14,7 @@ class Account(models.Model):
         return self.user.first_name
     
     def has_gmail_scope(self):
-        if not self.google_account:
+        if not self.google_account or self.google_account.get('scopes') is None:
             return False
         return GMAIL_SEND_SCOPE in self.google_account.get('scopes')
     

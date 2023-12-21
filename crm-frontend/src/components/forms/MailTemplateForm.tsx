@@ -4,10 +4,18 @@ import { Typography, Button } from "@mui/material";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { extractParameters, saveMailTemplate } from "@/lib/utils"
+import { TemplateParameter } from "@/lib/types";
 
-interface Parameter {
+
+export type TemplateType = {
+    id?: string | number,
+    subject: string,
+    cc: string,
+    bcc: string,
+    mailBody: string,
+    body?: string,
     name: string,
-    defaultValue: string
+    parameters: TemplateParameter[],
 }
 
 
@@ -16,7 +24,7 @@ const MailTemplateForm = ({ isCreate = true, selectedTemplate, onChange }) => {
     const [templateName, setTemplateName] = useState("");
     const [subject, setSubject] = useState("");
     const [mailBody, setMailBody] = useState("");
-    const [parameters, setParameters] = useState<Parameter[]>([])
+    const [parameters, setParameters] = useState<TemplateParameter[]>([])
 
     useEffect(() => {
         getParameters();

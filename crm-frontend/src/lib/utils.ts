@@ -1,6 +1,7 @@
 import axios from "axios";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { TemplateParameter } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -22,12 +23,9 @@ export const saveMailTemplate = async ({ data, onSuccess, onError }: SaveMailTem
   }
 }
 
-export const getTemplates = (setTemplates) => {
-  axios.get('/templates/')
-  .then(res => {
-    setTemplates(res.data)
-  })
-  .catch(err => console.error(err))
+export const getTemplates = async () => {
+  const res = await axios.get('/templates/')
+  return res.data
 }
 
 export function extractParameters(message) {
@@ -42,6 +40,22 @@ export function extractParameters(message) {
   }
 
   return matches;
+}
+
+export const getUpdatedParams = (content: string, currentParameters: TemplateParameter[]) => {
+  const extracted = extractParameters(content);
+  const newParams = extracted.filter(paramName => !currentParameters.some(p => p.name === paramName));
+  const params = currentParameters.filter(param => extracted.some(paramName => param.name === paramName));
+  newParams.forEach((paramName) => {
+    params.push({
+          name: paramName,
+          defaultValue: ""
+      })
+  })
+  return {
+    params,
+    newParams,
+  }
 }
 
 export function generateMessage(template, parameters) {

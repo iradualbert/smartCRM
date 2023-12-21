@@ -3,6 +3,7 @@ import { Button, Dialog, DialogActions, DialogContent, Divider, List, ListItem, 
 import ModalTitle from "./ui/ModalTitle";
 import { getTemplates } from "@/lib/utils";
 import dompurify from "dompurify"
+import { TemplateType } from "./forms/MailTemplateForm";
 
 const sanitizer = (raw) => {
     return {
@@ -15,12 +16,11 @@ const sanitizer = (raw) => {
 const ImportTemplate = ({ onSelect }) => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [templates, setTemplates] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
 
 
     useEffect(() => {
         if (!isDialogOpen) return;
-        getTemplates(setTemplates);
+        getTemplates().then(_templates => setTemplates(_templates));
     }, [isDialogOpen])
 
 
@@ -29,7 +29,7 @@ const ImportTemplate = ({ onSelect }) => {
     }
 
 
-    const handleSelect = (template: object) => {
+    const handleSelect = (template: TemplateType) => {
         onSelect(template);
         setIsDialogOpen(false);
     }
@@ -37,7 +37,7 @@ const ImportTemplate = ({ onSelect }) => {
 
     return (
         <>
-            <Button variant="outlined" style={{ alignSelf: "flex-start" }} onClick={toggleDialog}>Import Template</Button>
+            <Button style={{ alignSelf: "flex-start", textDecoration: "underline" }} onClick={toggleDialog}>Import Template</Button>
             {isDialogOpen && (
                 <Dialog
                     open={isDialogOpen}

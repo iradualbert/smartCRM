@@ -1,7 +1,7 @@
 from .models import Contact, ContactCategory
 from .serializers import ContactSerializer, ContactCategorySerializer
 from rest_framework import viewsets, permissions
-from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 
@@ -28,6 +28,7 @@ def viewset_init(Model, ModelSerializer, filters=[], search_fields=[]):
         serializer_class = ModelSerializer
         pagination_class = DefaultPagination
         permission_classes = [
+            permissions.IsAuthenticated,
             IsOwnerPermission,
         ]
         

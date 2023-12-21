@@ -46,8 +46,10 @@ class MailViewSet(viewsets.ModelViewSet):
 
 class MailTemplateViewSet(viewsets.ModelViewSet):
     serializer_class = MailTemplateSerializer
-    queryset = MailTemplate.objects.all()
     
     def perform_create(self, serializer):
         user = self.request.user
         serializer.save(user=user)
+        
+    def get_queryset(self):
+        return MailTemplate.objects.filter(user=self.request.user)

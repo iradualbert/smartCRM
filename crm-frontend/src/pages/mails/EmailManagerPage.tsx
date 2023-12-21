@@ -33,6 +33,7 @@ const EmailManagerPage = () => {
       .catch(error => console.error('Error fetching time slots:', error));
   }, []);
 
+  if(true) return <MailForm />
 
   return (
     <div>
