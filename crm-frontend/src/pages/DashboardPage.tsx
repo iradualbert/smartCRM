@@ -2,9 +2,17 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import DashboardCard from "./dashboard-components/DashboardCard"
 import { Typography } from "@mui/material";
+import UpcomingAndRecent from "@/components/UpcomingAndRecent";
 
 const DashboardPage = () => {
-    const [dashboardData, setDashboardData] = useState({});
+    const [dashboardData, setDashboardData] = useState({
+        sent_emails: 0,
+        scheduled_emails:0,
+        failed_emails: 0,
+        total_contacts: 0,
+        newsletter_subs: 0,
+        mail_templates: 0,
+    });
 
     useEffect(() => {
         axios.get("/accounts/dashboard_data")
@@ -25,7 +33,7 @@ const DashboardPage = () => {
                     <DashboardCard borderBottomColor="success.main" cardTitle="Subscribers" value={dashboardData.newsletter_subs} />
                     <DashboardCard borderBottomColor="grey.500" cardTitle="Email Templates" value={dashboardData.mail_templates} />
                 </div>
-
+                <UpcomingAndRecent />
             </div>
         </div>
 

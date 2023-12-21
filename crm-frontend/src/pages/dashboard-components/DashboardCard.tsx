@@ -2,8 +2,7 @@ import { Box, Button, Card, CardActions, CardContent, Typography } from "@mui/ma
 type CardElementProps = {
     cardTitle: string,
     value: number,
-    borderBottom: string,
-    borderBottomColor: "primary.main" | "success.main" | "warning.main" | "error.main"
+    borderBottomColor: "primary.main" | "success.main" | "warning.main" | "error.main" | "secondary.main" | "grey.500"
 }
 
 

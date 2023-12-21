@@ -1,31 +1,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import 'react-quill/dist/quill.snow.css';
-import MailForm from "../components/forms/MailForm";
+import MailForm from "@/components/forms/MailForm";
 import { Button } from "@/components/ui/button";
 import dompurify from "dompurify";
 import { TableContainer, Table, TableHead, Checkbox, TableBody, TableCell, TableRow, Typography } from "@mui/material";
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
+import { parseTime } from "@/lib/utils";
 
 
-const parseTime = (s) => {
-  const date = new Date(s);
-  const today = new Date();
 
-  if (
-    date.getDate() === today.getDate() &&
-    date.getMonth() === today.getMonth() &&
-    date.getFullYear() === today.getFullYear()
-  ) {
-    // If the date is today, return only the time
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } else {
-    // If the date is not today, return the date without seconds
-    return date.toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  }
-};
 
 const sanitizer = dompurify.sanitize;
 

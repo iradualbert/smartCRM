@@ -7,6 +7,7 @@ import 'react-quill/dist/quill.snow.css';
 import { ImAttachment } from "react-icons/im";
 import { MdOutlineSchedule } from "react-icons/md";
 import { createEmail } from "@/lib/api";
+import { getCurrentDateTime } from "@/lib/utils";
 
 
 const MailForm = () => {
@@ -94,22 +95,13 @@ const MailForm = () => {
     });
   };
 
-  function getCurrentDateTime() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  }
+  
 
 
   return (
     <section className="bg-primary-50 max-w-xl bg-dotted-pattern bg-center bg-cover py-2  md:py-3">
       <Typography variant="h5">Send & Schedule Email</Typography>
-      <div className="flex gap-4 mt-5">
+      <div className="flex gap-4 mt-5 sticky top-14">
         <Chip onClick={() => setIsBulk(false)} label="Send Single Mail" color={isBulk ? "default" : "primary"} clickable />
         <Chip onClick={() => setIsBulk(true)} label="Multiple Emails" color={isBulk ? "primary" : "default"} clickable />
         <div className="ml-auto">
@@ -125,6 +117,7 @@ const MailForm = () => {
         <FormGroup row>
 
           <div className="flex gap-2 items-center">
+            <MdOutlineSchedule size={26} />
             <InputLabel>Send At:</InputLabel>
             <input
               value={scheduleAt}
@@ -133,7 +126,7 @@ const MailForm = () => {
                 setScheduleAt(e.target.value);
                 if (e.target.value) setIsSendLater(true);
               }}
-              className=" outline-none" type="datetime-local"
+              className="outline-none" type="datetime-local"
               min={getCurrentDateTime()}
             />
           </div>
@@ -147,7 +140,7 @@ const MailForm = () => {
               setIsScheduleDisabled(e.target.checked);
             }}
           />
-        </FormGroup> 
+        </FormGroup>
 
         <FormControl fullWidth>
           <Input

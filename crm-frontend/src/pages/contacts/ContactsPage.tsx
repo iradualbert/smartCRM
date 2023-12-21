@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { List, ListItem, ListItemText, Typography, Button, Divider, Alert, Snackbar } from "@mui/material";
-import ContactView from "../components/ContactView";
+import ContactView from "../../components/ContactView";
 import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
 import { ContactType } from "@/components/forms/ContactForm";
 import ContactsImporter from "@/components/ContactsImporter";
