@@ -5,3 +5,4 @@ client_secret.json
 db.sqlite3
 __pycache__
 attachments
+**/__pycache__/
