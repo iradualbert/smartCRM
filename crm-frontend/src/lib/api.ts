@@ -7,3 +7,11 @@ export const createEmail = async (data: FormData) => {
         }
     });
 }
+
+export const createBulkEmail = async (data: FormData) => {
+    return await axios.post('/bulk-mails/', data, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        }
+    })
+}

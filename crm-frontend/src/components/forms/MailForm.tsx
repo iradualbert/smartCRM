@@ -5,7 +5,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { ImAttachment } from "react-icons/im";
 import { MdOutlineSchedule } from "react-icons/md";
-import { createEmail } from "@/lib/api";
+import { createBulkEmail, createEmail } from "@/lib/api";
 import { getCurrentDateTime, getUpdatedParams } from "@/lib/utils";
 import { TemplateType } from "./MailTemplateForm";
 import { TemplateParameter } from "@/lib/types";
@@ -36,11 +36,27 @@ const MailForm = () => {
       clearTimeout(timer.current as number);
     }
     timer.current = setTimeout(() => {
-      setTemplateParameters(current => getUpdatedParams(to + CC + subject + mailBody, current).params);
+      setTemplateParameters(current => {
+        const { params } = getUpdatedParams(to + CC + subject + mailBody, current);
+        return params
+      });
     }, 1000)
     return () => clearTimeout(timer.current)
 
   }, [to, CC, subject, mailBody])
+
+  useEffect(() => {
+    setGridRows(currentRows => {
+      return currentRows.map(row => {
+        const _row = {}
+        templateParameters.forEach(param => {
+          _row[param.name] = row[param.name] || { currentValue: "", willUseDefaultValue: false }
+        })
+        return _row
+      })
+    })
+  }, [templateParameters])
+
 
   useEffect(() => {
     if (!isBulk) return;
@@ -85,6 +101,32 @@ const MailForm = () => {
 
   }
 
+  const handleSendAllClick = (e) => {
+    e.preventDefault();
+    if (gridRows.length <= 0) {
+      alert("Add at least one row");
+      return
+    }
+    const formData = new FormData();
+    const mailTemplate = { to, cc: CC, body: mailBody, subject }
+    if (isSendLater && scheduleAt) {
+      mailTemplate["schedule_datetime"] = scheduleAt;
+    }
+    formData.append("template", JSON.stringify(mailTemplate));
+
+    attachments.forEach(attach => {
+      formData.append("attachment", attach);
+    });
+    formData.append("mailRows", JSON.stringify(gridRows));
+    const parameters = {}
+    templateParameters.forEach(param => {
+      parameters[param.name] = paramDefaultValues[param.name] === undefined ? param.defaultValue : paramDefaultValues[param.name]
+    })
+    formData.append("paramDefaultValues", JSON.stringify(parameters))
+    createBulkEmail(formData);
+
+  }
+
   const handleAttachClick = () => {
     attachInputRef.current.click();
   }
@@ -108,11 +150,11 @@ const MailForm = () => {
   };
 
   const updateParameterDefaultValue = (e, idx) => {
-    // setTemplateParameters(currentParams => {
-    //   const _currentParams = [...currentParams]
-    //   _currentParams[idx].defaultValue = e.target.value;
-    //   return _currentParams
-    // })
+    setTemplateParameters(currentParams => {
+      const _currentParams = [...currentParams]
+      _currentParams[idx].defaultValue = e.target.value;
+      return _currentParams
+    })
     setParamDefaultValues(current => ({
       ...current,
       [e.target.name]: e.target.value
@@ -122,7 +164,10 @@ const MailForm = () => {
   const handleAddRow = () => {
     const row = {}
     templateParameters.forEach(param => {
-      row[param.name] = paramDefaultValues[param.name]
+      row[param.name] = {
+        currentValue: "", //paramDefaultValues[param.name] || param.defaultValue,
+        willUseDefaultValue: false,
+      }
     })
     setGridRows(current => [...current, row])
   }
@@ -131,18 +176,46 @@ const MailForm = () => {
     setGridRows(currentRows => {
       const newRows = [...currentRows];
       newRows.splice(removeAt, 1)
-      return newRows 
-
+      return newRows
     })
   }
 
   const handleRowInputChange = (e, rowIndex) => {
-    setGridRows( currentRows => {
+    setGridRows(currentRows => {
       const newRows = [...currentRows];
       const updatedRow = newRows[rowIndex];
-      newRows[rowIndex]= {
+      newRows[rowIndex] = {
         ...updatedRow,
-        [e.target.name]: e.target.value,
+        [e.target.name]: {
+          currentValue: e.target.value,
+          willUseDefaultValue: false,
+        }
+      }
+      return newRows
+    })
+  }
+
+  const handleRowInputToggleUseDefaultValue = (paramName, rowIndex) => {
+    setGridRows(currentRows => {
+      const newRows = [...currentRows];
+      const updatedRow = newRows[rowIndex];
+      let willUseDefaultValue = true;
+      let currentValue = paramDefaultValues[paramName];
+      try {
+        willUseDefaultValue = !updatedRow[paramName].willUseDefaultValue;
+        currentValue = willUseDefaultValue ? paramDefaultValues[paramName] : updatedRow[paramName].currentValue;
+      } catch (err) {
+        console.error(err)
+      }
+
+      console.log(updatedRow)
+
+      newRows[rowIndex] = {
+        ...updatedRow,
+        [paramName]: {
+          currentValue: currentValue || "",
+          willUseDefaultValue,
+        }
       }
       return newRows
     })
@@ -282,9 +355,9 @@ const MailForm = () => {
               rows={gridRows}
               parameters={templateParameters}
               onRowInputChange={handleRowInputChange}
-              paramDefaultValues={paramDefaultValues}
+              onRowInputUseDefaultValueChange={handleRowInputToggleUseDefaultValue}
             />
-            <Button variant="contained">Send All</Button>
+            <Button variant="contained" onClick={handleSendAllClick}>Send All</Button>
           </>
         )}
 

@@ -1,7 +1,7 @@
 import os
 from django.db import models
 from django.utils import timezone
-import smtplib, ssl, email
+import smtplib, ssl
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
@@ -15,6 +15,12 @@ from googleapiclient.discovery import build
 
 
 send_with_smartCRM = "<p><a href='smartcrm.com'>Sent With smartCRM<a/></p>"
+
+class BulkMail(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bulk_mails")
+    template = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
 
 class Mail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name="mails")
@@ -30,6 +36,7 @@ class Mail(models.Model):
     failed = models.BooleanField(default=False)
     failure_reason = models.TextField(blank=True)
     message_id = models.CharField(max_length=100, null=True, blank=True)
+    bulk_mail = models.ForeignKey(BulkMail, on_delete=models.SET_NULL, null=True, related_name="mails")
     
 
     def __str__(self):
@@ -67,7 +74,8 @@ class Mail(models.Model):
         message["From"] =self.user.email
         message["Cc"] = self.cc
         message["Subject"] = self.subject
-        for attach in self.attachments.all():
+        attachments = self.bulk_mail.attachments.all() if self.bulk_mail else self.attachments.all()
+        for attach in attachments:
             _file = attach.attachment_file
             filepath = _file.path
             
@@ -167,11 +175,15 @@ class Mail(models.Model):
 
 
 def attachment_upload_path(instance, filename):
-    return f'attachments/{instance.mail.id}/{filename}'
+    if instance.mail:
+        return f'attachments/{instance.mail.id}/{filename}'
+    else:
+        return f'attachments/bulk-mails/{instance.bulk_mail.id}/{filename}'
 
 
 class MailAttachment(models.Model):
-    mail = models.ForeignKey(Mail, on_delete=models.CASCADE, related_name="attachments")
+    bulk_mail = models.ForeignKey(BulkMail, on_delete=models.CASCADE, related_name="attachments", null=True)
+    mail = models.ForeignKey(Mail, on_delete=models.CASCADE, related_name="attachments", null=True)
     attachment_file = models.FileField(
         upload_to=attachment_upload_path, 
         validators=[
@@ -181,6 +193,15 @@ class MailAttachment(models.Model):
     
     def __str__(self):
         return self.attachment_file.name
+    
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(bulk_mail__isnull=False) | models.Q(mail__isnull=False),
+                name="either_mail_or_bulk_email_is_required",
+                #msg="Both mail and bulk_mail fields can not be empty. At least one must be provided"
+            )
+        ]
     
 class MailTemplate(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mail_templates")
