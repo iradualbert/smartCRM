@@ -206,9 +206,12 @@ class MailAttachment(models.Model):
 class MailTemplate(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mail_templates")
     name = models.CharField(max_length=200)
+    to = models.TextField(blank=True)
+    cc = models.TextField(blank=True)
     subject = models.CharField(max_length=700, null=True, blank=True)
     body = models.TextField(blank=True)
-    parameters = models.JSONField()
+    parameters = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self) -> str:
         return self.name

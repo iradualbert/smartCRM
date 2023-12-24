@@ -6,6 +6,7 @@ GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send"
 class Account(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="account")
     google_account = models.JSONField(null=True)
+    mail_signature = models.TextField(blank=True)
     email_provider = ""
     calendar_provider = ""
     meeting_provider = ""

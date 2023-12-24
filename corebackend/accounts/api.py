@@ -18,6 +18,17 @@ def get_user_dashboard_data(user: User):
     } 
     return response
 
+@api_view(['GET', 'POST', 'PUT'])
+def mail_signature(request):
+    account = request.user.account
+    if request.method in ["POST" "PUT"]:
+        account.mail_signature = request.data.get('signature')
+        account.save()
+        return Response({"mail_signature": account.mail_signature}, status=201)
+    
+    elif request.method == "GET":
+        return Response({"mail_signature": account.mail_signature})
+
 @api_view(['GET'])
 def dashboard_data(request):
     user = request.user

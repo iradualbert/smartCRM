@@ -1,4 +1,5 @@
 import axios from "axios";
+import dompurify from "dompurify"
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { TemplateParameter } from "./types";
@@ -97,3 +98,10 @@ export const parseTime = (s) => {
     return date.toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 };
+
+export const sanitizer = (raw: string) => {
+  return {
+      __html: dompurify.sanitize(raw)
+  }
+
+}

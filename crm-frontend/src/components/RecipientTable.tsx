@@ -39,13 +39,9 @@ const RecipientsTable: React.FC<RecipientsTableProps> = ({
             <Table sx={{ minWidth: 750 }} aria-labelledby="Emails" size="medium">
                 <TableHead>
                     <TableRow>
-
-                        <TableCell padding="checkbox">
-                            <Checkbox color="primary" />
-                        </TableCell>
                         <TableCell>No. </TableCell>
                         {parameters.map((parameter) => (
-                            <TableCell key={parameter.name}>{parameter.name}</TableCell>
+                            <TableCell key={parameter.name}>{parameter.name.toLocaleUpperCase()}</TableCell>
                         ))}
                         <TableCell>Remove</TableCell>
                     </TableRow>
@@ -53,11 +49,6 @@ const RecipientsTable: React.FC<RecipientsTableProps> = ({
                 <TableBody>
                     {rows.map((row, rowIndex) => (
                         <TableRow key={rowIndex}>
-                            <TableCell padding="checkbox">
-                                <Checkbox
-                                    color="primary"
-                                />
-                            </TableCell>
                             <TableCell>{rowIndex + 1}</TableCell>
                             {parameters.map((parameter) => {
                                 const { currentValue, willUseDefaultValue } = row[parameter.name] || {};

@@ -5,9 +5,10 @@ from .auth_views import (
   update_google_account,
   get_google_api_authorization_url,
   auth2callback,
-  view_email_provider
+  view_email_provider,
+  
 )
-from .api import dashboard_data
+from .api import dashboard_data, mail_signature
 
 urlpatterns = [
   path('api/auth', include('knox.urls')),
@@ -19,5 +20,6 @@ urlpatterns = [
   path('api/accounts/get_google_api_authorization_url', get_google_api_authorization_url),
   path("api/accounts/auth2callback", auth2callback),
   path("api/accounts/email_provider", view_email_provider),
-  path("api/accounts/dashboard_data", dashboard_data)
+  path("api/accounts/dashboard_data", dashboard_data),
+  path("api/accounts/mail_signature", mail_signature),
 ]

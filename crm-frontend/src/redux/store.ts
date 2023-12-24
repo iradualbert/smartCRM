@@ -1,8 +1,8 @@
 import { createStore, combineReducers, applyMiddleware, compose } from "redux";
 import thunk from "redux-thunk";
-
 import UserReducer from "./reducers/userReducer";
 import rootReducer from "./reducers/rootReducer";
+import uiReducer from "./reducers/uiReducer";
 
 const initialState = {};
 const middleware = [thunk]
@@ -10,6 +10,7 @@ const middleware = [thunk]
 const reducers = combineReducers({
     root: rootReducer,
     user: UserReducer,
+    ui: uiReducer
 })
 
 const composeEnhancers =

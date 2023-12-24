@@ -12,3 +12,10 @@ export type Email = {
     isSendLater?: boolean,
     scheduleTime: Date,
 }
+
+
+export type IToast = {
+    id?: string | number,
+    message: string,
+    severity: "error" | "info" | "success",
+}

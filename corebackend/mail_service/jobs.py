@@ -21,5 +21,5 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 def start_mail_service_job():
 	scheduler = BackgroundScheduler()
-	scheduler.add_job(send_scheduled_emails, 'interval', seconds=5)
+	scheduler.add_job(send_scheduled_emails, 'interval', seconds=30)
 	scheduler.start()
