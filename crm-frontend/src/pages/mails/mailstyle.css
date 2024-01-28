@@ -1,0 +1,19 @@
+.status {
+    padding: 5px;
+    border-radius: 5px;
+    width: 100%;
+    text-align: center;
+}
+
+.Sent {
+  color: green;
+  background-color: rgba(0, 128, 0, 0.151);
+}
+.Scheduled {
+  color: goldenrod;
+  background-color: rgba(189, 189, 3, 0.103);
+}
+.Failed {
+    color: red;
+    background-color: rgba(189, 189, 3, 0.103);
+}

@@ -8,6 +8,23 @@ import { IToast } from "./types";
 
 export * from "./useAPI";
 
+export const useDashboardData = () => {
+    const [dashboardData, setDashboardData] = useState({
+        sent_emails: 0,
+        scheduled_emails:0,
+        failed_emails: 0,
+        total_contacts: 0,
+        newsletter_subs: 0,
+        mail_templates: 0,
+    });
+    useEffect(() => {
+        axios.get("/accounts/dashboard_data")
+            .then(res => setDashboardData(res.data))
+    }, [])
+    return { data: dashboardData }
+}
+
+
 export const useToasts = () => {
     const dispatch = useDispatch();
     const showToast = (toast: IToast) => {

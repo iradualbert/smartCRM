@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardActions, CardContent, Typography } from "@mui/material";
+import { Box, Card, CardContent, Typography } from "@mui/material";
 type CardElementProps = {
     cardTitle: string,
     value: number,
@@ -8,7 +8,7 @@ type CardElementProps = {
 
 const DashboardCard = ({ cardTitle, value, borderBottomColor }: CardElementProps) => {
     return (
-        <Box sx={{ minWidth: 275, borderBottomWidth: 2, borderBottomColor: borderBottomColor }}>
+        <Box sx={{ width: 200, borderWidth: 1, borderColor: borderBottomColor, borderRadius: 1 }}>
             <Card elevation={0}>
                 <CardContent>
                     <Typography color="textSecondary" variant="h6" gutterBottom>
@@ -18,9 +18,6 @@ const DashboardCard = ({ cardTitle, value, borderBottomColor }: CardElementProps
                         {value}
                     </Typography>
                 </CardContent>
-                <CardActions>
-                    <Button size="small">Learn More</Button>
-                </CardActions>
             </Card>
         </Box>
 

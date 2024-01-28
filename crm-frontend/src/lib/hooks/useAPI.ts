@@ -2,6 +2,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 
 export const useApiListView = (url: string, params = {}) => {
+  const [count, setCount] = useState(0);
   const [results, setResults] = useState([]);
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,9 +18,11 @@ export const useApiListView = (url: string, params = {}) => {
   }, [url]);
 
   useEffect(() => {
-    if (hasLoaded) {
-      loadData(true);
-    }
+    // if (hasLoaded) {
+    //   loadData(true);
+    // }
+    //console.log(params)
+    if(_params.limit) loadData(true);
   }, [_params]);
 
   const loadData = async (reload = false) => {
@@ -29,6 +32,7 @@ export const useApiListView = (url: string, params = {}) => {
         params: _params
       });
       setIsLoading(false);
+      setCount(data.count);
       if (reload) {
         setResults(data.results);
       } else {
@@ -57,6 +61,7 @@ export const useApiListView = (url: string, params = {}) => {
     }
   };
   return {
+    count,
     results,
     isLoading,
     error,

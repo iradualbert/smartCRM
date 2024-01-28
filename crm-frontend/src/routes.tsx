@@ -29,7 +29,7 @@ export const PrivateRoute = () => {
 
     if (isAuthenticated) {
         return (
-            <div className="mt-10 py-10 pl-24">
+            <div className="mt-10 py-10 pl-24 pr-10">
                 <Navbar />
                 <SideBar />
                 <Outlet />

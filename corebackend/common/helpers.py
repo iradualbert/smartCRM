@@ -1,6 +1,6 @@
 import re, json
 from rest_framework import viewsets, permissions
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
 def generate_message(template, parameters):
@@ -23,13 +23,14 @@ def build_mail_from_template(template, row, default_values):
     s_mail = generate_message(template, parameters)
     return json.loads(s_mail)
 
-class DefaultPagination(PageNumberPagination):
-    max_limit = 20  
+
+class DefaultPagination(LimitOffsetPagination):
+    max_limit = 50  
     def get_paginated_response(self, data):
         return Response({
                 'next': self.get_next_link(),
                 'previous': self.get_previous_link(),
-                'count': self.page.paginator.count,
+                'count': self.count,
                 'results': data
             })
         

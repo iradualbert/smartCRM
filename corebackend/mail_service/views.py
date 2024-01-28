@@ -1,11 +1,10 @@
 import json
-import re
 from django.db.models import Q
 from rest_framework.response import Response
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from .serializers import MailSerializer, MailTemplateSerializer
 from .models import Mail, MailTemplate, MailAttachment, BulkMail
-from common.helpers import IsOwnerPermission, build_mail_from_template
+from common.helpers import IsOwnerPermission, build_mail_from_template, DefaultPagination
 
 
 class BulkMailViewSet(viewsets.ViewSet):
@@ -58,9 +57,10 @@ class BulkMailViewSet(viewsets.ViewSet):
 
 class MailViewSet(viewsets.ModelViewSet):
     permission_classes = [
-        permissions.IsAuthenticated
+        IsOwnerPermission
     ]
     serializer_class = MailSerializer
+    pagination_class = DefaultPagination
     
     def get_queryset(self):
         user = self.request.user
@@ -69,6 +69,8 @@ class MailViewSet(viewsets.ModelViewSet):
         if query:
             return Mail.objects.filter(Q(to__icontains=query)|Q(subject__icontains=query), user=user)
         return Mail.objects.filter(user=user)
+    
+    
     
     def create(self, request, *args, **kwargs):
         user = self.request.user
