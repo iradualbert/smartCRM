@@ -1,0 +1,202 @@
+import json
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.models import User
+from django.shortcuts import redirect, get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from django.http import JsonResponse
+from knox.models import AuthToken
+from knox.auth import TokenAuthentication
+from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
+from .models import Account, VerificationCode
+from django.utils import timezone
+import google_auth_oauthlib.flow
+from googleapiclient.discovery import build
+from .utils import send_confirmation_email
+from .tokens import account_activation_token
+
+
+CLIENT_SECRETS_FILE = "client_secret.json"
+redirect_uri = "http://localhost:8000/api/accounts/auth2callback"
+
+def credentials_to_dict(credentials):
+  return {'token': credentials.token,
+          'refresh_token': credentials.refresh_token,
+          'token_uri': credentials.token_uri,
+          'client_id': credentials.client_id,
+          'client_secret': credentials.client_secret,
+          'scopes': credentials.scopes}
+
+
+def get_google_api_authorization_url(request):
+    user_token = request.GET.get('token')
+    scopes = request.GET.get('scopes')
+    if(not scopes):
+      return JsonResponse({ "error": "The scope was not provided"}, status=400)
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+      CLIENT_SECRETS_FILE, scopes=scopes)
+    
+    flow.redirect_uri = redirect_uri
+
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+      include_granted_scopes='true')
+    
+    request.session["state"] = state
+    request.session["user_token"] = user_token  
+    return redirect(authorization_url)
+    
+
+def auth2callback(request):
+      state = request.session["state"]
+      user_token = request.session["user_token"]
+      auth = TokenAuthentication()
+      user, _= auth.authenticate_credentials(token=bytes(user_token,  'utf-8'))
+      SCOPES = request.GET.get("scope")
+      flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
+      flow.redirect_uri = redirect_uri
+      full_url = request.build_absolute_uri()
+      import os 
+      os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+      flow.fetch_token(authorization_response=full_url)
+      credentials = flow.credentials
+      user.account.google_account = credentials_to_dict(credentials)
+      user.account.save()
+      return redirect("http://localhost:5173/settings/intergration")
+  
+
+@api_view(['GET', 'POST', 'DELETE'])
+def view_email_provider(request):
+    user = request.user
+    if request.method == "GET":
+        return Response({
+          "email_provider": user.account.get_connected_email_provider()
+        })
+    
+    if request.method == "DELETE":
+        user.account.disconnect_email_provider()
+        return Response({
+          "message": "Email Disconnected"
+        })
+
+@api_view(["POST"])
+def update_google_account(request):
+    account = Account.objects.get(user=request.user)
+    data = json.loads(request.body)
+    account.google_access_token = data.get("access_token")
+    account.google_credentials_updated_at = timezone.now()
+    account.google_scope = data.get('scope')
+    account.google_token_expires_in = data.get('expires_in')
+    account.google_token_type = data.get("token_type")
+    account.save()
+    
+    return Response({ "message": "success"}, status=201)
+
+
+
+# Register API
+class RegisterAPI(generics.GenericAPIView):
+    serializer_class = RegisterSerializer
+    permission_classes=[permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        send_confirmation_email(user, request)
+        return Response({
+        "user": UserSerializer(user, context=self.get_serializer_context()).data,
+        })
+
+# Login API
+class LoginAPI(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
+        _, token = AuthToken.objects.create(user)
+        return Response({
+        "user": UserSerializer(user, context=self.get_serializer_context()).data,
+        "token": token
+        })
+
+# Get User API
+class UserAPI(generics.RetrieveAPIView):
+  permission_classes = [
+    permissions.IsAuthenticated,
+  ]
+  serializer_class = UserSerializer
+
+  def get_object(self):
+    return self.request.user
+  
+
+# activate through email
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+def activate_account(request, uidb64, token):
+    uid = force_bytes(urlsafe_base64_decode(uidb64))
+    try:
+        user = User.objects.get(pk=uid)
+        if user is not None and account_activation_token.check_token(user, token):
+            user.is_active = True
+            user.save()
+            return JsonResponse({
+                'status': f"{user}", 
+                "token" : AuthToken.objects.create(user)[0]}, 
+            )
+    finally:
+        pass
+    return JsonResponse({'error': 'invalid activation link'})
+
+
+# activate through the verification code
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def activate_account_code(request):
+    data = json.loads(request.body)
+    code = data.get('code')
+    if not code:
+        return JsonResponse({'error': 'Invalid code'})
+    email = data.get('email')
+    try:
+        user = User.objects.get(email=email)
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "Invalid email address"}, status=401)
+   
+    if VerificationCode.check_code(user, code):
+        user.is_active = True
+        profile = Account.objects.create(user=user)
+        profile.save()
+        user.save()
+        _, token = AuthToken.objects.create(user)
+        return JsonResponse({
+            "user": data,
+            "token": token,
+            "is_active": True
+        })
+    return JsonResponse({'error': 'invalid code'}, status=400)
+
+@api_view(['POST'])
+@permission_classes([])
+def degenerate_code(request):
+    data = json.loads(request.body)
+    email = data.get('email')
+    if not email:
+        return JsonResponse({'error': 'email not provided'}, status=401)
+    try:
+        user = User.objects.get(email=email, is_active=False)
+        if user:
+            send_confirmation_email(user, request)
+        else:
+            return JsonResponse({'error': 'account not found'}, status=401)
+    except ObjectDoesNotExist:
+        return JsonResponse({'error': f"invalid email address"}, status=401)
+    return JsonResponse({"status": "ok"})

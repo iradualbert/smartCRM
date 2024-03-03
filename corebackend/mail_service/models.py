@@ -13,8 +13,9 @@ from googleapiclient.errors import HttpError
 import google
 from googleapiclient.discovery import build
 
+from accounts.models import Account
 
-send_with_smartCRM = "<p><a href='smartcrm.com'>Sent With smartCRM<a/></p>"
+send_with_smartCRM = "<p><a href='beinpark.com'>Sent With Beinpark<a/></p>"
 
 class BulkMail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bulk_mails")
@@ -60,11 +61,8 @@ class Mail(models.Model):
         self.save()
         
     def get_user_credentials(self):
-        return {
-            "signature": "",
-            "email": "",
-            "password": ''
-        }
+        account = Account.objects.get(user=self.user)
+        return account.mail_settings
         
     def build(self):
         message = MIMEMultipart()

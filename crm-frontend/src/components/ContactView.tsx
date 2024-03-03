@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogActions, Button } from "@mui/material";
 import ModalTitle from "./ui/ModalTitle";
 import ContactForm, { ContactFormProps, ContactType } from "./forms/ContactForm";
 import axios from "axios";
+import { Button as ShdButton } from "@/components/ui/button";
 
 interface ContactViewProps extends ContactFormProps {
     children?: React.ReactNode;
@@ -79,7 +80,7 @@ const ContactView = ({ children, onUpdate, onCreate, onDelete, contact: _contact
 
     return (
         <>
-            <Button variant="outlined" onClick={toggleShowDialog}>{children ? children : "Update"}</Button>
+            {<ShdButton variant="secondary" onClick={toggleShowDialog}>{children ? children : "Update"}</ShdButton>}
             {isDialogOpen && (
                 <Dialog
                     open={isDialogOpen}

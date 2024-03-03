@@ -7,6 +7,8 @@ const api = {
     GET_USER: "/auth/user",
     LOGOUT: "/auth/logout/",
     LOGOUT_ALL: "/auth/logoutall/",
+	VERIFY_CODE: "/accounts/activate/code/",
+	RESEND_CODE: "/accounts/activate/resend/"
 }
 
 const config = {
@@ -43,7 +45,9 @@ export const loginUser =
 			const { user, token } = data;
 			saveToken(token);
 			dispatch(setUser(user));
-			navigate(next || "/");
+			if(next) navigate(next) 
+			else navigate("/dashboard");
+			
 		} catch (err) {
 			if (err.response) {
 				return err.response.data;
@@ -54,17 +58,38 @@ export const loginUser =
 
 export const registerUser = (userData, navigate) => async (dispatch) => {
 	try {
-		const { data } = await axios.post(api.REGISTER_USER, userData, config);
-		saveToken(data.token);
-		dispatch(setUser(data.user));
-		navigate("/account/verification");
+		await axios.post(api.REGISTER_USER, userData, config);
+		//const { data } = await axios.post(api.REGISTER_USER, userData, config);
+		// saveToken(data.token);
+		// dispatch(setUser(data.user));
+		// navigate("/account/verification");
 	} catch (err) {
 		if (err.response) {
 			return err.response.data;
 		}
-		console.log(err);
 	}
 };
+
+export const verify_code = (userData, navigate) => async(dispatch) => {
+	try{
+		const { data } = await axios.post(api.VERIFY_CODE, userData, config);
+		saveToken(data.token);
+		dispatch(setUser(data.user));
+		navigate("/dashboard");
+	} catch(err){
+		if(err.response) return err.response.data;
+	}
+}
+
+export const resend_verification_code = async (userData) => {
+	try {
+		await axios.post(api.RESEND_CODE, userData, config);
+	} catch (err) {
+		if (err.response) {
+			return err.response.data;
+		}
+	}
+}
 
 export const getUser = () => async (dispatch) => {
 	try {
@@ -76,7 +101,6 @@ export const getUser = () => async (dispatch) => {
 			dispatch(removeAuthToken());
 			dispatch({ type: SET_TOKEN_VERIFIED });
 		}
-		console.log(err);
 	}
 };
 
@@ -85,7 +109,7 @@ export const logoutUser = () => {
 		.then(() => {
 			// dispatch(removeAuthToken());
 			localStorage.removeItem('token');
-			window.location.reload();
+			window.location.href = "/";
 		})
 	.catch(err => console.log(err))
 };

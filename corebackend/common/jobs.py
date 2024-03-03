@@ -1,6 +1,10 @@
 from django.db.models import Q
 from django.utils import timezone
-from .models import Mail
+from mail_service.models import Mail
+from accounts.models import Plan, Account
+
+def bill_users():
+    print("billing users")
 
 def send_scheduled_emails():
     current_time = timezone.now()
@@ -19,7 +23,9 @@ def send_scheduled_emails():
         
 from apscheduler.schedulers.background import BackgroundScheduler
 
-def start_mail_service_job():
-	scheduler = BackgroundScheduler()
-	scheduler.add_job(send_scheduled_emails, 'interval', seconds=30)
-	scheduler.start()
+
+def start_jobs():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(send_scheduled_emails, 'interval', seconds=30)
+    scheduler.add_job(bill_users, 'interval', hours=10)
+    scheduler.start()

@@ -5,6 +5,7 @@ import { BsNewspaper, BsFillCalendarDateFill } from "react-icons/bs";
 import { SiChatbot } from "react-icons/si";
 import { IoIosContacts, IoMdSettings } from "react-icons/io";
 import { FaHome } from "react-icons/fa";
+import { SiAutomattic } from "react-icons/si";
 
 
 const SideBar = () => {
@@ -17,6 +18,7 @@ const SideBar = () => {
             <SideBarIcon icon={<BsNewspaper size={30} />} text="Newsletter" to="/newsletter-manager"/>
             <SideBarIcon icon={<BsFillCalendarDateFill size={30} />} text="Calendar" to="/schedule-manager"/>
             <SideBarIcon icon={<SiChatbot size={30} />} text="ChatBot" to=""/>
+            <SideBarIcon icon={<SiAutomattic size={30} /> } text="Automation" to="/automation"/>
             <SideBarIcon icon={<IoMdSettings size={30} />} text="Settings" to="/settings/intergration" />
         </div>
     )

@@ -19,3 +19,14 @@ export type IToast = {
     message: string,
     severity: "error" | "info" | "success",
 }
+
+
+export type PlanCardProps = {
+    features: string[],
+    color: string,
+    title: string,
+    description: string,
+    btnText: string,
+    price: string
+
+}

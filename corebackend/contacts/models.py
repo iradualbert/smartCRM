@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from mail_service.models import Mail
 
+
 class ContactCategory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="contact_categories")
     name = models.CharField(max_length=50)
@@ -18,6 +19,15 @@ class ContactCategory(models.Model):
             "name": self.name,
             "id": self.id
         }
+    def add_contact(self, **data):
+        contact = Contact.objects.create(user=self.user, **data)
+        return contact
+        
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'user'], name='unique_category_name_per_user'),
+           
+        ]
 
 
 class Contact(models.Model):
@@ -25,7 +35,7 @@ class Contact(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     company = models.CharField(max_length=255, null=True, blank=True)
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     cc = models.TextField(blank=True)
@@ -49,8 +59,36 @@ class Contact(models.Model):
         else:
             mail.send()
     
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['email', 'user'], name='unique_email_per_user'),
-            models.UniqueConstraint(fields=['phone_number', 'user'], name='unique_phone_number_per_user'),
-        ]
+    def get_emails_sent(self):
+        emails = Mail.objects.filter(to__contains=self.email)
+        return emails
+    
+        
+
+class SubscribeLink(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    category = models.ForeignKey(ContactCategory, on_delete=models.CASCADE)
+    should_verify = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def subscribe(self, first_name, last_name, email):
+        contact = Contact( 
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            user=self.category.user
+        )
+        contact.categories.add(self.category)
+        contact.save()
+        return contact
+        
+    def unsubscribe(self, email):
+        self.category.remove_contact(email)
+    
+    def to_json(self):
+        return {
+            "title": self.title,
+            "description": self.description,
+        }     
