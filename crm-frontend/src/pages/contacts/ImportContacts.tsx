@@ -23,6 +23,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "../../components/ui/label";
 import { Loader2 } from "lucide-react";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { ADD_CONTACTS_MANY } from "@/redux/types";
 
 
 const ImportContacts = ({ title = "Upload / Import from a file", children }: { children: React.ReactNode }) => {
@@ -31,7 +33,8 @@ const ImportContacts = ({ title = "Upload / Import from a file", children }: { c
     const [currentStep, setCurrentStep] = useState(1);
     const [isUploading, setIsUploading] = useState(false);
     const [isCanceled, setIsCanceled] = useState(false);
-    const abortController = new AbortController()
+    const abortController = new AbortController();
+    const dispatch = useDispatch();
 
     const [uploadResults, setUploadResults] = useState({
         skipped: 0,
@@ -93,6 +96,12 @@ const ImportContacts = ({ title = "Upload / Import from a file", children }: { c
                 signal: abortController.signal
             });
             const { uploaded, duplicate_total, skipped_total } = res.data
+            if(uploaded.length){
+                dispatch({
+                    type: ADD_CONTACTS_MANY,
+                    payload: uploaded
+                })
+            }
             setUploadResults( prev => ({
                 uploaded: prev.uploaded + uploaded.length,
                 duplicate: prev.duplicate + duplicate_total,

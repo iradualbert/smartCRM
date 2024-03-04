@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogActions, Button, FormControl, FormLabel, TextField } from "@mui/material";
-import ModalTitle from "../ui/ModalTitle";
+import ModalTitle from "../../components/ui/ModalTitle";
 import axios from "axios";
 
 

@@ -11,3 +11,17 @@ export const SET_TOKEN_VERIFIED = "SET_TOKEN_VERIFIED "
 // UI
 export const SHOW_TOAST = "SHOW_TOAST";
 export const CLEAR_TOAST = "CLEAR_TOAST";
+
+
+// contacts
+
+export const ADD_CONTACT ="ADD CONTACT";
+export const UPDATE_CONTACT="UPDATE_CONTACT";
+export const ADD_CONTACTS_MANY="ADD_CONTACT_MANY";
+export const SET_CONTACTS = "SET_CONTACTS"
+export const DELETE_CONTACT = "DELETE_CONTACT";
+
+export const SET_CATEGORIES = "SET_CATEGORIES";
+export const ADD_CATEGORY= "ADD_CATEGORY";
+export const DELETE_CATEGORY = "DELETE_CATEGORY";
+export const UPDATE_CATEGORY = "UPDATE_CATEGORY";

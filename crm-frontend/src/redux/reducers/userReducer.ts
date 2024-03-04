@@ -6,7 +6,7 @@ const initialState = {
     credentials: {},
 }
 
-export default function (state = initialState, action) {
+export default function (state = initialState, action:{ type: string, payload?: object}) {
     switch (action.type) {
         case Types.SET_AUTHENTICATED:
             return {

@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { List, ListItem, ListItemText, Typography, Button, Divider, Alert, Snackbar } from "@mui/material";
+import { Typography, Alert, Snackbar } from "@mui/material";
 import ContactView from "../../components/ContactView";
-import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
 import { ContactType } from "@/components/forms/ContactForm";
-import ContactsImporter from "@/pages/contacts/ImportContacts";
-import ContactCategories from "@/components/contacts/ContactCategories";
 import { useSearchParams } from "react-router-dom";
 import { Button as ShdButton } from "@/components/ui/button";
 import {
@@ -25,14 +22,17 @@ import {
 } from "@/components/ui/table"
 import { parseTime } from "@/lib/utils";
 import ImportContacts from "@/pages/contacts/ImportContacts";
+import { getCategories, getContacts } from "@/redux/actions/contactActions";
+import { useSelector } from "react-redux";
+import EmailContactDialog from "./EmailContactDialog";
 
 
 
 const ContactsManagerPage = () => {
 
-    const [contacts, setContacts] = useState(null);
-    const [contactCategories, setContactCategories] = useState(null);
+    const [_contacts, setContacts] = useState(null);
     const [searchParams, setSearchParams] = useSearchParams();
+    const { categories: contactCategories, all_contacts } = useSelector(state => state.contacts);
     const [toast, setToast] = useState({
         isOpen: false,
         message: "",
@@ -40,10 +40,8 @@ const ContactsManagerPage = () => {
     })
 
     useEffect(() => {
-        axios.get('/contacts/')
-            .then(res => setContacts(res.data))
-        axios.get("/contact-categories/")
-            .then(res => setContactCategories(res.data))
+        getContacts();
+        getCategories();
     }, [])
 
     const showToast = (message: string, severity: "error" | "info" | "success") => {
@@ -111,7 +109,7 @@ const ContactsManagerPage = () => {
                     <div className="flex items-center justify-between p-2 text-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group">
                         <ShdButton variant="link" className="ms-3" onClick={() => setSearchParams({})}>All</ShdButton>
                     </div>
-                    {contactCategories?.results.map(_category => (
+                    {contactCategories?.map(_category => (
                         <div key={_category.id} className="flex items-center justify-between p-2 text-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group">
                             <ShdButton variant="link" className="ms-3" onClick={() => setSearchParams({ category: _category.id })}>
                                 {_category.name}
@@ -140,9 +138,10 @@ const ContactsManagerPage = () => {
                             <TableHead>Phone</TableHead>
                             <TableHead>Categories</TableHead>
                             <TableHead>Created At</TableHead>
+                            <TableHead>Actions</TableHead>
                         </TableHeader>
                         <TableBody>
-                            {contacts?.results.map(contact => (
+                            {all_contacts.results.map(contact => (
                                 <TableRow key={contact.id}>
                                     <TableCell>{contact.first_name} {contact.last_name}</TableCell>
                                     <TableCell>{contact.email}</TableCell>
@@ -150,6 +149,11 @@ const ContactsManagerPage = () => {
                                     <TableCell>{contact.phone_number}</TableCell>
                                     <TableCell>subscriber</TableCell>
                                     <TableCell>{parseTime(contact.created_at)}</TableCell>
+                                    <TableCell>
+                                        <EmailContactDialog contact={contact}>
+                                            <ShdButton variant="secondary">Send Email</ShdButton>
+                                        </EmailContactDialog>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
