@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Typography, Alert, Snackbar } from "@mui/material";
 import ContactView from "../../components/ContactView";
 import { ContactType } from "@/components/forms/ContactForm";
 import { useSearchParams } from "react-router-dom";
-import { Button as ShdButton } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     ColumnDef,
     flexRender,
@@ -25,6 +24,7 @@ import ImportContacts from "@/pages/contacts/ImportContacts";
 import { getCategories, getContacts } from "@/redux/actions/contactActions";
 import { useSelector } from "react-redux";
 import EmailContactDialog from "./EmailContactDialog";
+import CategoryFormDialog from "./CategoryFormDialog";
 
 
 
@@ -107,17 +107,20 @@ const ContactsManagerPage = () => {
             <div className="flex gap-8">
                 <div className="w-40 flex flex-col gap-6">
                     <div className="flex items-center justify-between p-2 text-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                        <ShdButton variant="link" className="ms-3" onClick={() => setSearchParams({})}>All</ShdButton>
+                        <Button variant="link" className="ms-3" onClick={() => setSearchParams({})}>All</Button>
                     </div>
                     {contactCategories?.map(_category => (
                         <div key={_category.id} className="flex items-center justify-between p-2 text-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                            <ShdButton variant="link" className="ms-3" onClick={() => setSearchParams({ category: _category.id })}>
+                            <Button variant="link" className="ms-3" onClick={() => setSearchParams({ category: _category.id })}>
                                 {_category.name}
-                            </ShdButton>
+                            </Button>
                             <span>{_category.total_contacts}</span>
                         </div>
                     ))}
-                    <ShdButton>+ New Category</ShdButton>
+                    <CategoryFormDialog>
+                        <Button>+ New Category</Button>
+                    </CategoryFormDialog>
+
                 </div>
                 <div className="flex flex-col gap-6">
                     <h1 className="text-4xl">All Contacts</h1>
@@ -126,9 +129,11 @@ const ContactsManagerPage = () => {
                             + New Contact
                         </ContactView>
                         <ImportContacts>
-                            <ShdButton variant="outline">Import Contacts</ShdButton>
+                            <Button variant="outline">Import Contacts</Button>
                         </ImportContacts>
-                        <ShdButton >{"Send Email ->"}</ShdButton>
+                        <Button >{"Send Email ->"}</Button>
+                        <Button variant="link">Update</Button>
+                        <Button variant="destructive">{"Delete Category"}</Button>
                     </div>
                     <Table>
                         <TableHeader>
@@ -151,7 +156,7 @@ const ContactsManagerPage = () => {
                                     <TableCell>{parseTime(contact.created_at)}</TableCell>
                                     <TableCell>
                                         <EmailContactDialog contact={contact}>
-                                            <ShdButton variant="secondary">Send Email</ShdButton>
+                                            <Button variant="secondary">Send Email</Button>
                                         </EmailContactDialog>
                                     </TableCell>
                                 </TableRow>

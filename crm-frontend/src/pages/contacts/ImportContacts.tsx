@@ -269,7 +269,6 @@ const ImportContacts = ({ title = "Upload / Import from a file", children }: { c
                                     <div className="space-y-3">
                                         <Label>If contact already exists...</Label>
                                         <RadioGroup
-                                            onValueChange={() => { }}
                                             value={options.duplicate}
                                             onValueChange={value => setOptions({ duplicate: value })}
                                             className="flex flex-col space-y-1"

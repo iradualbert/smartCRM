@@ -7,6 +7,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import MailForm from "../mails/MailForm"
+import { useState } from "react"
 
 type EmailContactDialogProps = {
     children: React.ReactNode, 
@@ -14,8 +15,9 @@ type EmailContactDialogProps = {
 } 
 
 const EmailContactDialog = ({ children, contact }: EmailContactDialogProps) => {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     return (
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className={"lg:max-w-screen-lg overflow-y-scroll max-h-screen"}>
                 <DialogHeader>
@@ -23,7 +25,10 @@ const EmailContactDialog = ({ children, contact }: EmailContactDialogProps) => {
                         {`Schedule & Send Email to ${contact.first_name} <${contact.email}>`} 
                         </DialogTitle>
                     <DialogDescription className="py-6" asChild>
-                        <MailForm />
+                        <MailForm 
+                            mailContent={{ to: contact.email }}
+                            onAfterSend={() => setIsDialogOpen(false)}
+                        />
                     </DialogDescription>
                 </DialogHeader>
             </DialogContent>

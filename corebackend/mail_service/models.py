@@ -1,3 +1,4 @@
+from email.utils import formataddr
 import os
 from django.db import models
 from django.utils import timezone
@@ -69,7 +70,7 @@ class Mail(models.Model):
         message_body= MIMEText(self.body,'html')            
         message.attach(message_body)
         message["To"] = self.to
-        message["From"] =self.user.email
+        message["From"] =formataddr((self.user.first_name, self.user.email))
         message["Cc"] = self.cc
         message["Subject"] = self.subject
         attachments = self.bulk_mail.attachments.all() if self.bulk_mail else self.attachments.all()
@@ -123,7 +124,7 @@ class Mail(models.Model):
         signature = credentials["signature"]
         message = MIMEMultipart()
         message["Subject"] = self.subject
-        message["From"] = sender_email
+        message["From"] = formataddr(('Albert from Beinpark', sender_email))
         message["To"] = self.to
         message["Cc"] = self.cc
         message["Bcc"] = self.bcc

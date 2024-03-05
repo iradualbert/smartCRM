@@ -1,6 +1,6 @@
 import axios from "axios";
 import store from "../store";
-import { SET_CATEGORIES, SET_CONTACTS } from "../types";
+import { ADD_CATEGORY, SET_CATEGORIES, SET_CONTACTS } from "../types";
 
 const dispatch = store.dispatch;
 
@@ -31,6 +31,18 @@ export const getCategories = async () => {
         })
         return res.data.results
     } catch(err){
+        return err
+    }
+}
 
+export const createCategory = async (data: object) => {
+    try {
+        const res = await axios.post(contactAPI.CONTACT_CATEGORIES, data);
+        dispatch({
+            type: ADD_CATEGORY,
+            payload: res.data
+        })
+    } catch(err){
+        return err.response?.data || {}
     }
 }
