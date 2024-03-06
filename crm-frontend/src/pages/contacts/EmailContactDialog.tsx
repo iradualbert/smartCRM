@@ -19,7 +19,7 @@ const EmailContactDialog = ({ children, contact }: EmailContactDialogProps) => {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className={"lg:max-w-screen-lg overflow-y-scroll max-h-screen"}>
+            <DialogContent className={"max-w-3xl overflow-y-scroll max-h-screen"}>
                 <DialogHeader>
                     <DialogTitle className="py-4">
                         {`Schedule & Send Email to ${contact.first_name} <${contact.email}>`} 

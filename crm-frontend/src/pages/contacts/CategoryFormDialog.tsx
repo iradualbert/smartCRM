@@ -53,7 +53,7 @@ const CategoryFormDialog = ({ children }: CategoryFormDialogType) => {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className={"lg:max-w-screen-lg overflow-y-scroll max-h-screen"}>
+            <DialogContent className={"max-w-3xl-lg overflow-y-scroll max-h-screen"}>
                 <DialogHeader>
                     <DialogTitle className="py-2">
                         New Contact Category

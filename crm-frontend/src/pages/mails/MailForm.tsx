@@ -12,10 +12,10 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Loader2 } from "lucide-react";
-import { ImAttachment } from "react-icons/im";
 import { MdOutlineSchedule } from "react-icons/md";
 import { createEmail } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
+import MailAttachments from "./MailAttachments";
 
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>;
@@ -40,7 +40,6 @@ const MailForm = ({ isSaved = false, mailContent, onAfterSend }: MailFormProps) 
         cc: "",
         body: ""
     })
-    const attachInputRef = useRef();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
     const { toast } = useToast();
@@ -69,30 +68,7 @@ const MailForm = ({ isSaved = false, mailContent, onAfterSend }: MailFormProps) 
         setMailData(prev => ({ ...prev, body: value }))
     }
 
-    const [attachments, setAttachments] = useState(new Set());
-
-    const handleAttachClick = () => {
-        attachInputRef.current?.click();
-    }
-
-
-    const handleAddAttach = (e) => {
-        setAttachments((prev) => new Set([...prev, ...e.target.files]));
-    };
-
-    const handleRemoveAttach = (index: number) => {
-        setAttachments((prev) => {
-            const newFiles = new Set([...prev]);
-
-            // Convert set to an array, remove the file at the specified index, and convert back to a set
-            const filesArray = Array.from(newFiles);
-            filesArray.splice(index, 1);
-            const updatedFilesSet = new Set(filesArray);
-
-            return updatedFilesSet;
-        });
-    };
-
+    const [attachments, setAttachments] = useState<Set<File>>(new Set());
     const handleSubmit = async (e: any, isScheduled = false) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -139,7 +115,7 @@ const MailForm = ({ isSaved = false, mailContent, onAfterSend }: MailFormProps) 
 
 
     return (
-        <div className="flex flex-col gap-4 py-6">
+        <div className="flex flex-col gap-4 py-6 max-w-3xl">
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-3 border-b">
@@ -200,29 +176,11 @@ const MailForm = ({ isSaved = false, mailContent, onAfterSend }: MailFormProps) 
                         </p>
                     )}
                 </div>
-
-
-                <div className="flex flex-col items-start py-4 gap-2">
-                    <Button disabled={isDisabled} type="button" variant="ghost" onClick={handleAttachClick} className="flex gap-2 items-center">
-                        <ImAttachment />
-                        Attachments
-                    </Button>
-                    <div className="py-4 w-full px-2 rounded-md border">
-                        <input hidden type="file" onChange={handleAddAttach} multiple ref={attachInputRef} />
-                        {attachments &&
-                            <div className="flex gap-3 flex-wrap">
-                                {
-                                    Array.from(attachments).map(
-                                        (file, idx) => (<div className="p-2 flex gap-2 items-center rounded-lg bg-slate-200" key={idx}>
-                                            <span>{file.name}</span>
-                                            <Button type="button" variant="secondary" onClick={() => handleRemoveAttach(idx)} >X</Button>
-                                        </div>),
-                                    )}
-                            </div>
-                        }
-                    </div>
-                    <Button type="button" disabled={isDisabled} onClick={handleAttachClick} variant="outline" size="sm">+ Add</Button>
-                </div>
+                <MailAttachments 
+                    attachments={attachments}
+                    onAttachmentsChange={setAttachments}
+                />
+            
                 {errors?.non_field_errors && (
                     <p className='text-sm text-red-500'>
                         {errors.non_field_errors}
