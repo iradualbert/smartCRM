@@ -65,7 +65,6 @@ class MailViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         query = self.request.GET.get("query")
-        
         if query:
             return Mail.objects.filter(Q(to__icontains=query)|Q(subject__icontains=query), user=user)
         return Mail.objects.filter(user=user)

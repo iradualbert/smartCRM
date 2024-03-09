@@ -1,4 +1,4 @@
-import { ADD_CATEGORY, ADD_CONTACT, ADD_CONTACTS_MANY, SET_CATEGORIES, SET_CONTACTS } from "../types";
+import { ADD_CATEGORY, ADD_CONTACT, ADD_CONTACTS_MANY, SET_CATEGORIES, SET_CONTACTS, UPDATE_CATEGORY } from "../types";
 
 
 const initialState = {
@@ -49,8 +49,14 @@ export default function (state = initialState, action: TACtion) {
     else if (actionType === ADD_CATEGORY)
         return {
             ...state,
-            categories: [action.payload, ...state.categories]
+            categories: [...state.categories, action.payload]
         }
+    else if(actionType === UPDATE_CATEGORY){
+        return {
+            ...state,
+            categories: state.categories.map(category => category.id === action.payload.id ? action.payload : category)
+        }
+    }
 
     return state
 

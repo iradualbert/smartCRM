@@ -1,6 +1,6 @@
 import axios from "axios";
 import store from "../store";
-import { ADD_CATEGORY, SET_CATEGORIES, SET_CONTACTS } from "../types";
+import { ADD_CATEGORY, SET_CATEGORIES, SET_CONTACTS, UPDATE_CATEGORY } from "../types";
 
 const dispatch = store.dispatch;
 
@@ -42,7 +42,20 @@ export const createCategory = async (data: object) => {
             type: ADD_CATEGORY,
             payload: res.data
         })
-    } catch(err){
-        return err.response?.data || {}
+    } catch(err: any){
+        return err?.response?.data 
+    }
+}
+
+
+export const updateCategory = async ({ name, id}: { name: string, id: number | string }) => {
+    try {
+        const res = await axios.put(`${contactAPI.CONTACT_CATEGORIES}${id}/`, {name})
+        dispatch({
+            type: UPDATE_CATEGORY,
+            payload: res.data
+        })
+    } catch (err: any){
+        return err?.response?.data 
     }
 }

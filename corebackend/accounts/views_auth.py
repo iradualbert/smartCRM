@@ -10,12 +10,12 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from knox.models import AuthToken
 from knox.auth import TokenAuthentication
-from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
+from .serializers import PasswordResetSerializer, UserSerializer, RegisterSerializer, LoginSerializer
 from .models import Account, VerificationCode
 from django.utils import timezone
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
-from .utils import send_confirmation_email
+from .utils import send_confirmation_email, send_password_reset_emai
 from .tokens import account_activation_token
 
 
@@ -199,4 +199,40 @@ def degenerate_code(request):
             return JsonResponse({'error': 'account not found'}, status=401)
     except ObjectDoesNotExist:
         return JsonResponse({'error': f"invalid email address"}, status=401)
+    return JsonResponse({"message": "ok"})
+
+# send password reset link
+@api_view(['POST'])
+@permission_classes([])
+def forgot_password(request):
+    data = json.loads(request.body)
+    email = data.get('email')
+    if not email:
+        return JsonResponse({'email': 'email not provided'}, status=401)
+    try:
+        user = User.objects.get(email=email, is_active=True)
+        send_password_reset_emai(user, request)
+    except ObjectDoesNotExist:
+        return JsonResponse({'email': 'account not found'}, status=401)
     return JsonResponse({"status": "ok"})
+
+
+#  reset the user password given the token is valid 
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+def reset_password_via_email(request, uidb64, token):
+    uid = force_bytes(urlsafe_base64_decode(uidb64))
+    try:
+        user = User.objects.get(pk=uid, is_active=True)
+        if user is not None and account_activation_token.check_token(user, token):
+            serializer = PasswordResetSerializer(data=request.data)
+            if serializer.is_valid(raise_exception=True):
+                user.set_password(serializer.validated_data["password"])
+                
+                user.save()
+                return JsonResponse({
+                    'message': f"Password changed successfully"
+                    })
+    finally:
+        pass
+    return JsonResponse({'non_field_errors': 'invalid activation link'}, status=401)

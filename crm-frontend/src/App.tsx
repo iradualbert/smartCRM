@@ -19,6 +19,8 @@ import AutomationPage from "./pages/automation/AutomationPage";
 import LandingPage from "./pages/landing/LandingPage";
 import SignupPage from "./pages/auth/SignupPage";
 import SubscribePage from "./pages/external_pages/SubscribePage";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import PasswordResetPage from "./pages/auth/PasswordResetPage";
 
 const dev = "http://127.0.0.1:8000/api";
 axios.defaults.baseURL = dev;
@@ -49,9 +51,9 @@ function App() {
               </Route>
               <Route path="" element={<AuthRoute />}>
                 <Route path="/login" element={<LoginPage />} />
-              </Route>
-              <Route path="" element={<AuthRoute />}>
                 <Route path="/signup" element={<SignupPage />} />
+                <Route path="/accounts/forgot-password" element={<ForgotPassword />} />
+                <Route path="/accounts/password-reset/:uid/:token" element={<PasswordResetPage />} />
               </Route>
             </Routes>
         </Router>

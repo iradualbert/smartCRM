@@ -25,6 +25,8 @@ import { getCategories, getContacts } from "@/redux/actions/contactActions";
 import { useSelector } from "react-redux";
 import EmailContactDialog from "./EmailContactDialog";
 import CategoryFormDialog from "./CategoryFormDialog";
+import store from "@/redux/store";
+import { Badge } from "@/components/ui/badge";
 
 
 
@@ -99,7 +101,11 @@ const ContactsManagerPage = () => {
 
     const send_multiple_emails = () => { }
 
-    const { category } = searchParams
+    const categoryId = searchParams.get("categoryId") 
+
+
+    const category = categoryId ? contactCategories?.filter(cat => cat.id === parseInt(categoryId))[0] : null
+
 
     return (
         <div className="flex flex-col gap-2 bg-slate-50 p-3 md:p-6">
@@ -111,7 +117,7 @@ const ContactsManagerPage = () => {
                     </div>
                     {contactCategories?.map(_category => (
                         <div key={_category.id} className="flex items-center justify-between p-2 text-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                            <Button variant="link" className="ms-3" onClick={() => setSearchParams({ category: _category.id })}>
+                            <Button variant="link" className="ms-3" onClick={() => setSearchParams({ categoryId: _category.id })}>
                                 {_category.name}
                             </Button>
                             <span>{_category.total_contacts}</span>
@@ -123,22 +129,30 @@ const ContactsManagerPage = () => {
 
                 </div>
                 <div className="flex flex-col gap-6">
-                    <h1 className="text-4xl">All Contacts</h1>
-                    <div className="flex gap-3">
-                        <ContactView onCreate={handleOnContactCreated} type="create">
-                            + New Contact
-                        </ContactView>
-                        <ImportContacts>
-                            <Button variant="outline">Import Contacts</Button>
-                        </ImportContacts>
-                        <Button >{"Send Email ->"}</Button>
-                        <Button variant="link">Update</Button>
-                        <Button variant="destructive">{"Delete Category"}</Button>
-                    </div>
+                    {category ?
+                        (
+                            <>
+                                <h1 className="text-4xl">{category.name}</h1>
+                                <div className="flex gap-3">
+                                    <ContactView onCreate={handleOnContactCreated} type="create">
+                                        + New Contact
+                                    </ContactView>
+                                    <ImportContacts>
+                                        <Button variant="outline">Import Contacts</Button>
+                                    </ImportContacts>
+                                    <Button >{"Send Email ->"}</Button>
+                                    <CategoryFormDialog key={category.id} category={category}>
+                                        <Button>Update</Button>
+                                    </CategoryFormDialog>
+                                    <Button variant="destructive">{"Delete Category"}</Button>
+                                </div>
+                            </>
+                        ) :
+                        (<h1 className="text-4xl">All Contacts</h1>)}
+
                     <Table>
                         <TableHeader>
-                            <TableHead>Full Name</TableHead>
-                            <TableHead>Email</TableHead>
+                            <TableHead>Contact</TableHead>
                             <TableHead>Company</TableHead>
                             <TableHead>Phone</TableHead>
                             <TableHead>Categories</TableHead>
@@ -146,13 +160,17 @@ const ContactsManagerPage = () => {
                             <TableHead>Actions</TableHead>
                         </TableHeader>
                         <TableBody>
-                            {all_contacts.results.map(contact => (
+                            {all_contacts.results.map((contact) => (
                                 <TableRow key={contact.id}>
-                                    <TableCell>{contact.first_name} {contact.last_name}</TableCell>
-                                    <TableCell>{contact.email}</TableCell>
+                                    <TableCell className="flex flex-col gap-2">
+                                        <span className="text-xl">{contact.first_name} {contact.last_name}</span>
+                                        <span>{contact.email}</span>
+                                    </TableCell>
                                     <TableCell>{contact.company}</TableCell>
                                     <TableCell>{contact.phone_number}</TableCell>
-                                    <TableCell>subscriber</TableCell>
+                                    <TableCell className="flex flex-wrap gap-2">
+                                        {contact.categories.map(cat => <Badge variant="outline" key={cat.id}>{cat.name}</Badge>)}
+                                    </TableCell>
                                     <TableCell>{parseTime(contact.created_at)}</TableCell>
                                     <TableCell>
                                         <EmailContactDialog contact={contact}>

@@ -84,3 +84,30 @@ class LoginSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Incorrect Credentials")
+    
+    
+
+# Password Reset Serializer
+class PasswordResetSerializer(serializers.ModelSerializer):
+    password_confirm = serializers.CharField(write_only=True, required=True)
+    
+    class Meta:
+        model = User
+        fields = ('password', "password_confirm")
+        extra_kwargs = {'password': {'write_only': True}}
+
+    
+    def validate_password(self, value):
+        try:
+            validate_password(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
+        return value
+
+    
+    def validate_password_confirm(self, value):
+        if self.initial_data['password'] != value:
+            raise serializers.ValidationError("Passwords do not match")
+        return value 
+    
+

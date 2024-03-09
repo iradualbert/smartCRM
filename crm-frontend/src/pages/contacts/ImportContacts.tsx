@@ -129,7 +129,7 @@ const ImportContacts = ({ title = "Upload / Import from a file", children }: { c
             <DialogContent className={"lg:max-w-screen-lg overflow-y-scroll max-h-screen"}>
                 <DialogHeader>
                     <DialogTitle>Import Contacts</DialogTitle>
-                    <DialogDescription className="py-6" asChild>
+                    <DialogDescription className="py-10" asChild>
                         <div>
                             {currentStep === 1 && (
                                 <>

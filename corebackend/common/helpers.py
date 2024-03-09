@@ -25,7 +25,7 @@ def build_mail_from_template(template, row, default_values):
 
 
 class DefaultPagination(LimitOffsetPagination):
-    max_limit = 50  
+    max_limit = 10  
     def get_paginated_response(self, data):
         return Response({
                 'next': self.get_next_link(),

@@ -12,20 +12,24 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast";
-import { createCategory } from "@/redux/actions/contactActions";
+import { createCategory, updateCategory } from "@/redux/actions/contactActions";
 
 type CategoryFormDialogType = {
     children: React.ReactNode,
+    category?: {
+        name: string,
+        id: number | string
+    }
 }
 
 type ErrorsType = {
-    name?: string | string [],
+    name?: string | string[],
     non_field_errors?: string[]
 }
 
-const CategoryFormDialog = ({ children }: CategoryFormDialogType) => {
+const CategoryFormDialog = ({ children, category }: CategoryFormDialogType) => {
     const [errors, setErrors] = useState<ErrorsType>({});
-    const [categoryName, setCategoryName] = useState("")
+    const [categoryName, setCategoryName] = useState(category ? category.name : "")
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const isDisabled = isSubmitting
@@ -35,16 +39,18 @@ const CategoryFormDialog = ({ children }: CategoryFormDialogType) => {
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         setIsSubmitting(true)
-        const _errors = await createCategory({name: categoryName})
+        const _errors = category ?
+            await updateCategory({ name: categoryName, id: category.id })
+            : await createCategory({ name: categoryName })
         setIsSubmitting(false);
-        if(_errors){
+        if (_errors) {
             setErrors(_errors)
         } else {
-            setCategoryName("");
+            if(!category)setCategoryName("");
             setIsDialogOpen(false);
             setErrors({});
             toast({
-                title: "Category Created"
+                title: category ? "Contact category updated" : "Contact category created"
             })
         }
     }
@@ -56,7 +62,7 @@ const CategoryFormDialog = ({ children }: CategoryFormDialogType) => {
             <DialogContent className={"max-w-3xl-lg overflow-y-scroll max-h-screen"}>
                 <DialogHeader>
                     <DialogTitle className="py-2">
-                        New Contact Category
+                        { category ?   "Update Contact Category" : "New Contact Category"}
                     </DialogTitle>
                     <DialogDescription className="py-6" asChild>
                         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -80,9 +86,7 @@ const CategoryFormDialog = ({ children }: CategoryFormDialogType) => {
                             )}
 
                             <div className="flex gap-4">
-                                <Button variant="destructive">Delete</Button>
                                 <Button
-                                    variant="outline"
                                     type="button"
                                     onClick={handleSubmit}
                                     disabled={isDisabled}
@@ -90,7 +94,7 @@ const CategoryFormDialog = ({ children }: CategoryFormDialogType) => {
                                     {isSubmitting && (
                                         <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                                     )}
-                                    Save
+                                    { category ? "Update" : "Create"}
                                 </Button>
                             </div>
                         </form >

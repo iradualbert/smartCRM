@@ -8,7 +8,9 @@ from .views_auth import (
     view_email_provider,
     activate_account,
     activate_account_code,
-    degenerate_code
+    degenerate_code,
+    forgot_password,
+    reset_password_via_email
 )
 from .api import dashboard_data, mail_signature
 
@@ -28,4 +30,8 @@ urlpatterns = [
     path('api/accounts/activate/<uidb64>/<token>/', activate_account, name='activate'),
     path('api/accounts/activate/code/', activate_account_code, name="activate-code"),
     path('api/accounts/activate/resend/', degenerate_code),
+    
+    
+    path('api/accounts/forgot-password', forgot_password),
+    path('api/accounts/password-reset/<uidb64>/<token>', reset_password_via_email)
 ]

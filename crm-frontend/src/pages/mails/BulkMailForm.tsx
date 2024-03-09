@@ -11,7 +11,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import { MdOutlineSchedule } from "react-icons/md";
 import { createEmail } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,6 +20,11 @@ import { TemplateParameter } from "@/lib/types";
 import { getUpdatedParams } from "@/lib/utils";
 import ParameterInput from "@/components/forms/ParameterInput";
 import BulkMailRows from "./BulkMailRows";
+import ImportBulkMailRows from "./ImportMailRows";
+import { BiCalendarEvent } from 'react-icons/bi';
+import { FiEye } from 'react-icons/fi';
+import { SiMicrosoftexcel } from "react-icons/si";
+import { Checkbox } from "@/components/ui/checkbox";
 
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>;
@@ -36,7 +41,6 @@ type MailFormProps = {
 }
 
 const BulkMailForm = ({ mailContent, onAfterSend }: MailFormProps) => {
-
 
     const [errors, setErrors] = useState(null);
     const [scheduleAt, setScheduleAt] = useState("");
@@ -117,6 +121,21 @@ const BulkMailForm = ({ mailContent, onAfterSend }: MailFormProps) => {
             ...current,
             [e.target.name]: e.target.value
         }))
+    }
+
+
+    const handleImportedRows = ({ fieldMapping, rows }) => {
+
+        rows.forEach(row => {
+            const rowData = {}
+            Object.keys(fieldMapping).forEach(field => {
+                rowData[field] = {
+                    currentValue: row[fieldMapping[field]],
+                    willUseDefaultValue: false
+                }
+            });
+            setGridRows(currentRows => [...currentRows, rowData])
+        })
     }
 
     const handleAddRow = () => {
@@ -228,7 +247,8 @@ const BulkMailForm = ({ mailContent, onAfterSend }: MailFormProps) => {
 
     return (
         <>
-            <div className="flex gap-4 py-6 justify-between flex-wrap">
+            <h1 className="text-3xl font-bold my-10">Mail template</h1>
+            <div className="flex gap-4 py-6 justify-between flex-wrap bg-slate-100 p-4 mt-4">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-3xl w-full">
                     <div className="flex flex-col gap-3">
                         <div className="flex items-center gap-3 border-b">
@@ -275,7 +295,7 @@ const BulkMailForm = ({ mailContent, onAfterSend }: MailFormProps) => {
                             </p>
                         )}
                     </div>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 bg-white">
                         <ReactQuill
                             value={mailData.body}
                             onChange={onBodyChange}
@@ -299,53 +319,7 @@ const BulkMailForm = ({ mailContent, onAfterSend }: MailFormProps) => {
                             {errors.non_field_errors}
                         </p>
                     )}
-                    <div className="flex gap-4">
-                        <Button
-                            variant="outline"
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={isDisabled}
-                        >
-                            {isSubmitting && (
-                                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                            )}
-                            Send Now
-                        </Button>
-                        <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button type="button" variant="secondary" disabled={isDisabled}>Schedule</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle className="py-4" asChild>
-                                        <div className="flex gap-4 items-center">
-                                            <MdOutlineSchedule size={26} />
-                                            <span>Send Email At</span>
-                                        </div>
 
-                                    </DialogTitle>
-                                    <DialogDescription className="py-6" asChild>
-                                        <div className="flex gap-4">
-                                            <Input
-                                                type="datetime-local"
-                                                value={scheduleAt}
-                                                onChange={(e) => {
-                                                    setScheduleAt(e.target.value);
-                                                }}
-                                            />
-                                            <Button
-                                                type="button"
-                                                disabled={!scheduleAt}
-                                                onClick={(e) => handleSubmit(e, true)}
-                                            >
-                                                Schedule
-                                            </Button>
-                                        </div>
-                                    </DialogDescription>
-                                </DialogHeader>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
                 </form>
                 {templateParameters.length > 0 && (
                     <div className="flex flex-col border-2 p-5 rounded-md self-start gap-3">
@@ -362,23 +336,127 @@ const BulkMailForm = ({ mailContent, onAfterSend }: MailFormProps) => {
                     </div>
                 )}
             </div>
-            <div className="flex flex-col gap-8">
-                <div className="flex gap-4">
-                    <Button variant="secondary">Send All</Button>
-                    <Button variant="secondary">Schedule All</Button>
-                    <Button variant="outline">Preview</Button>
-                    <Button variant="outline">Select Contacts</Button>
-                    <Button variant="outline">Import Excel</Button>
-                </div>
+            <h1 className="text-3xl font-bold my-10">Mail Instances</h1>
+            <div className="flex flex-col gap-6">
+                <p>You can add details or import from an excel & csv files</p>
                 <BulkMailRows
-                    onAddRow={handleAddRow}
                     onRemoveRow={handleRemoveRow}
                     rows={gridRows}
                     parameters={templateParameters}
                     onRowInputChange={handleRowInputChange}
                     onRowInputUseDefaultValueChange={handleRowInputToggleUseDefaultValue}
                 />
+                <div className="flex gap-4 items-center">
+                    <Button onClick={handleAddRow} size="sm">+ Add Row</Button>
+                    <ImportBulkMailRows
+                        key={templateParameters}
+                        parameters={
+                            templateParameters.reduce((p: any, { name }) => {
+                                p[name] = "";
+                                return p;
+                            }, {})}
+                        onImportRows={handleImportedRows}
+                    >
+                        <Button variant="outline" size="sm">
+                            <SiMicrosoftexcel className="mr-2 h-4 w-4" />
+                            Import Excel
+                        </Button>
+                    </ImportBulkMailRows>
+                    <span>Total: {gridRows.length} </span>
+                </div>
+            </div >
+            <div className="flex gap-8 my-16">
+                <Button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={isDisabled}
+                    size="lg"
+                >
+                    <Mail className="mr-2 h-4 w-4" />
+                    {isSubmitting && (
+                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    )}
+                    Schedule & Send All
+                </Button>
+                <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button type="button" size="lg" variant="secondary" disabled={isDisabled}>
+                            <BiCalendarEvent className="mr-2 h-4 w-4" />
+                            Schedule All
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle className="py-4" asChild>
+                                <div className="flex gap-4 items-center">
+                                    <MdOutlineSchedule size={26} />
+                                    <span>Send All Emails At</span>
+                                </div>
+
+                            </DialogTitle>
+                            <DialogDescription className="py-6" asChild>
+                                <div className="flex flex-col gap-8">
+                                    <Input
+                                        type="datetime-local"
+                                        value={scheduleAt}
+                                        onChange={(e) => {
+                                            setScheduleAt(e.target.value);
+                                        }}
+                                    />
+                                    <div className="flex gap-4 items-center">
+                                        <Checkbox />
+                                        <span>Only for Emails without custom schedule</span>
+                                    </div>
+
+                                    <Button
+                                        type="button"
+                                        disabled={!scheduleAt}
+                                        onClick={(e) => handleSubmit(e, true)}
+                                    >
+                                        Schedule
+                                    </Button>
+                                </div>
+                            </DialogDescription>
+                        </DialogHeader>
+                    </DialogContent>
+                </Dialog>
+                <Button variant="outline" size="lg">
+                    <FiEye className="mr-2 h-4 w-4" />
+                    Preview
+                </Button>
             </div>
+
+
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button type="button" size="lg" variant="secondary">
+                        <BiCalendarEvent className="mr-2 h-4 w-4" />
+                        View Status
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>
+                            Status
+                        </DialogTitle>
+                        <DialogDescription className="py-6" asChild>
+                            <div className="flex flex-col gap-4">
+                                <p>Sending.....</p>
+                                <>
+                                    <p>Error: </p>
+                                    <p>Scheduled Emails: 10</p>
+                                </>
+                                <div className="flex gap-4">
+                                    <Button variant="link">Email Dashboard</Button>
+                                    <Button variant="link">Send Emails Again</Button>
+                                </div>
+                            </div>
+
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
+
         </>
 
     )
