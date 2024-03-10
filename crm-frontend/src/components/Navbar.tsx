@@ -6,7 +6,7 @@ import { Link } from "react-router-dom"
 const Navbar = () => {
     const dispatch = useDispatch();
 
-    const { first_name } = useSelector(state => state.user.credentials)
+    const { first_name } = useSelector((state: any) => state.user.credentials)
 
     const handleLogout = () => {
         dispatch(logoutUser() as any)
@@ -17,7 +17,7 @@ const Navbar = () => {
                 <h1>SmartCRM</h1>
                 <div className="flex gap-2">
                     <Button variant="link" asChild>
-                        <Link to="/settings">{first_name}</Link>
+                        <Link to="/settings/profile">{first_name}</Link>
                     </Button>
                     <Button onClick={handleLogout} variant="outline" size="sm">
                         Log Out

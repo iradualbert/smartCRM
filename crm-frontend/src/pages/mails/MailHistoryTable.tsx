@@ -6,13 +6,17 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import DataTable from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { FiEye } from "react-icons/fi";
+import { useToast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import MailForm from "./MailForm";
+import { Input } from "@/components/ui";
+import { Label } from "@/components/ui/label";
 
 const parseTime = (time: string) => {
     if (!time) return ""
@@ -28,15 +32,136 @@ type Mail = {
 
 }
 
+type funAR = {
+    id: number | string,
+    urlWithId: string,
+    data?: object
+}
+
+type API = {
+    results: Mail[],
+    deleteItem: (args: funAR) => void;
+    updateItem: (args: funAR) => void;
+}
+
 const getMailBodyText = (body: string) => {
     const div = document.createElement("div");
     div.innerHTML = body;
     return div.innerText;
 }
 
+const Actions = ({ api, mail }: { api: API, mail: Mail }) => {
+    const now = (new Date()).toISOString().slice(0, 16);
+    const [isPerformingAction, setIsPerformingAction] = useState(false);
+    const { is_sent, failed } = mail;
+    const status = is_sent ? "Sent" : failed ? "Failed" : "Scheduled"
+    const { toast } = useToast();
+    const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
+    const [scheduleDateTime, setScheduleDateTime] = useState(now);
+
+    const handleDelete = async () => {
+        setIsPerformingAction(true)
+        toast({ title: "Deleting..." })
+        try {
+            await api.deleteItem({ urlWithId: `/mails/${mail.id}/`, id: mail.id })
+            toast({ title: "Email deleted & canceled" })
+        } catch (err) {
+            toast({ title: "Something went wrong", variant: "destructive" })
+        }
+        finally {
+            setIsPerformingAction(false);
+        }
+
+    }
+
+    const handleUpdate = async (e: any,action: string) => {
+        e.preventDefault();
+        setIsPerformingAction(true)
+        toast({ title: "Updating..." })
+        try {
+            await api.updateItem({
+                urlWithId: `/mails/${mail.id}/?action=${action}`, id: mail.id, data: {
+                    schedule_datetime: scheduleDateTime || now
+                }
+            })
+            toast({ title: "Updated" })
+        } catch (err) {
+            toast({ 
+                title: "Something went wrong", 
+                variant: "destructive",
+                description: JSON.stringify(err.response)
+            })
+        }
+        finally {
+            setIsPerformingAction(false);
+        }
+    }
+
+    const handleViewFailureReason = () => {
+        toast({
+            title: mail.failure_reason,
+            variant: "destructive",
+        })
+    }
+
+    return (
+        <DropdownMenu>
+            <Dialog open={isRescheduleDialogOpen} onOpenChange={setIsRescheduleDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Resend & Rescedule Email</DialogTitle>
+                        <DialogDescription className="py-6 mt-10 " asChild>
+                            <form
+                                className="flex flex-col gap-4"
+                                onSubmit={(e) => handleUpdate(e, "reschedule")}
+                            >
+                                <Label>Send At: </Label>
+                                <Input
+                                    type="datetime-local"
+                                    value={scheduleDateTime}
+                                    onChange={(e) => setScheduleDateTime(e.target.value)}
+                                />
+                                <Button type="submit">Schedule</Button>
+                            </form>
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                {status === "Scheduled" &&
+                    <DropdownMenuItem
+                        disabled={isPerformingAction}
+                        onClick={(e) => handleUpdate(e, "send_now")}
+                    >
+                        Send Now
+                    </DropdownMenuItem>
+                }
+                <DropdownMenuItem
+                    disabled={isPerformingAction}
+                    onClick={() => setIsRescheduleDialogOpen(true)}
+                >
+                    Reschedule & Send Again
+                </DropdownMenuItem>
+                {status === "Failed" &&
+                    <DropdownMenuItem onClick={handleViewFailureReason}>View Failure Reason</DropdownMenuItem>
+                }
+                <DropdownMenuItem disabled={isPerformingAction} onClick={handleDelete}>Delete & Cancel</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
+
 const MailHistoryTable = () => {
-    const api = useApiListView("/mails/");
-    const [paginationModel, _] = useState({ page: 0, pageSize: 10 })
+    const api: API = useApiListView("/mails/") as any;
+    const [paginationModel, _] = useState({ page: 0, pageSize: 10 });
+
 
 
     useEffect(() => {
@@ -53,9 +178,9 @@ const MailHistoryTable = () => {
 
     const formatMailContent = (mail: Mail) => {
         return (
-            <div className="flex flex-col gap-3">
-                <h1 className="text-xl">{mail.subject}</h1>
-                <p>{getMailBodyText(mail.body)}</p>
+            <div className="flex flex-col gap-3 max-w-md mb-2">
+                <h1 className="text-xl truncate">{mail.subject}</h1>
+                <p className="truncate">{getMailBodyText(mail.body)}</p>
             </div>
         )
     }
@@ -63,8 +188,18 @@ const MailHistoryTable = () => {
     const columns: ColumnDef<object>[] = [
         {
             id: "preview",
-            cell: () => (
-                <Button size="icon" variant="link"><FiEye /></Button>
+            cell: ({ row }) => (
+                <Dialog>
+                    <DialogTrigger asChild><Button size="icon" variant="link"><FiEye /></Button></DialogTrigger>
+                    <DialogContent className={"lg:max-w-screen-lg overflow-y-scroll max-h-screen"}>
+                        <DialogHeader>
+                            <DialogTitle>Email Preview</DialogTitle>
+                            <DialogDescription className="py-6 mt-10 " asChild>
+                                <MailForm mailContent={row.original} isPreview={true} />
+                            </DialogDescription>
+                        </DialogHeader>
+                    </DialogContent>
+                </Dialog>
             )
         },
         {
@@ -81,8 +216,8 @@ const MailHistoryTable = () => {
             accessorKey: "status",
             header: "Status",
             cell: ({ row }) => {
-                const { is_sent, failed }  = row.original as {is_sent: boolean, failed: boolean};
-                const status = is_sent ? "Sent" : failed ? "Failed": "Scheduled"
+                const { is_sent, failed } = row.original as { is_sent: boolean, failed: boolean };
+                const status = is_sent ? "Sent" : failed ? "Failed" : "Scheduled"
                 return (
                     <div className={`status ${status}`}>
                         <p>{status}</p>
@@ -104,25 +239,7 @@ const MailHistoryTable = () => {
 
         {
             id: "actions",
-            cell: ({ row }) => {
-                return (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>Send Now</DropdownMenuItem>
-                            <DropdownMenuItem>Reschedule</DropdownMenuItem>
-                            <DropdownMenuItem>View Failure Reason</DropdownMenuItem>
-                            <DropdownMenuItem>Delete & Cancel</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )
-            },
+            cell: ({ row }) => <Actions mail={row.original as Mail} api={api} />
         },
 
     ]

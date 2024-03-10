@@ -29,7 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>;
 
-type MailFormProps = {
+type BulkMailFormProps = {
     isSaved?: boolean,
     mailContent?: {
         to?: string,
@@ -37,10 +37,13 @@ type MailFormProps = {
         body?: string,
         subject?: string,
     }
-    onAfterSend?: () => void
+    onAfterSend?: () => void,
+    isSendingToContact?: true | false,
+    contactCategoryId?: number | string,
+    recipients?: {[key: string]: object} [], // this can be a list of contacts or subscribers - fields shall be mapped accordingly 
 }
 
-const BulkMailForm = ({ mailContent, onAfterSend }: MailFormProps) => {
+const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
 
     const [errors, setErrors] = useState(null);
     const [scheduleAt, setScheduleAt] = useState("");

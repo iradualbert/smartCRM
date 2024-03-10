@@ -66,12 +66,13 @@ class Account(models.Model):
 class VerificationCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     code = models.CharField(default=generate_integers, max_length=6)
+    new_email = models.EmailField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expire_date = models.DateTimeField(default=generate_expire_date)
     
-    def check_code(user, code):
+    def check_code(user, code, new_email=None):
         try:
-            v_code = VerificationCode.objects.get(user=user, code=code)
+            v_code = VerificationCode.objects.get(user=user, code=code, new_email=new_email)
             if v_code and v_code.expire_date > timezone.now():
                 return True, v_code
              

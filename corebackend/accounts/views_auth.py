@@ -2,6 +2,7 @@ import json
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from django.shortcuts import redirect, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view, permission_classes
@@ -15,7 +16,7 @@ from .models import Account, VerificationCode
 from django.utils import timezone
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
-from .utils import send_confirmation_email, send_password_reset_emai
+from .utils import send_confirmation_email, send_mail_verification_code, send_password_reset_email
 from .tokens import account_activation_token
 
 
@@ -128,15 +129,47 @@ class LoginAPI(generics.GenericAPIView):
         })
 
 # Get User API
-class UserAPI(generics.RetrieveAPIView):
-  permission_classes = [
-    permissions.IsAuthenticated,
-  ]
-  serializer_class = UserSerializer
+class UserAPI(generics.RetrieveUpdateAPIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        ]
+    serializer_class = UserSerializer
+    
+    def get(self, request, *args, **kwargs):
+        return Response(UserSerializer(request.user).data)
+    
+    def put(self, request, *args, **kwargs):
+        user = request.user
+        new_email = request.data.get("email")
+        new_name = request.data.get("first_name")
+        if not new_name:
+            return Response({"first_name": "This field can not be blank"}, status=400)
+        verification_code = request.data.get("verification_code")
+        password = request.data.get("password")
+        
+        if new_email and user.email != new_email:
+            if not user.check_password(password):
+                return Response({"password": "Wrong password"}, status=401)
+            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                return Response({"email": "email already in use"}, 400)
+            
+            if verification_code:
+                if VerificationCode.check_code(code=verification_code, user=user, new_email=new_email):
+                    user.email = new_email
+                else:
+                    return Response({"verification_code": "Invalid code"}, status=400)
+            else:
+                send_mail_verification_code(request, user, new_email)
+                return Response({"status": "verification_email_sent"})
+        
+        
+        user.first_name = new_name
+        user.save()
+        return Response(UserSerializer(user).data)
 
-  def get_object(self):
-    return self.request.user
-  
+    
+    
+
 
 # activate through email
 @api_view(["POST"])
@@ -211,7 +244,7 @@ def forgot_password(request):
         return JsonResponse({'email': 'email not provided'}, status=401)
     try:
         user = User.objects.get(email=email, is_active=True)
-        send_password_reset_emai(user, request)
+        send_password_reset_email(user, request)
     except ObjectDoesNotExist:
         return JsonResponse({'email': 'account not found'}, status=401)
     return JsonResponse({"status": "ok"})
@@ -236,3 +269,17 @@ def reset_password_via_email(request, uidb64, token):
     finally:
         pass
     return JsonResponse({'non_field_errors': 'invalid activation link'}, status=401)
+
+
+@api_view(["POST", "UPDATE"])
+def reset_password(request):
+    user = request.user
+    serializer = PasswordResetSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        current_password = request.data.get("current_password", "")
+        if not user.check_password(current_password):
+            return Response({"current_password": "Current password is incorrect"}, status=400)
+        
+        user.set_password(serializer.validated_data["password"])
+        user.save()
+        return JsonResponse({ 'message': f"Password changed successfully"})

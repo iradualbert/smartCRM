@@ -17,7 +17,7 @@ const config = {
 	},
 };
 
-const saveToken = (token) => {
+const saveToken = (token: string) => {
 	axios.defaults.headers.common["Authorization"] = `Token ${token}`;
 	localStorage.setItem("token", token);
 };
@@ -30,7 +30,7 @@ const removeAuthToken = () => {
 	};
 };
 
-const setUser = (user) => {
+const setUser = (user: any) => {
 	return {
 		type: SET_USER,
 		payload: user,
@@ -38,8 +38,8 @@ const setUser = (user) => {
 };
 
 export const loginUser =
-	(userData, navigate, next) =>
-	async (dispatch) => {
+	(userData: any, navigate: any, next: string) =>
+	async (dispatch: any) => {
 		try {
 			const { data } = await axios.post(api.LOGIN, userData, config);
 			const { user, token } = data;
@@ -48,7 +48,7 @@ export const loginUser =
 			if(next) navigate(next) 
 			else navigate("/dashboard");
 			
-		} catch (err) {
+		} catch (err: any) {
 			if (err.response) {
 				return err.response.data;
 			}
@@ -56,47 +56,47 @@ export const loginUser =
 		}
 	};
 
-export const registerUser = (userData, navigate) => async (dispatch) => {
+export const registerUser = (userData: any, navigate: any) => async (dispatch: any) => {
 	try {
 		await axios.post(api.REGISTER_USER, userData, config);
 		//const { data } = await axios.post(api.REGISTER_USER, userData, config);
 		// saveToken(data.token);
 		// dispatch(setUser(data.user));
 		// navigate("/account/verification");
-	} catch (err) {
+	} catch (err: any) {
 		if (err.response) {
 			return err.response.data;
 		}
 	}
 };
 
-export const verify_code = (userData, navigate) => async(dispatch) => {
+export const verify_code = (userData: any, navigate:any) => async(dispatch: any) => {
 	try{
 		const { data } = await axios.post(api.VERIFY_CODE, userData, config);
 		saveToken(data.token);
 		dispatch(setUser(data.user));
 		navigate("/dashboard");
-	} catch(err){
+	} catch(err: any){
 		if(err.response) return err.response.data;
 	}
 }
 
-export const resend_verification_code = async (userData) => {
+export const resend_verification_code = async (userData: any) => {
 	try {
 		await axios.post(api.RESEND_CODE, userData, config);
-	} catch (err) {
+	} catch (err: any) {
 		if (err.response) {
 			return err.response.data;
 		}
 	}
 }
 
-export const getUser = () => async (dispatch) => {
+export const getUser = () => async (dispatch: any) => {
 	try {
 		const { data } = await axios.get(api.GET_USER);
 		dispatch(setUser(data));
 		dispatch({ type: SET_TOKEN_VERIFIED });
-	} catch (err) {
+	} catch (err: any) {
 		if (err.response) {
 			dispatch(removeAuthToken());
 			dispatch({ type: SET_TOKEN_VERIFIED });
@@ -114,7 +114,16 @@ export const logoutUser = () => {
 	.catch(err => console.log(err))
 };
 
-export const checkAuthToken = () => async (dispatch) => {
+export const logoutUserAll = () => {
+	axios.post(api.LOGOUT_ALL)
+	.then(() => {
+		localStorage.removeItem('token');
+	    window.location.href = "/";
+	})
+}
+
+
+export const checkAuthToken = () => async (dispatch: any) => {
 	const token = localStorage.getItem("token");
 	if (token) {
 		axios.defaults.headers.common["Authorization"] = `Token ${token}`;

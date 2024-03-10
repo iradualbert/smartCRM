@@ -5,6 +5,8 @@ from rest_framework import viewsets
 from .serializers import MailSerializer, MailTemplateSerializer
 from .models import Mail, MailTemplate, MailAttachment, BulkMail
 from common.helpers import IsOwnerPermission, build_mail_from_template, DefaultPagination
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 
 class BulkMailViewSet(viewsets.ViewSet):
@@ -89,6 +91,36 @@ class MailViewSet(viewsets.ModelViewSet):
             # elif mail.user.account.has_gmail_scope():
             #     mail.send_with_google_oauth()
         return Response(mail_serializer.data)
+    
+    def update(self, request, *args, **kwargs):
+        action = request.GET.get("action")
+        mail = mail = get_object_or_404(Mail, id=kwargs['pk'], user=request.user)
+        if action not in ["send_now", "reschedule", "try_again"]:
+            return Response({"non_field_errors": "invalid action"}, status=400)
+        
+        # if mail.is_sent:
+        #     return Response({"non_field_errors": "email already sent"}, status=400)
+        
+        if action == "send_now":
+            mail.schedule_datetime = timezone.now()
+        elif action == "reschedule":
+            new_schedule_datetime = request.data.get("schedule_datetime")
+            if new_schedule_datetime is None:
+                return Response({"schedule_datetime": ["This field is required."]}, status=400)
+            mail.schedule_datetime = new_schedule_datetime
+            
+        elif action == "try_again":
+            if not mail.failed:
+                return Response({"non_field_errors": "invalid action"}, status=400)
+               
+        mail.is_sent = False
+        mail.sent_datetime = None
+        mail.failed = False
+        mail.failure_reason = ""  
+        serializer = MailSerializer(mail)    
+        # serializer.is_valid(raise_exception=True)
+        mail.save()
+        return Response(serializer.data, status=201)
     
 
 class MailTemplateViewSet(viewsets.ModelViewSet):

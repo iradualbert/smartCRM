@@ -21,18 +21,23 @@ import MailAttachments from "./MailAttachments";
 type InputEvent = React.ChangeEvent<HTMLInputElement>;
 
 type MailFormProps = {
-    isSaved? : boolean,
+    isSaved?: boolean,
     mailContent?: {
         to?: string,
         cc?: string,
         body?: string,
         subject?: string,
     }
-    onAfterSend?: () => void
+    onAfterSend?: () => void,
+    isPreview?: true | false,
 }
 
-const MailForm = ({ isSaved = false, mailContent, onAfterSend }: MailFormProps) => {
-    const [errors, setErrors] = useState(null);
+type Errors = null | {
+    [key: string]: string | string[]
+}
+
+const MailForm = ({ isPreview, mailContent, onAfterSend }: MailFormProps) => {
+    const [errors, setErrors] = useState<Errors>(null);
     const [scheduleAt, setScheduleAt] = useState("");
     const [mailData, setMailData] = useState({
         subject: "",
@@ -44,11 +49,11 @@ const MailForm = ({ isSaved = false, mailContent, onAfterSend }: MailFormProps) 
     const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
     const { toast } = useToast();
 
-    const isDisabled = isSubmitting
+    const isDisabled = isSubmitting || isPreview;
 
     useEffect(() => {
-        if(mailContent){
-            setMailData( prev => ({
+        if (mailContent) {
+            setMailData(prev => ({
                 ...prev,
                 ...mailContent
             }))
@@ -91,14 +96,14 @@ const MailForm = ({ isSaved = false, mailContent, onAfterSend }: MailFormProps) 
                 toast({
                     title: isScheduled ? "Email Scheduled" : "Email Sent"
                 })
-                if(onAfterSend) onAfterSend();
+                if (onAfterSend) onAfterSend();
                 setMailData({
                     to: mailContent?.to || "",
                     cc: mailContent?.cc || "",
                     subject: mailContent?.subject || "",
                     body: mailContent?.body || "",
                 })
-                setAttachments( new Set())
+                setAttachments(new Set())
             })
             .catch((err) => {
                 toast({
@@ -176,71 +181,67 @@ const MailForm = ({ isSaved = false, mailContent, onAfterSend }: MailFormProps) 
                         </p>
                     )}
                 </div>
-                <MailAttachments 
-                    attachments={attachments}
-                    onAttachmentsChange={setAttachments}
-                />
-            
+                {!isPreview && (
+                    <MailAttachments
+                        attachments={attachments}
+                        onAttachmentsChange={setAttachments}
+                    />
+                )}
                 {errors?.non_field_errors && (
                     <p className='text-sm text-red-500'>
                         {errors.non_field_errors}
                     </p>
                 )}
-                <div className="flex gap-4">
-                    <Button
-                        variant="outline"
-                        type="button"
-                        onClick={handleSubmit}
-                        disabled={isDisabled}
-                    >
-                        {isSubmitting  && (
-                            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                        )}
-                        Send Now
-                    </Button>
-                    <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button type="button" variant="secondary" disabled={isDisabled}>Schedule</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle className="py-4" asChild>
-                                    <div className="flex gap-4 items-center">
-                                        <MdOutlineSchedule size={26} />
-                                        <span>Send Email At</span>
-                                    </div>
+                {!isPreview && (
+                    <div className="flex gap-4">
+                        <Button
+                            variant="outline"
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={isDisabled}
+                        >
+                            {isSubmitting && (
+                                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                            )}
+                            Send Now
+                        </Button>
+                        <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button type="button" variant="secondary" disabled={isDisabled}>Schedule</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle className="py-4" asChild>
+                                        <div className="flex gap-4 items-center">
+                                            <MdOutlineSchedule size={26} />
+                                            <span>Send Email At</span>
+                                        </div>
 
-                                </DialogTitle>
-                                <DialogDescription className="py-6" asChild>
-                                    <div className="flex gap-4">
-                                        <Input
-                                            type="datetime-local"
-                                            value={scheduleAt}
-                                            onChange={(e) => {
-                                                setScheduleAt(e.target.value);
-                                            }}
-                                        />
-                                        <Button
-                                            type="button"
-                                            disabled={!scheduleAt}
-                                            onClick={(e) => handleSubmit(e, true)}
-                                        >
-                                            Schedule
-                                        </Button>
-                                    </div>
-                                </DialogDescription>
-                            </DialogHeader>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-
+                                    </DialogTitle>
+                                    <DialogDescription className="py-6" asChild>
+                                        <div className="flex gap-4">
+                                            <Input
+                                                type="datetime-local"
+                                                value={scheduleAt}
+                                                onChange={(e) => {
+                                                    setScheduleAt(e.target.value);
+                                                }}
+                                            />
+                                            <Button
+                                                type="button"
+                                                disabled={!scheduleAt}
+                                                onClick={(e) => handleSubmit(e, true)}
+                                            >
+                                                Schedule
+                                            </Button>
+                                        </div>
+                                    </DialogDescription>
+                                </DialogHeader>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                )}
             </form>
-            {isSaved && (
-                <div className="flex gap-3">
-                    <Button type="button">Delete</Button>
-                    <Button type="button">Reschedule</Button>
-                </div>
-            )}
         </div>
     )
 }

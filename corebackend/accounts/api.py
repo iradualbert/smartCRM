@@ -34,3 +34,4 @@ def dashboard_data(request):
     user = request.user
     return Response(get_user_dashboard_data(user))
 
+

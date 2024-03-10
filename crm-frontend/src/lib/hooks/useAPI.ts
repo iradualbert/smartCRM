@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 export const useApiListView = (url: string, params = {}) => {
     const [count, setCount] = useState(0);
-    const [results, setResults] = useState([]);
+    const [results, setResults] = useState<object[]>([]);
     const [error, setError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [next, setNext] = useState(url);
@@ -24,6 +24,22 @@ export const useApiListView = (url: string, params = {}) => {
         //console.log(params)
         if (_params.limit) loadData(true);
     }, [_params]);
+
+    const updateItem = async ({ id, urlWithId, data }: { id: number | string, urlWithId: string, data: object }) => {
+        const res = await axios.put<object>(urlWithId, data);
+        setResults((prevResults) =>
+            prevResults.map((element: any) =>
+                element.id === id ? res.data : element
+            )
+        );
+    }
+
+    const deleteItem = async ({ id, urlWithId }:{id: number | string, urlWithId: string,}) => {
+        await axios.delete(urlWithId)
+        setCount(prevCount => prevCount - 1);
+        setResults(prevResults => prevResults.filter((element: any) => element.id !== id))
+
+    }
 
     const loadData = async (reload = false) => {
         setIsLoading(true);
@@ -77,5 +93,7 @@ export const useApiListView = (url: string, params = {}) => {
         init,
         loadMore,
         setParams,
+        deleteItem,
+        updateItem,
     };
 };

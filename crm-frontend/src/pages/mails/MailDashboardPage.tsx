@@ -1,7 +1,5 @@
 import "./mailstyle.css";
-import { useApiListView, useDashboardData } from "@/lib/hooks";
-import { useEffect, useRef, useState } from "react";
-import MailForm from "@/components/forms/MailForm";
+import { useDashboardData } from "@/lib/hooks";
 import DashboardCard from "../dashboard-components/DashboardCard";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,8 +10,6 @@ import MailHistoryTable from "./MailHistoryTable";
 const MailDashoardPage = () => {
 
     const dashboard = useDashboardData();
-    const [selectedMail, setSelectedMail] = useState(null);
-    const mailFormRef = useRef();
 
 
     return (
@@ -48,19 +44,6 @@ const MailDashoardPage = () => {
 
             <div className="flex gap-4 flex-wrap">
                 <MailHistoryTable />
-                {selectedMail && (
-                    <div className="flex flex-col gap-2 p-3" ref={mailFormRef}>
-                        <div className="flex">
-                            Status: Sent Today at 7:32 AM
-                            <Button variant="outline" >Close</Button>
-                        </div>
-                        <div>
-                            <MailForm isReadOnly data={selectedMail} showAttachments />
-                        </div>
-
-                    </div>
-
-                )}
             </div>
 
         </div>

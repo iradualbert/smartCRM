@@ -21,6 +21,7 @@ import SignupPage from "./pages/auth/SignupPage";
 import SubscribePage from "./pages/external_pages/SubscribePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
+import ProfilePage from "./pages/profile/ProfilePage";
 
 const dev = "http://127.0.0.1:8000/api";
 axios.defaults.baseURL = dev;
@@ -47,7 +48,9 @@ function App() {
                 <Route path="/contacts-manager" element={<ContactsManagerPage />} />
                 <Route path="/newsletter-manager" element={<NewsletterManagerPage />} />
                 <Route path="/automation" element={<AutomationPage />} />
+                <Route path="/settings/profile" element={<ProfilePage />} />
                 <Route path="/settings/intergration" element={<EmailIntergration />} />
+                <Route path="/settings/password-reset" element={<PasswordResetPage />} />
               </Route>
               <Route path="" element={<AuthRoute />}>
                 <Route path="/login" element={<LoginPage />} />

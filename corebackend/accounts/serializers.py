@@ -21,8 +21,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'fullname', 'email', 'password', "password_confirm")
-        extra_kwargs = {'password': {'write_only': True}}
-
+        extra_kwargs = {'password': {'write_only': True}, "password_confirm":  {'write_only': True},}
+    
     def create(self, validated_data):
         passive_user = User.objects.filter(email=validated_data['email'], is_active=False).first()
         if passive_user:
@@ -94,7 +94,7 @@ class PasswordResetSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('password', "password_confirm")
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {'password': {'write_only': True}, "password_confirm":  {'write_only': True},}
 
     
     def validate_password(self, value):
