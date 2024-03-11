@@ -19,13 +19,13 @@ const SideBar = () => {
             <SideBarIcon icon={<BsFillCalendarDateFill size={30} />} text="Calendar" to="/schedule-manager"/>
             <SideBarIcon icon={<SiChatbot size={30} />} text="ChatBot" to=""/>
             <SideBarIcon icon={<SiAutomattic size={30} /> } text="Automation" to="/automation"/>
-            <SideBarIcon icon={<IoMdSettings size={30} />} text="Settings" to="/settings/intergration" />
+            <SideBarIcon icon={<IoMdSettings size={30} />} text="Settings" to="/settings/integration" />
         </div>
     )
 
 }
 
-const SideBarIcon = ({ icon, text, to }) => {
+const SideBarIcon = ({ icon, text, to }: { icon: React.ReactNode, text: string, to: string}) => {
     return (
         <div className="sidebar-icon group">
             <Link to={to}>

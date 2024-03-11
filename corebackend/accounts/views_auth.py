@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from knox.models import AuthToken
 from knox.auth import TokenAuthentication
-from .serializers import PasswordResetSerializer, UserSerializer, RegisterSerializer, LoginSerializer
+from .serializers import PasswordResetSerializer, UserEmailConfigSerializer, UserSerializer, RegisterSerializer, LoginSerializer
 from .models import Account, VerificationCode
 from django.utils import timezone
 import google_auth_oauthlib.flow
@@ -66,23 +66,34 @@ def auth2callback(request):
       flow.fetch_token(authorization_response=full_url)
       credentials = flow.credentials
       user.account.google_account = credentials_to_dict(credentials)
+      user.account.email_provider="gmail"
       user.account.save()
-      return redirect("http://localhost:5173/settings/intergration")
+      return redirect("http://localhost:5173/settings/integration")
   
 
-@api_view(['GET', 'POST', 'DELETE'])
+@api_view(['GET', 'PUT', 'DELETE', 'POST'])
 def view_email_provider(request):
     user = request.user
     if request.method == "GET":
-        return Response({
-          "email_provider": user.account.get_connected_email_provider()
-        })
+        return Response(user.account.get_email_config())
     
     if request.method == "DELETE":
         user.account.disconnect_email_provider()
-        return Response({
-          "message": "Email Disconnected"
-        })
+        return Response(user.account.get_email_config())
+    
+        
+    if request.method in ["PUT", "POST"]:
+        serializer = UserEmailConfigSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        account = user.account 
+        account.email_provider= "smtp"
+        account.mail_settings= serializer.validated_data 
+        account.save()
+        return Response(account.get_email_config())
+    
+
+
+
 
 @api_view(["POST"])
 def update_google_account(request):
@@ -112,6 +123,7 @@ class RegisterAPI(generics.GenericAPIView):
         return Response({
         "user": UserSerializer(user, context=self.get_serializer_context()).data,
         })
+    
 
 # Login API
 class LoginAPI(generics.GenericAPIView):

@@ -34,14 +34,18 @@ class Account(models.Model):
     last_billing_date = models.DateTimeField(null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="account")
     google_account = models.JSONField(null=True, blank=True, default={})
-    mail_settings = models.JSONField(null=True, blank=True)
+    mail_settings = models.JSONField(default={})
     mail_signature = models.TextField(blank=True)
-    email_provider = ""
+    email_provider = models.CharField(max_length=50, null=True, blank=True)
     calendar_provider = ""
     meeting_provider = ""
     
     def __str__(self) -> str:
         return self.user.first_name
+    
+    def get_email_config(self):
+        return {**self.mail_settings, "email_provider": self.email_provider}
+    
     
     def has_gmail_scope(self):
         if not self.google_account or self.google_account.get('scopes') is None:
@@ -59,7 +63,7 @@ class Account(models.Model):
             google_account = self.google_account
             google_account["scopes"] = google_account["scopes"].replace(GMAIL_SEND_SCOPE, '')
             self.google_account = google_account
-        self.mail_settings = {}
+        self.email_provider = None
         self.save()
         
 

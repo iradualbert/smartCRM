@@ -5,6 +5,20 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
+from .models import Account
+
+
+class UserEmailConfigSerializer(serializers.ModelSerializer):
+    host = serializers.CharField(required=True, max_length=50)
+    port = serializers.IntegerField(required=True)
+    password = serializers.CharField(required=True, write_only=True, max_length=15)
+    email = serializers.EmailField()
+    default_name = serializers.CharField(max_length=50)
+    
+    class Meta:
+        model = Account
+        fields = ['email_provider', 'host', 'port', 'password', 'email', 'default_name']    
+    
 
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
