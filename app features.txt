@@ -31,6 +31,11 @@ AI powered All-In-One Platform & Confirmation is required to not annoy people
 
       - payment: Form -> Validation -> Email Verification -> Payment -> After Form Fill actions
 
+  Use case:
+      1. job application forms: 
+            - send email after
+            - add the people who filled out the form to a contact list. -> applicants list for instance
+
 
 
 
