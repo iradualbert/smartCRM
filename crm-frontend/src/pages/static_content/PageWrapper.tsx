@@ -17,7 +17,7 @@ const PageWrapper = ({ md, pageTitle }: PageWrapperProps) => {
     }, [md])
 
     return (
-        <div className="flex flex-col py-10 w-full items-center">
+        <div className="flex flex-col py-10 w-full items-center mt-14">
             <PageTitle title={pageTitle} />
             <Typography variant="h4" component="h1" borderBottom={4} marginBottom={10}>{pageTitle}</Typography>
             <main style={{ maxWidth: 1000 }}>

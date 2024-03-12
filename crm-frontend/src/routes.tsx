@@ -3,7 +3,17 @@ import { Outlet, Navigate } from "react-router-dom";
 import SideBar from "./components/SideBar";
 import { useQuery } from "./lib/hooks";
 import Navbar from "@/components/Navbar";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
+
+
+export const MainRoute = () => {
+    return (
+        <>
+           <Navbar isAppRoute={false}/>
+           <Outlet />
+        </>
+    )
+}
 
 
 export const AuthRoute = () => {
