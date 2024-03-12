@@ -23,6 +23,8 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import EmailIntegrationPage from "./pages/profile/EmailIntegrationPage";
+import { PrivacyPage, TermsPage } from "./pages/static_content";
+import Footer from "./components/Footer";
 
 const dev = "http://127.0.0.1:8000/api";
 axios.defaults.baseURL = dev;
@@ -39,6 +41,8 @@ function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/subs/:linkId" element={<SubscribePage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPage />} />
               <Route path="" element={<PrivateRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/emails" element={<MailDashoardPage />} />
@@ -60,6 +64,7 @@ function App() {
                 <Route path="/accounts/password-reset/:uid/:token" element={<PasswordResetPage />} />
               </Route>
             </Routes>
+            <Footer />
         </Router>
       </div>
     </Provider>

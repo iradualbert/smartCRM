@@ -1,6 +1,7 @@
-import { Button } from "@mui/material";
 import { FaCheck } from "react-icons/fa";
 import { PlanCardProps } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const PlanCard = ({ features, color, title, description, btnText, price }: PlanCardProps) => {
     return (
@@ -24,7 +25,9 @@ const PlanCard = ({ features, color, title, description, btnText, price }: PlanC
                 ))}
             </ul>
             <div className="mt-auto rounded-xl py-3 px-6 text-lg">
-                <Button variant="contained" size="large" fullWidth>{btnText}</Button>
+                <Link to="/signup">
+                    <Button type="button" size="lg">{btnText}</Button>
+                </Link>
             </div>
 
         </div>

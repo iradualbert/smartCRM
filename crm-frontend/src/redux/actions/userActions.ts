@@ -75,7 +75,7 @@ export const verify_code = (userData: any, navigate:any) => async(dispatch: any)
 		const { data } = await axios.post(api.VERIFY_CODE, userData, config);
 		saveToken(data.token);
 		dispatch(setUser(data.user));
-		navigate("/dashboard");
+		navigate("/settings/integration");
 	} catch(err: any){
 		if(err.response) return err.response.data;
 	}
