@@ -5,23 +5,31 @@ AI powered All-In-One Platform & Confirmation is required to not annoy people
 - Social Media Post Scheduler
 - Email Sender & Reader & Scheduler
 - Newsletter & Forms. SDK subscribe & unsubscribe(hostnames) - subscribers
-- Forms within the chat bots
-- ChatBot Intergration to your website. - add your name and email or chat anonymously 
+- Forms within the chatbots
+- ChatBot Integration to your website. - add your name and email or chat anonymously 
 - Multiple Email Sending with chrome extension
 - Calendar & Meeting Appointment: schedule a meeting automatically upon selecting your preferred meeting app 
 - Triggers
 
-- CRM - Manage leads, send emails, fetch fedbacks automatically, leads conversation history: status historys
+- CRM - Manage leads, send emails, fetch feedbacks automatically, leads conversation history: status historys
       - Fields: source, products, related_leads, company
 
-- Ads Campains Management
+- Ads Campaigns Management
 
 - todos & due date alarm 
 
 - SMS & Phone Messages 
 
-1. Forms: embaddable
+1. Forms: -> This will make it easy for Newsletter and Subscriber Management 
+      - embeddable(allowed hosts):  5 forms free
       - Feedback & review forms customized per person 
       - Send a reminder if not filled. 
+      - Events:
+            1. Create a contact from the form: choose category(conditionally) - field mapping 
+            2. Send an email to the user - E.x. use case: Fill out this form to get a free PDF guide
+      - Send this form to people: with tracking(premium)
 
-2. Newsletter & Subscriber Managment 
+
+
+2. Newsletter & Subscriber Management 
+
