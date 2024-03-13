@@ -7,7 +7,7 @@ from .models import Mail, MailTemplate, MailAttachment, BulkMail
 from common.helpers import IsOwnerPermission, build_mail_from_template, DefaultPagination
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-
+from .models import EmailMessage
 
 class BulkMailViewSet(viewsets.ViewSet):
     

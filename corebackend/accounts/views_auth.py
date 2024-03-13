@@ -148,7 +148,9 @@ class UserAPI(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     
     def get(self, request, *args, **kwargs):
-        return Response(UserSerializer(request.user).data)
+        user = request.user
+        user_data = UserSerializer(user).data       
+        return Response(user_data)
     
     def put(self, request, *args, **kwargs):
         user = request.user

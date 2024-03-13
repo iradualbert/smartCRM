@@ -1,10 +1,23 @@
 from django.db.models import Q
 from django.utils import timezone
-from mail_service.models import Mail
+from mail_service.models import Mail, EmailUsage
 from accounts.models import Plan, Account
+from django.db.models import Q
 
-def bill_users():
-    print("billing users")
+
+def send_limit_emails():
+    today = timezone.now().date()
+    obj_list = EmailUsage.objects.filter(date=today, is_limit_reached_email_sent=False)
+    for obj in obj_list:
+        limit = obj.user.account.plan.max_emails_per_day
+        if (obj.emails_sent /limit ) >= 0.9:
+            if obj.is_limit_warning_email_sent == False:
+                obj.send_limit_warning_email(limit=limit)
+                
+            if (obj.emails_sent /limit ) >= 1:
+                obj.send_limit_reached_email()
+    
+    
 
 def send_scheduled_emails():
     current_time = timezone.now()
@@ -27,5 +40,5 @@ from apscheduler.schedulers.background import BackgroundScheduler
 def start_jobs():
     scheduler = BackgroundScheduler()
     scheduler.add_job(send_scheduled_emails, 'interval', seconds=30)
-    scheduler.add_job(bill_users, 'interval', hours=10)
+    scheduler.add_job(send_limit_emails, 'interval', seconds=10)
     scheduler.start()

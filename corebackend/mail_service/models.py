@@ -13,8 +13,11 @@ import base64
 from googleapiclient.errors import HttpError
 import google
 from googleapiclient.discovery import build
-
 from accounts.models import Account
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
+
+
 
 send_with_smartCRM = "<p><a href='beinpark.com'>Sent With Beinpark<a/></p>"
 
@@ -46,6 +49,7 @@ class Mail(models.Model):
     
     class Meta:
         ordering = ["-created_at"]
+            
         
     def set_has_sent(self, message_id=None):
         self.is_sent = True
@@ -214,3 +218,56 @@ class MailTemplate(models.Model):
     
     def __str__(self) -> str:
         return self.name
+    
+
+class EmailUsage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateField()
+    emails_sent = models.IntegerField(default=0)
+    contacts_created = models.IntegerField(default=0)
+    is_limit_warning_email_sent = models.BooleanField(default=False)
+    is_limit_reached_email_sent = models.BooleanField(default=False)
+    
+    class Meta:
+        unique_together = ('user', 'date')
+        
+    
+    @classmethod
+    def record_email_sent(cls, user, date):
+        obj, created = cls.objects.get_or_create(user=user, date=date)
+        if not created:
+            if obj.user.plan.max_emails_per_day <= obj.emails_sent:
+                return obj, True
+            obj.emails_sent += 1
+            obj.save()
+        else:
+            obj.emails_sent = 1
+            obj.save()
+            return obj, False
+            
+            
+    def send_limit_warning_email(self, limit):
+        current_usage = (self.emails_sent / limit)
+        email_subject = f"Beinpark - About to reach the daily limit."
+        message = render_to_string('reset-password.html', {
+            "user": self.user,
+            'total_remaining': limit - current_usage,
+        })
+        email_message = EmailMessage(email_subject, message, to=[self.user.email])
+        email_message.send()
+        self.is_limit_warning_email_sent = True
+        self.save()
+        
+           
+    def send_limit_reached_email(self):
+        email_subject = f"Beinpark - Daily limit reached."
+        message = render_to_string('limit_reached.html', {
+            "user": self.user,
+            'max_emails_per_day': self.emails_sent,
+        })
+        email_message = EmailMessage(email_subject, message, to=[self.user.email])
+        email_message.send() 
+        self.is_limit_reached_email_sent = True
+        self.save()          
+    
+    

@@ -22,23 +22,28 @@ class Plan(models.Model):
     description = models.CharField(max_length=500)
     max_emails_per_day = models.PositiveIntegerField()
     max_emails_per_month = models.PositiveIntegerField()
-    max_emails_at_once = models.PositiveIntegerField()
+    max_emails_at_once = models.PositiveIntegerField(default=50)
     is_active = models.BooleanField(default=False)
     price = models.FloatField()
     features = models.TextField()
-
-DefaultPlan = Plan(name='Free', max_emails_per_day=1000, max_emails_per_month=1000, max_emails_at_once=10)
+    
+    @classmethod
+    def get_default_plan(cls):
+        return cls.objects.get_or_create(
+            name='Free', max_emails_per_day=100, max_emails_per_month=1000, price=0, is_active=True
+            )[0].id
+        
 
 class Account(models.Model):
-    plan = models.ForeignKey(Plan, on_delete=models.SET_NULL, null=True, blank=True)
+    plan = models.ForeignKey(Plan, on_delete=models.SET_DEFAULT, default=Plan.get_default_plan)
     last_billing_date = models.DateTimeField(null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="account")
     google_account = models.JSONField(null=True, blank=True, default={})
     mail_settings = models.JSONField(default={})
     mail_signature = models.TextField(blank=True)
     email_provider = models.CharField(max_length=50, null=True, blank=True)
-    calendar_provider = ""
-    meeting_provider = ""
+    
+    
     
     def __str__(self) -> str:
         return self.user.first_name

@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from .models import Account
+from mail_service.models import EmailUsage
+from django.utils import timezone
 
 
 class UserEmailConfigSerializer(serializers.ModelSerializer):
@@ -22,9 +24,22 @@ class UserEmailConfigSerializer(serializers.ModelSerializer):
 
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
+    app_usage = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name')
+        fields = ('id', 'email', 'first_name', 'last_name', 'app_usage')
+        
+    
+    def get_app_usage(self, obj):
+        today = timezone.now().date()
+        email_usage, _ = EmailUsage.objects.get_or_create(user=obj, date=today)
+        
+        return {
+            "emails_sent_today": email_usage.emails_sent,
+            "max_emails_per_day": obj.account.plan.max_emails_per_day
+            
+        }
+        
 
 # Register Serializer
 class RegisterSerializer(serializers.ModelSerializer):
