@@ -28,7 +28,7 @@ import Footer from "./components/Footer";
 import NotFound from "./components/404";
 
 const dev = "http://127.0.0.1:8000/api";
-const prod = "https://beinpark.com/api";
+const prod = "/api";
 
 
 axios.defaults.baseURL =location.hostname === "localhost" ? dev : prod
