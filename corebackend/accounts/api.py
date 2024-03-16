@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework import permissions
 
 def get_user_dashboard_data(user: User):
     sent_mails = user.mails.filter(is_sent=True).count()
@@ -19,6 +20,7 @@ def get_user_dashboard_data(user: User):
     return response
 
 @api_view(['GET', 'POST', 'PUT'])
+@permission_classes([permissions.IsAuthenticated])
 def mail_signature(request):
     account = request.user.account
     if request.method in ["POST" "PUT"]:
@@ -30,6 +32,7 @@ def mail_signature(request):
         return Response({"mail_signature": account.mail_signature})
 
 @api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
 def dashboard_data(request):
     user = request.user
     return Response(get_user_dashboard_data(user))
