@@ -7,7 +7,6 @@ from django.views.static import serve as static_serve
 def serve_react(request, path, document_root=None):
     path = posixpath.normpath(path).lstrip("/")
     fullpath = Path(safe_join(document_root, path))
-    print(fullpath)
     if fullpath.is_file():
         return static_serve(request, path, document_root)
     else:
