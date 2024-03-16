@@ -16,7 +16,7 @@ const PasswordResetPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<any>({});
     const { uid, token } = useParams();
-    const [isPasswordChanged, setIsPasswordChanged] = useState(true);
+    const [isPasswordChanged, setIsPasswordChanged] = useState(false);
 
     const isViaEmailClick = uid && token;
 

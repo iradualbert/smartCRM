@@ -1,0 +1,12 @@
+{
+    "name": "command",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+    },
+    "scripts": {
+      "predeploy":"cd crm-frontend  && npm run build",
+      "collectstatic": "py manage.py collectstatic && git init && git add .",
+      "migrate": "py manage.py makemigrations && py manage.py migrate"
+    }
+  }

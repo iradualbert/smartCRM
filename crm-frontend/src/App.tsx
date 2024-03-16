@@ -23,12 +23,16 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import EmailIntegrationPage from "./pages/profile/EmailIntegrationPage";
-import { PrivacyPage, TermsPage } from "./pages/static_content";
+import { PrivacyPage, RefundPolicyPage, TermsPage } from "./pages/static_content";
 import Footer from "./components/Footer";
 import NotFound from "./components/404";
 
 const dev = "http://127.0.0.1:8000/api";
-axios.defaults.baseURL = dev;
+const prod = "https://beinpark.com/api";
+
+
+axios.defaults.baseURL =location.hostname === "localhost" ? dev : prod
+
 
 function App() {
   useEffect(() => {
@@ -45,6 +49,7 @@ function App() {
               <Route path="/subs/:linkId" element={<SubscribePage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy-policy" element={<PrivacyPage />} />
+              <Route path="/refund-policy" element={<RefundPolicyPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
             <Route path="" element={<PrivateRoute />}>

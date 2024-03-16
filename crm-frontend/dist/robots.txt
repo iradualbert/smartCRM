@@ -1,0 +1,8 @@
+"User-Agent: *"
+"Disallow: /private/"
+"Disallow: /affliate/*",
+"Disallow: /account/*",
+"Disallow: /users/*",
+"Disallow: /teachers/*"
+"Disallow: /settings/*"
+"Disallow: /acounts/*"

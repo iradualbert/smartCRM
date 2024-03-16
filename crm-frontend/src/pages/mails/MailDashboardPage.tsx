@@ -35,10 +35,10 @@ const MailDashoardPage = () => {
             </div>
             <div className="flex gap-3 mb-7">
                 <Link to="/emails/new?type=single">
-                    <Button size="lg" variant="outline">Send & Schedule Email</Button>
+                    <Button size="lg" variant="secondary">Send & Schedule Email</Button>
                 </Link>
                 <Link to="/emails/new?type=multiple">
-                    <Button size="lg" variant="outline">Send Multiple Emails</Button>
+                    <Button size="lg">New Bulk Emails</Button>
                 </Link>
             </div>
 

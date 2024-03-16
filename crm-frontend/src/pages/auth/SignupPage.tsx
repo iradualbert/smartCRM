@@ -36,20 +36,20 @@ const SignupPage = () => {
 
     const handleVerifyCode = async (e) => {
         e.preventDefault();
-        const newErrors = await dispatch(verify_code({ code: verificationCode, email  }, navigate));
+        const newErrors = await dispatch(verify_code({ code: verificationCode, email }, navigate));
         setErrors(newErrors)
     }
 
     const hanldeResend = async () => {
         setIsLoading(true)
         const newErrors = await resend_verification_code({ email });
-        if(newErrors){
+        if (newErrors) {
             alert(newErrors.error)
         } else {
             alert("Verification code was sent again")
         }
         setIsLoading(false)
-        
+
     }
 
     if (step == 2) {
@@ -90,7 +90,7 @@ const SignupPage = () => {
 
     return (
         <FormWrapper title="Create Account">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
                 <FormControl fullWidth>
                     <Label className="mb-2">Full Name</Label>
                     <TextField
@@ -166,6 +166,13 @@ const SignupPage = () => {
                         {errors.non_field_errors}
                     </p>
                 )}
+                <div>
+                    By joining, you agree to our 
+                    <a href="/terms" target="_blank" className="text-blue-500 hover:underline"> Terms </a>
+                    and
+                    <a href="/privacy-policy" target="_blank" className="text-blue-500 hover:underline"> Privacy Policy </a>.
+                </div>
+
                 <Button disabled={isLoading} type="submit">
                     {isLoading && (
                         <Loader2 className='mr-2 h-4 w-4 animate-spin' />

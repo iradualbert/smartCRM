@@ -11,10 +11,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-mmyv4uu61&_l_825ium-ss640f)g*b=ya%o(am&gz!+i#=7pkg'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+ENV = os.environ.get("ENV")
 
-ALLOWED_HOSTS = []
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DEBUG', False)
+ALLOWED_HOSTS = [".awsapprunner.com"] #os.environ.get("ALLOWED_HOSTS", "").split(" ")
+
 
 
 # Application definition
@@ -46,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
    
     
 ]
@@ -74,12 +77,40 @@ WSGI_APPLICATION = 'corebackend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
+DATABASES_sqllite = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+DATABASES_PROD = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER':os.environ.get('DATABASE_USER'),
+        'PASSWORD':os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'), 
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
+        # "OPTIONS": {'sslmode': 'require'}
+        
+    }
+}
+
+DATABASES_PROD = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DATABASE_NAME', "verceldb"),
+        'USER':os.environ.get('DATABASE_USER', "default"),
+        'PASSWORD':os.environ.get('DATABASE_PASSWORD', 'hn0AWcQdBf4y'),
+        'HOST': os.environ.get('DATABASE_HOST', 'ep-bitter-cherry-a2f30oac-pooler.eu-central-1.aws.neon.tech'), 
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
+        # "OPTIONS": {'sslmode': 'require'}
+        
+    }
+}
+
+DATABASES = DATABASES_PROD # if ENV == "PRODUCTION" else DATABASES_sqllite
 
 
 # Password validation
@@ -115,6 +146,15 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MAIN_DIR = Path(__file__).resolve().parent.parent.parent
+
+REACT_APP_BUILD_PATH = MAIN_DIR / "crm-frontend/dist"
+
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -153,3 +193,27 @@ EMAIL_PORT = os.environ.get("EMAIL_PORT", 587)
 
 
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 3
+
+
+if not DEBUG:
+    REST_FRAMEWORK = {
+        'DEFAULT_RENDERER_CLASSES': (
+            'rest_framework.renderers.JSONRenderer',
+            )
+        }
+    
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                },
+            },
+        'loggers': {
+            'django': {
+                'level': 'ERROR',
+                'handlers': ['console'],
+                },
+            }
+        }

@@ -25,9 +25,10 @@ class UserEmailConfigSerializer(serializers.ModelSerializer):
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
     app_usage = serializers.SerializerMethodField()
+    config = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'app_usage')
+        fields = ('id', 'email', 'first_name', 'last_name', 'app_usage', 'config')
         
     
     def get_app_usage(self, obj):
@@ -37,9 +38,10 @@ class UserSerializer(serializers.ModelSerializer):
         return {
             "emails_sent_today": email_usage.emails_sent,
             "max_emails_per_day": obj.account.plan.max_emails_per_day
-            
         }
-        
+    
+    def get_config(self, obj):
+        return {"email_provider": obj.account.email_provider}
 
 # Register Serializer
 class RegisterSerializer(serializers.ModelSerializer):

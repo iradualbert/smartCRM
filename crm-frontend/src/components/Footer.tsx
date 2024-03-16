@@ -17,6 +17,10 @@ const Footer = () => {
                 <Link to="/privacy-policy">
                     <Button variant="link" size="lg">Privacy Policy</Button>
                 </Link>
+                <span> | </span>
+                <Link to="/refund-policy">
+                    <Button variant="link" size="lg">Refund Policy</Button>
+                </Link>
             </div>
             <p>Copyright © {new Date().getFullYear()} BeinPark LLC. All rights reserved.</p>
 

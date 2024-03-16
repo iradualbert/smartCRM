@@ -1,8 +1,9 @@
+import React from "react"
+import BeinparkLogo from "@/assets/beinpark-logo.svg";
+
 const Logo = () => {
     return (
-        
-        <img src="/beinpark_logo.svg" className="block ml-auto mr-auto w-20 mt-6"/>
-       
+        <img src={BeinparkLogo} className="block ml-auto mr-auto w-20 mt-6"/>
     )
 }
 
