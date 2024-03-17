@@ -18,12 +18,12 @@ const config = {
 };
 
 const saveToken = (token: string) => {
-	axios.defaults.headers.common["Authorization"] = `Token ${token}`;
+	axios.defaults.headers.common["authorization"] = `Token ${token}`;
 	localStorage.setItem("token", token);
 };
 
 const removeAuthToken = () => {
-	delete axios.defaults.headers.common["Authorization"];
+	delete axios.defaults.headers.common["authorization"];
 	localStorage.removeItem("token");
 	return {
 		type: SET_UNAUTHENTICATED,
