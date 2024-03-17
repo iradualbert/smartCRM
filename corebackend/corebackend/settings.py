@@ -48,9 +48,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-   
-    
+    "whitenoise.middleware.WhiteNoiseMiddleware", 
+    'common.middleware.DisableCsrfCheckForDRF',
+    'common.middleware.CsrfDisableMiddleware',
 ]
 
 ROOT_URLCONF = 'corebackend.urls'

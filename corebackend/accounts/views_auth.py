@@ -72,6 +72,7 @@ def auth2callback(request):
   
 
 @api_view(['GET', 'PUT', 'DELETE', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
 def view_email_provider(request):
     user = request.user
     if request.method == "GET":
