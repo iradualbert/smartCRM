@@ -18,7 +18,7 @@ def send_confirmation_email(user, request):
         'uid': urlsafe_base64_encode(force_bytes(user.pk)),
         'token': account_activation_token.make_token(user),
     })
-    confirmation_email = EmailMessage(email_subject, message, to=[user.email])
+    confirmation_email = EmailMessage(email_subject, message,from_email="Beinpark", to=[user.email])
     # confirmation_email.content_subtype = "html"
     confirmation_email.send()
     
@@ -33,7 +33,7 @@ def send_mail_verification_code(request, user, new_email):
         'domain': current_site.domain,
         'verification_code': verification_code
     })
-    verification_email = EmailMessage(email_subject, message, to=[new_email])
+    verification_email = EmailMessage(email_subject, message,from_email="Beinpark", to=[new_email])
     # confirmation_email.content_subtype = "html"
     verification_email.send()
     
@@ -49,6 +49,6 @@ def send_password_reset_email(user, request):
         'token': account_activation_token.make_token(user)
     })
     
-    password_reset_email = EmailMessage(email_subject, message, to=[user.email])
+    password_reset_email = EmailMessage(email_subject, message, from_email="Beinpark", to=[user.email])
     # password_reset_email.content_subtype = "html"
     password_reset_email.send()

@@ -8,6 +8,7 @@ from django.contrib.auth.password_validation import validate_password
 from .models import Account
 from mail_service.models import EmailUsage
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class UserEmailConfigSerializer(serializers.ModelSerializer):
@@ -33,12 +34,17 @@ class UserSerializer(serializers.ModelSerializer):
     
     def get_app_usage(self, obj):
         today = timezone.now().date()
-        email_usage, _ = EmailUsage.objects.get_or_create(user=obj, date=today)
-        
-        return {
-            "emails_sent_today": email_usage.emails_sent,
-            "max_emails_per_day": obj.account.plan.max_emails_per_day
-        }
+        try:
+            email_usage = EmailUsage.objects.get(user=obj, date=today)
+            return {
+                "emails_sent_today": email_usage.emails_sent,
+                "max_emails_per_day": obj.account.plan.max_emails_per_day
+                }
+        except ObjectDoesNotExist:
+            return {
+                "emails_sent_today": 0,
+                "max_emails_per_day": 100
+                }
     
     def get_config(self, obj):
         return {"email_provider": obj.account.email_provider}

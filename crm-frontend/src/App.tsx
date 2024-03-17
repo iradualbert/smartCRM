@@ -32,7 +32,7 @@ const prod = location.origin + "/api";
 
 
 axios.defaults.baseURL =location.hostname === "localhost" ? dev : prod
-axios.defaults.baseURL = "http://54.147.43.100:8000/api"
+
 
 
 function App() {

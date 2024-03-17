@@ -253,7 +253,7 @@ class EmailUsage(models.Model):
             "user": self.user,
             'total_remaining': limit - current_usage,
         })
-        email_message = EmailMessage(email_subject, message, to=[self.user.email])
+        email_message = EmailMessage(email_subject, message, from_email="Beinpark", to=[self.user.email])
         email_message.send()
         self.is_limit_warning_email_sent = True
         self.save()
@@ -265,7 +265,7 @@ class EmailUsage(models.Model):
             "user": self.user,
             'max_emails_per_day': self.emails_sent,
         })
-        email_message = EmailMessage(email_subject, message, to=[self.user.email])
+        email_message = EmailMessage(email_subject, message,from_email="Beinpark", to=[self.user.email])
         email_message.send() 
         self.is_limit_reached_email_sent = True
         self.save()          
