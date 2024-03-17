@@ -68,11 +68,15 @@ def auth2callback(request):
       flow.redirect_uri = redirect_uri
       full_url = request.build_absolute_uri()
       os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-      flow.fetch_token(authorization_response=full_url)
-      credentials = flow.credentials
-      user.account.google_account = credentials_to_dict(credentials)
-      user.account.email_provider="gmail"
-      user.account.save()
+      try:
+          flow.fetch_token(authorization_response=full_url)
+          credentials = flow.credentials
+          user.account.google_account = credentials_to_dict(credentials)
+          user.account.email_provider="gmail"
+          user.account.save()
+      except Exception as ex:
+          if not (str(ex) == "access_denied"):
+              raise ex
       current_site = get_current_site(request)
       redirect_to = os.environ.get("FRONTEND_URL", f"http://{current_site.domain}") + "/settings/integration"
       return redirect(redirect_to)

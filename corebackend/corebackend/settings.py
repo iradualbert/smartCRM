@@ -15,9 +15,9 @@ SECRET_KEY = os.environ.get("SECRET_KEY", 'django-insecure-mmyv4uu61&_l_825ium-s
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
-ALLOWED_HOSTS = ["*"] #os.environ.get("ALLOWED_HOSTS", "").split(" ")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(" ")
 
-
+CSRF_TRUSTED_ORIGINS = ['https://www.beinpark.com']
 
 # Application definition
 
