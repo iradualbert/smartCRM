@@ -18,10 +18,13 @@ import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 from .utils import send_confirmation_email, send_mail_verification_code, send_password_reset_email
 from .tokens import account_activation_token
+from django.contrib.sites.shortcuts import get_current_site
+import os 
 
 
-CLIENT_SECRETS_FILE = "client_secret.json"
-redirect_uri = "http://localhost:8000/api/accounts/auth2callback"
+CLIENT_SECRETS_FILE = os.environ.get("CLIENT_SECRETS_FILE", "client_secret.json")
+# redirect_uri = "http://localhost:8000/api/accounts/auth2callback"
+
 
 def credentials_to_dict(credentials):
   return {'token': credentials.token,
@@ -39,7 +42,8 @@ def get_google_api_authorization_url(request):
       return JsonResponse({ "error": "The scope was not provided"}, status=400)
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
       CLIENT_SECRETS_FILE, scopes=scopes)
-    
+    current_site = get_current_site(request)
+    redirect_uri = os.environ.get("SITE_URL", current_site.domain) + "api/accounts/auth2callback"
     flow.redirect_uri = redirect_uri
 
     authorization_url, state = flow.authorization_url(
@@ -59,6 +63,8 @@ def auth2callback(request):
       SCOPES = request.GET.get("scope")
       flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
+      current_site = get_current_site(request)
+      redirect_uri = os.environ.get("SITE_URL", current_site.domain) + "api/accounts/auth2callback"
       flow.redirect_uri = redirect_uri
       full_url = request.build_absolute_uri()
       import os 
@@ -68,7 +74,9 @@ def auth2callback(request):
       user.account.google_account = credentials_to_dict(credentials)
       user.account.email_provider="gmail"
       user.account.save()
-      return redirect("http://localhost:5173/settings/integration")
+      current_site = get_current_site(request)
+      redirect_to = os.environ.get("FRONTEND_URL", current_site.domain) + "/settings/integration"
+      return redirect(redirect_to)
   
 
 @api_view(['GET', 'PUT', 'DELETE', 'POST'])

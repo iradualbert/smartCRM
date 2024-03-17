@@ -8,5 +8,7 @@ attachments
 **/__pycache__/
 .vercel
 .env
+.env.prod
+
 
 
