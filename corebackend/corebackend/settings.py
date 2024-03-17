@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY", 'django-insecure-mmyv4uu61&_l_825ium-ss640f)g*b=ya%o(am&gz!+i#=7pkg')
 
-ENV = os.environ.get("ENV")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
@@ -108,7 +108,7 @@ DATABASES_PROD = {
     }
 }
 
-DATABASES = DATABASES_PROD # if ENV == "PRODUCTION" else DATABASES_sqllite
+DATABASES = DATABASES_PROD 
 
 
 # Password validation

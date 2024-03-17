@@ -43,7 +43,7 @@ def get_google_api_authorization_url(request):
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
       CLIENT_SECRETS_FILE, scopes=scopes)
     current_site = get_current_site(request)
-    redirect_uri = os.environ.get("SITE_URL", current_site.domain) + "api/accounts/auth2callback"
+    redirect_uri = os.environ.get("SITE_URL", current_site.domain) + "/api/accounts/auth2callback"
     flow.redirect_uri = redirect_uri
 
     authorization_url, state = flow.authorization_url(
@@ -64,7 +64,7 @@ def auth2callback(request):
       flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
       current_site = get_current_site(request)
-      redirect_uri = os.environ.get("SITE_URL", current_site.domain) + "api/accounts/auth2callback"
+      redirect_uri = os.environ.get("SITE_URL", current_site.domain) + "/api/accounts/auth2callback"
       flow.redirect_uri = redirect_uri
       full_url = request.build_absolute_uri()
       import os 
