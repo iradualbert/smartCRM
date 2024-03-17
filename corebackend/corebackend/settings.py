@@ -15,7 +15,7 @@ ENV = os.environ.get("ENV")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
-ALLOWED_HOSTS = [".awsapprunner.com"] #os.environ.get("ALLOWED_HOSTS", "").split(" ")
+ALLOWED_HOSTS = ["*"] #os.environ.get("ALLOWED_HOSTS", "").split(" ")
 
 
 
@@ -199,7 +199,12 @@ if not DEBUG:
     REST_FRAMEWORK = {
         'DEFAULT_RENDERER_CLASSES': (
             'rest_framework.renderers.JSONRenderer',
-            )
+            ),
+        'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
+        'DEFAULT_PERMISSION_CLASSES': [
+            'rest_framework.permissions.IsAuthenticated',
+        ],
+        "PAGE_SIZE": 10
         }
     
     LOGGING = {
