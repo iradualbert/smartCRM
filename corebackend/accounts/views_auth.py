@@ -75,7 +75,7 @@ def auth2callback(request):
           user.account.email_provider="gmail"
           user.account.save()
       except Exception as ex:
-          if not (str(ex) == "access_denied"):
+          if not (str(ex) == "access_deniedaccess_denied"):
               raise ex
       current_site = get_current_site(request)
       redirect_to = os.environ.get("FRONTEND_URL", f"http://{current_site.domain}") + "/settings/integration"

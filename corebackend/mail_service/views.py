@@ -19,7 +19,7 @@ class BulkMailViewSet(viewsets.ViewSet):
         total_saved = 0
         for index, row in enumerate(json.loads(data.get('mailRows'))):
             row_mail = build_mail_from_template(json.dumps(bulk_mail.template), row, default_values)
-            row_mail_serializer = MailSerializer(data={**row_mail, "bulk_mail": bulk_mail})
+            row_mail_serializer = MailSerializer(data={**row_mail, "bulk_mail": bulk_mail}, context={'user': request.user})
             if not row_mail_serializer.is_valid():
                 failed[index] = row_mail_serializer.errors
             else:
@@ -32,7 +32,7 @@ class BulkMailViewSet(viewsets.ViewSet):
         data = request.data
         template = data.get("template")
         total_saved = 0
-        mail_serializer = MailSerializer(data=json.loads(template))
+        mail_serializer = MailSerializer(data=json.loads(template), context={'user': request.user})
         if mail_serializer.is_valid(raise_exception=True):
             bulk_mail.template = json.loads(template)
             bulk_mail.save()
@@ -46,7 +46,7 @@ class BulkMailViewSet(viewsets.ViewSet):
             failed = {}
             for index, row in enumerate(json.loads(data.get('mailRows'))):
                 row_mail = build_mail_from_template(template, row, default_values)
-                row_mail_serializer = MailSerializer(data={**row_mail, "bulk_mail": bulk_mail})
+                row_mail_serializer = MailSerializer(data={**row_mail, "bulk_mail": bulk_mail}, context={'user': request.user})
                 if not row_mail_serializer.is_valid():
                     failed[index] = row_mail_serializer.errors
                 else:
@@ -75,7 +75,7 @@ class MailViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         user = self.request.user
-        mail_serializer = MailSerializer(data=request.data)
+        mail_serializer = MailSerializer(data=request.data, context={'user': request.user})
         
         if mail_serializer.is_valid(raise_exception=True):
             mail = mail_serializer.save(user=user)

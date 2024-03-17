@@ -12,7 +12,7 @@ class MailSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         today = timezone.now().date()
-        _, is_limit_reached = EmailUsage.record_email_sent(self.user, today)
+        _, is_limit_reached = EmailUsage.record_email_sent(self.context['user'], today)
         if is_limit_reached:
             raise serializers.ValidationError("Daily maximum limit reached. Cannot send more emails today. Consider upgrading")
         return super().create(validated_data)
