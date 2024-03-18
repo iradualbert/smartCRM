@@ -15,7 +15,7 @@ router.registry.extend(router_contact.registry)
 
 urlpatterns = [
     
-    path('admin/', admin.site.urls),
+    path('admin-beinpark/', admin.site.urls),
     path('api/', include(router.urls)),
     path('', include('accounts.urls')),
     path("api/", include('contacts.urls')),

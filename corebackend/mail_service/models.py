@@ -121,14 +121,21 @@ class Mail(models.Model):
             self.set_has_failed(error)
         return send_message
     
-    def send(self):
+    def send_with_smtp(self):
         credentials = self.get_user_credentials()
-        sender_email = credentials["email"]
-        password = credentials["password"]
-        signature = credentials["signature"]
+        sender_email = credentials.get("email")
+        if not sender_email:
+            self.failed = True
+            self.failure_reason = "No email configuration was found for this account. Set email configuration and try again"
+            self.save()
+            return 
+        password = credentials.get("password")
+        host = credentials.get("host")
+        port = credentials.get("port")
+        signature = credentials.get("signature", "")
         message = MIMEMultipart()
         message["Subject"] = self.subject
-        message["From"] = formataddr(('Albert from Beinpark', sender_email))
+        message["From"] = formataddr((credentials.get("default_name"), sender_email))
         message["To"] = self.to
         message["Cc"] = self.cc
         message["Bcc"] = self.bcc
@@ -159,9 +166,9 @@ class Mail(models.Model):
         context = ssl.create_default_context()
         
         
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+        with smtplib.SMTP_SSL(host, 465, context=context) as server:
             try:
-                server.login(sender_email, credentials["password"])
+                server.login(sender_email, password)
                 server.sendmail(
                     sender_email, self.to, message.as_string()
                     )
@@ -172,6 +179,11 @@ class Mail(models.Model):
                 self.save()
             
             except smtplib.SMTPAuthenticationError as e:
+                self.failed = True
+                self.failure_reason = "Failed to authenticate. Check your email configuration"
+                self.save()
+                
+            except Exception as e:
                 self.failed = True
                 self.failure_reason = e
                 self.save()

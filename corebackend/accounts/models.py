@@ -38,8 +38,8 @@ class Account(models.Model):
     plan = models.ForeignKey(Plan, on_delete=models.SET_DEFAULT, default=Plan.get_default_plan)
     last_billing_date = models.DateTimeField(null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="account")
-    google_account = models.JSONField(null=True, blank=True, default={})
-    mail_settings = models.JSONField(default={})
+    google_account = models.JSONField(null=True, blank=True, default=dict())
+    mail_settings = models.JSONField(default=dict())
     mail_signature = models.TextField(blank=True)
     email_provider = models.CharField(max_length=50, null=True, blank=True)
     
@@ -48,8 +48,11 @@ class Account(models.Model):
     def __str__(self) -> str:
         return self.user.first_name
     
-    def get_email_config(self):
-        return {**self.mail_settings, "email_provider": self.email_provider}
+    def get_email_config(self, with_password=False):
+        return_value =  {**self.mail_settings, "email_provider": self.email_provider}
+        if not with_password:
+            return_value["password"] = ""
+        return return_value
     
     
     def has_gmail_scope(self):

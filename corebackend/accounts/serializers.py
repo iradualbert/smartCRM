@@ -13,14 +13,14 @@ from django.core.exceptions import ObjectDoesNotExist
 
 class UserEmailConfigSerializer(serializers.ModelSerializer):
     host = serializers.CharField(required=True, max_length=50)
-    port = serializers.IntegerField(required=True)
+    # port = serializers.IntegerField(required=True)
     password = serializers.CharField(required=True, write_only=True, max_length=15)
     email = serializers.EmailField()
     default_name = serializers.CharField(max_length=50)
     
     class Meta:
         model = Account
-        fields = ['email_provider', 'host', 'port', 'password', 'email', 'default_name']    
+        fields = ['email_provider', 'host', 'password', 'email', 'default_name']    
     
 
 # User Serializer

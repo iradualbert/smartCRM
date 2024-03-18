@@ -108,7 +108,7 @@ DATABASES_PROD = {
     }
 }
 
-DATABASES = DATABASES_PROD 
+DATABASES = DATABASES_sqllite 
 
 
 # Password validation
@@ -163,7 +163,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    "PAGE_SIZE": 10
+    "PAGE_SIZE": 10,
+    "DEFAULT_PAGINATION_CLASS": 'rest_framework.pagination.LimitOffsetPagination',
 }
 
 ALLOWED_HOSTS = ['*']
@@ -194,16 +195,7 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 3
 
 
 if not DEBUG:
-    REST_FRAMEWORK = {
-        'DEFAULT_RENDERER_CLASSES': (
-            'rest_framework.renderers.JSONRenderer',
-            ),
-        'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
-        'DEFAULT_PERMISSION_CLASSES': [
-            'rest_framework.permissions.IsAuthenticated',
-        ],
-        "PAGE_SIZE": 10
-        }
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = ('rest_framework.renderers.JSONRenderer', ),
     
     LOGGING = {
         'version': 1,

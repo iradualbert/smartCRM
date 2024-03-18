@@ -29,7 +29,10 @@ def send_scheduled_emails():
     ).order_by("created_at")
     
     for mail in mails:
-        mail.send_with_google_oauth()
+        if mail.user.account.email_provider == "gmail":
+            mail.send_with_google_oauth()
+        else:
+            mail.send_with_smtp()
         sent_total +=1
     if(sent_total > 0 ):
         print(f"{current_time} : {sent_total} Emails Sent")
@@ -39,6 +42,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 def start_jobs():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(send_scheduled_emails, 'interval', seconds=30)
-    scheduler.add_job(send_limit_emails, 'interval', seconds=10)
+    scheduler.add_job(send_scheduled_emails, 'interval', seconds=5)
+    scheduler.add_job(send_limit_emails, 'interval', seconds=20)
     scheduler.start()
