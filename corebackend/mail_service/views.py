@@ -32,6 +32,7 @@ class BulkMailViewSet(viewsets.ViewSet):
         data = request.data
         template = data.get("template")
         total_saved = 0
+        total_failed = 0
         mail_serializer = MailSerializer(data=json.loads(template), context={'user': request.user})
         if mail_serializer.is_valid(raise_exception=True):
             bulk_mail.template = json.loads(template)
@@ -43,16 +44,28 @@ class BulkMailViewSet(viewsets.ViewSet):
                 )
                 mail_attachment.save()
             default_values = json.loads(data.get('paramDefaultValues'))
-            failed = {}
-            for index, row in enumerate(json.loads(data.get('mailRows'))):
+            row_results = {}
+            for row in json.loads(data.get('mailRows')):
                 row_mail = build_mail_from_template(template, row, default_values)
-                row_mail_serializer = MailSerializer(data={**row_mail, "bulk_mail": bulk_mail}, context={'user': request.user})
+                row_mail_serializer = MailSerializer(data={**row_mail, "bulk_mail": bulk_mail.id}, context={'user': request.user})
                 if not row_mail_serializer.is_valid():
-                    failed[index] = row_mail_serializer.errors
+                    row_results[row["_id"]] = row_mail_serializer.errors
+                    total_failed +=1
                 else:
+                    row_results[row["_id"]] = "sent"
                     total_saved += 1
-                    #row_mail_serializer.save()
-            return Response({"bulk_mail_id": bulk_mail.id, "total_saved": total_saved, "errors": failed}, status=201)
+                    row_mail_serializer.save(user=request.user)
+            results = {
+                "total_saved": total_saved,
+                "total_failed": total_failed
+            }
+            return Response({
+                "bulk_mail_id": bulk_mail.id, 
+                "results": results, 
+                "row_results": row_results
+                },
+                            status=201
+                            )
 
 
 # Mail Viewset

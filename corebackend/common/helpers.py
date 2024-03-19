@@ -14,8 +14,10 @@ def generate_message(template, parameters):
 
 def build_mail_from_template(template, row, default_values):
     parameters = {}
+    
     for param_name, param_value in row.items():
-       
+        if(param_name == "_id"):
+            continue
         if(param_value['willUseDefaultValue']):
             parameters[param_name] = default_values[param_name]
         else:

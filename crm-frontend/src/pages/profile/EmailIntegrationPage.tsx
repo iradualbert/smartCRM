@@ -7,8 +7,9 @@ import GmailLogo from "@/assets/gmail-logo.svg";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useToast } from "@/components/ui/use-toast";
+import { SET_EMAIL_PROVIDER } from "@/redux/types";
 const SCOPES = 'https://www.googleapis.com/auth/gmail.send';
 
 
@@ -28,6 +29,7 @@ const EmailIntegrationPage = () => {
     });
     const [errors, setErrors] = useState<any>(null);
     const { toast } = useToast();
+    const dispatch = useDispatch();
 
 
     const isDisabled = isLoading || isDisconnecting || isSaving
@@ -50,7 +52,12 @@ const EmailIntegrationPage = () => {
         axios.delete('/accounts/email_provider')
             .then(res => {
                 setCurrentConfig(res.data);
+                setFormData(res.data)
                 toast({ title: "Disconnected" })
+                dispatch({
+                    type: SET_EMAIL_PROVIDER,
+                    payload: null,
+                })
             })
             .finally(() => {
                 setIsDisconnecting(false);
@@ -60,7 +67,10 @@ const EmailIntegrationPage = () => {
     const getCurrentConfig = () => {
         setIsLoading(true)
         axios.get('/accounts/email_provider')
-            .then(res => setCurrentConfig(res.data))
+            .then(res => {
+                setCurrentConfig(res.data)
+                setFormData(res.data)
+            })
             .finally(() => setIsLoading(false))
     }
 
@@ -70,7 +80,11 @@ const EmailIntegrationPage = () => {
         axios.post('/accounts/email_provider', formData)
             .then((res) => {
                 setCurrentConfig(res.data);
-                toast({ title: "Updated successfully" })
+                toast({ title: "Updated successfully" });
+                dispatch({
+                    type: SET_EMAIL_PROVIDER,
+                    payload: "smtp",
+                })
             })
             .catch((err: any) => setErrors(err.response?.data))
             .finally(() => {
@@ -157,7 +171,7 @@ const EmailIntegrationPage = () => {
                     </div>
 
                 )}
-                {currentConfig.email_provider !== "gmail" && (
+                {/* {currentConfig.email_provider !== "gmail" && (
                     <div className="flex justify-between items-center flex-wrap gap-3">
                         <img src={GmailLogo} style={{ width: 100, height: "auto" }} alt="GMAIL LOG" />
                         <h3>Google / Gmail</h3>
@@ -167,7 +181,7 @@ const EmailIntegrationPage = () => {
                     </div>
                 )}
 
-                <h2 className="text-3xl font-bold">Connect with App Password</h2>
+                <h2 className="text-3xl font-bold">Connect with App Password</h2> */}
 
                 <form onSubmit={handleSave} className="flex flex-col gap-3">
 
@@ -190,7 +204,7 @@ const EmailIntegrationPage = () => {
                             </p>
                         )}
                     </div>
-                    <div className='flex flex-col gap-2'>
+                    {/* <div className='flex flex-col gap-2'>
                         <Label>Port</Label>
                         <Input
                             required
@@ -209,7 +223,7 @@ const EmailIntegrationPage = () => {
                                 {errors.port}
                             </p>
                         )}
-                    </div>
+                    </div> */}
                     <div className='flex flex-col gap-2'>
                         <Label>Email</Label>
                         <Input
@@ -271,7 +285,7 @@ const EmailIntegrationPage = () => {
                         {isLoading && (
                             <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                         )}
-                        Save
+                        Add
                     </Button>
                 </form>
 

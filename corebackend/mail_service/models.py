@@ -248,14 +248,12 @@ class EmailUsage(models.Model):
     def record_email_sent(cls, user, date):
         obj, created = cls.objects.get_or_create(user=user, date=date)
         if not created:
-            if obj.user.plan.max_emails_per_day <= obj.emails_sent:
+            if obj.user.account.plan.max_emails_per_day <= obj.emails_sent:
                 return obj, True
-            obj.emails_sent += 1
-            obj.save()
-        else:
-            obj.emails_sent = 1
-            obj.save()
-            return obj, False
+           
+        obj.emails_sent += 1
+        obj.save()
+        return obj, False
             
             
     def send_limit_warning_email(self, limit):

@@ -9,7 +9,6 @@ import SocialManagerPage from "./pages/social-media/SocialManagerPage";
 import NewsletterManagerPage from "./pages/newsletter/NewsletterManagerPage";
 import MailTemplatesPage from "./pages/mails/MailTemplatesPage";
 import NewMailPage from "./pages/mails/NewMailPage";
-import EmailIntergration from "./components/EmailIntergration";
 import { AuthRoute, MainRoute, PrivateRoute } from "./routes";
 import { Provider } from "react-redux";
 import LoginPage from "./pages/auth/LoginPage";

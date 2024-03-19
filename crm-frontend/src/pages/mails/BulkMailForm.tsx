@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Loader2, Mail } from "lucide-react";
 import { MdOutlineSchedule } from "react-icons/md";
-import { createEmail } from "@/lib/api";
+import { createBulkEmail, createEmail } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import MailAttachments from "./MailAttachments";
 import { TemplateParameter } from "@/lib/types";
@@ -22,9 +22,10 @@ import ParameterInput from "@/components/forms/ParameterInput";
 import BulkMailRows from "./BulkMailRows";
 import ImportBulkMailRows from "./ImportMailRows";
 import { BiCalendarEvent } from 'react-icons/bi';
-import { FiEye } from 'react-icons/fi';
 import { SiMicrosoftexcel } from "react-icons/si";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
+
 
 
 type InputEvent = React.ChangeEvent<HTMLInputElement>;
@@ -40,28 +41,35 @@ type BulkMailFormProps = {
     onAfterSend?: () => void,
     isSendingToContact?: true | false,
     contactCategoryId?: number | string,
-    recipients?: {[key: string]: object} [], // this can be a list of contacts or subscribers - fields shall be mapped accordingly 
+    recipients?: { [key: string]: object }[], // this can be a list of contacts or subscribers - fields shall be mapped accordingly 
 }
 
 const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
 
-    const [errors, setErrors] = useState(null);
+    const [errors, setErrors] = useState<any>(null);
     const [scheduleAt, setScheduleAt] = useState("");
     const [bulkEmailId, setBulkEmailId] = useState<undefined | string>();
     const [mailData, setMailData] = useState({
         subject: "",
-        to: "{{ email }}",
+        to: "{{ EMAIL }}",
         cc: "",
-        body: "{{ amir}} {{manager}}"
+        body: ""
     })
     const [templateParameters, setTemplateParameters] = useState<TemplateParameter[]>([]);
-    const [paramDefaultValues, setParamDefaultValues] = useState({});
+    const [paramDefaultValues, setParamDefaultValues] = useState<any>({});
     const [gridRows, setGridRows] = useState<object[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
     const { toast } = useToast();
-    const timer = useRef<number>();
+    const timer = useRef<number | any>();
     const [attachments, setAttachments] = useState<Set<File>>(new Set());
+    const formRef = useRef<any>()
+    const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
+    const [results, setResults] = useState<any>({
+        total_saved: 0,
+        total_failed: 0,
+    });
+    const [rowResults, setRowResults] = useState<any>({})
 
     const isDisabled = isSubmitting
 
@@ -89,8 +97,8 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
     }, [mailData])
     useEffect(() => {
         setGridRows(currentRows => {
-            return currentRows.map(row => {
-                const _row = {}
+            return currentRows.map((row: any) => {
+                const _row: any = {_id : row._id}
                 templateParameters.forEach(param => {
                     _row[param.name] = row[param.name] || { currentValue: "", willUseDefaultValue: false }
                 })
@@ -114,35 +122,44 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
 
 
 
-    const updateParameterDefaultValue = (e, idx) => {
+    const updateParameterDefaultValue = (e: any, idx: number) => {
         setTemplateParameters(currentParams => {
             const _currentParams = [...currentParams]
             _currentParams[idx].defaultValue = e.target.value;
             return _currentParams
         })
-        setParamDefaultValues(current => ({
+        setParamDefaultValues((current: any) => ({
             ...current,
             [e.target.name]: e.target.value
         }))
     }
 
+    function generateRandomString(length: number) {
+        const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
+        let result = "";
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
 
-    const handleImportedRows = ({ fieldMapping, rows }) => {
+    const handleImportedRows = ({ fieldMapping, rows }: any) => {
 
-        rows.forEach(row => {
-            const rowData = {}
+        rows.forEach((row: any) => {
+            const rowData: any = { _id: generateRandomString(10) }
             Object.keys(fieldMapping).forEach(field => {
                 rowData[field] = {
                     currentValue: row[fieldMapping[field]],
                     willUseDefaultValue: false
                 }
             });
+            rowData._id = generateRandomString(10);
             setGridRows(currentRows => [...currentRows, rowData])
         })
     }
 
     const handleAddRow = () => {
-        const row = {}
+        const row: any = { _id: generateRandomString(10) }
         templateParameters.forEach(param => {
             row[param.name] = {
                 currentValue: "", //paramDefaultValues[param.name] || param.defaultValue,
@@ -159,7 +176,7 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
             return newRows
         })
     }
-    const handleRowInputChange = (e, rowIndex) => {
+    const handleRowInputChange = (e: any, rowIndex: number) => {
         setGridRows(currentRows => {
             const newRows = [...currentRows];
             const updatedRow = newRows[rowIndex];
@@ -174,10 +191,10 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
         })
     }
 
-    const handleRowInputToggleUseDefaultValue = (paramName: string, rowIndex: nubmer) => {
+    const handleRowInputToggleUseDefaultValue = (paramName: string, rowIndex: number) => {
         setGridRows(currentRows => {
             const newRows = [...currentRows];
-            const updatedRow = newRows[rowIndex];
+            const updatedRow: any = newRows[rowIndex];
             let willUseDefaultValue = true;
             let currentValue = paramDefaultValues[paramName];
             try {
@@ -186,9 +203,6 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
             } catch (err) {
                 console.error(err)
             }
-
-            console.log(updatedRow)
-
             newRows[rowIndex] = {
                 ...updatedRow,
                 [paramName]: {
@@ -204,55 +218,63 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
 
     const handleSubmit = async (e: any, isScheduled = false) => {
         e.preventDefault();
-        return
-        setIsSubmitting(true);
-        setIsScheduleDialogOpen(false);
-        const formData = new FormData();
-        formData.append("to", mailData.to);
-        formData.append("cc", mailData.cc);
-        formData.append("body", mailData.body);
-        formData.append("subject", mailData.subject);
-        if (isScheduled && scheduleAt) {
-            formData.append("schedule_datetime", scheduleAt);
+
+        if (gridRows.length <= 0) {
+            alert("Add at least one row");
+            return
         }
+        setResults({
+            total_saved: "",
+            total_failed: ""
+        })
+        setIsSubmitting(true);
+        const formData = new FormData();
+        const mailTemplate: any = mailData;
+        if (isScheduled && scheduleAt) {
+            mailTemplate["schedule_datetime"] = scheduleAt;
+        }
+        formData.append("template", JSON.stringify(mailTemplate));
+
         attachments.forEach(attach => {
             formData.append("attachment", attach);
         });
+        const rowsToSend = gridRows.filter((row: any) => rowResults[row._id] !== "sent")
+        formData.append("mailRows", JSON.stringify(rowsToSend));
+        const parameters: any = {}
+        templateParameters.forEach(param => {
+            parameters[param.name] = paramDefaultValues[param.name] === undefined ? param.defaultValue : paramDefaultValues[param.name]
+        })
+        formData.append("paramDefaultValues", JSON.stringify(parameters))
+        try {
+            const { data } = await createBulkEmail(formData)
+            setIsResultDialogOpen(true);
+            setBulkEmailId(data.bulk_mail_id)
+            setResults({ ...data.results })
+            setRowResults((prevResults: any) => ({ ...prevResults, ...data.row_results }))
+            setErrors({})
 
-        createEmail(formData)
-            .then(() => {
-                setErrors({})
-                toast({
-                    title: isScheduled ? "Email Scheduled" : "Email Sent"
-                })
-                if (onAfterSend) onAfterSend();
-                setMailData({
-                    to: mailContent?.to || "",
-                    cc: mailContent?.cc || "",
-                    subject: mailContent?.subject || "",
-                    body: mailContent?.body || "",
-                })
-                setAttachments(new Set())
-            })
-            .catch((err) => {
-                toast({
-                    variant: "destructive",
-                    title: "Request failed"
-                })
-                if (err.response)
-                    setErrors(err.response?.data)
-            })
-            .finally(() => {
-                setIsSubmitting(false);
-            })
+        } catch (err: any) {
+            setErrors(err.response?.data)
+            if (err.response?.data) toast({
+                title: "Template error",
+                description: "Check the template and try again.",
+                variant: "destructive"
+            });
+            formRef.current.scrollIntoView()
+
+        }
+        finally {
+            setIsSubmitting(false);
+            setIsScheduleDialogOpen(false);
+        }
     }
 
 
     return (
         <>
-            <h1 className="text-3xl font-bold my-10">Mail template</h1>
+            <h1 className="text-3xl font-bold my-10">EMail template</h1>
             <div className="flex gap-4 py-6 justify-between flex-wrap bg-slate-100 p-4 mt-4">
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-3xl w-full">
+                <form onSubmit={handleSubmit} ref={formRef} className="flex flex-col gap-4 max-w-3xl w-full">
                     <div className="flex flex-col gap-3">
                         <div className="flex items-center gap-3 border-b">
                             <Label>To: </Label>
@@ -339,10 +361,12 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
                     </div>
                 )}
             </div>
-            <h1 className="text-3xl font-bold my-10">Mail Instances</h1>
+            <h1 className="text-3xl font-bold my-10">EMAILS & VALUES</h1>
             <div className="flex flex-col gap-6">
-                <p>You can add details or import from an excel & csv files</p>
+                <p className="text-lg text-neutral-400">{"Add row and type values & import from Excel / CSV"}</p>
                 <BulkMailRows
+                    isDisabled={isDisabled}
+                    rowResults={rowResults}
                     onRemoveRow={handleRemoveRow}
                     rows={gridRows}
                     parameters={templateParameters}
@@ -352,7 +376,7 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
                 <div className="flex gap-4 items-center">
                     <Button onClick={handleAddRow} size="sm">+ Add Row</Button>
                     <ImportBulkMailRows
-                        key={templateParameters}
+                        key={templateParameters as any}
                         parameters={
                             templateParameters.reduce((p: any, { name }) => {
                                 p[name] = "";
@@ -368,6 +392,7 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
                     <span>Total: {gridRows.length} </span>
                 </div>
             </div >
+            {JSON.stringify(gridRows)}
             <div className="flex gap-8 my-16">
                 <Button
                     type="button"
@@ -375,17 +400,17 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
                     disabled={isDisabled}
                     size="lg"
                 >
-                    <Mail className="mr-2 h-4 w-4" />
+
                     {isSubmitting && (
                         <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                     )}
-                    Schedule & Send All
+                    Send All Now
                 </Button>
                 <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
                     <DialogTrigger asChild>
                         <Button type="button" size="lg" variant="secondary" disabled={isDisabled}>
                             <BiCalendarEvent className="mr-2 h-4 w-4" />
-                            Schedule All
+                            Schedule
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
@@ -423,14 +448,8 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
                         </DialogHeader>
                     </DialogContent>
                 </Dialog>
-                <Button variant="outline" size="lg">
-                    <FiEye className="mr-2 h-4 w-4" />
-                    Preview
-                </Button>
             </div>
-
-
-            <Dialog>
+            <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
                 <DialogTrigger asChild>
                     <Button type="button" size="lg" variant="secondary">
                         <BiCalendarEvent className="mr-2 h-4 w-4" />
@@ -440,18 +459,25 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
-                            Status
+                            {isSubmitting ? "Scheduling & Sending...." : "Status"}
                         </DialogTitle>
                         <DialogDescription className="py-6" asChild>
                             <div className="flex flex-col gap-4">
-                                <p>Sending.....</p>
                                 <>
-                                    <p>Error: </p>
-                                    <p>Scheduled Emails: 10</p>
+                                    <p>Failed: {results.total_failed} </p>
+                                    <p>Scheduled Emails: {results.total_saved}</p>
                                 </>
                                 <div className="flex gap-4">
-                                    <Button variant="link">Email Dashboard</Button>
-                                    <Button variant="link">Send Emails Again</Button>
+
+                                    <Button variant="outline" onClick={() => setIsResultDialogOpen(false)}>
+                                        Continue Sending
+                                    </Button>
+                                    <Link to="/emails/new">
+                                        <Button variant="secondary">New Email</Button>
+                                    </Link>
+                                    <Link to="/emails">
+                                        <Button variant="default">Dashboard</Button>
+                                    </Link>
                                 </div>
                             </div>
 

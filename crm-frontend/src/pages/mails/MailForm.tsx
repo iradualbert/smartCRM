@@ -167,7 +167,7 @@ const MailForm = ({ isPreview, mailContent, onAfterSend }: MailFormProps) => {
                         </p>
                     )}
                 </div>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 bg-white">
                     <ReactQuill
                         value={mailData.body}
                         onChange={onBodyChange}

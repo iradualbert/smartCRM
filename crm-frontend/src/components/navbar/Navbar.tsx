@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { logoutUser } from "@/redux/actions/userActions";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom"
+import HeaderLogo from "../HeaderLogo";
+import ProfileMenubar from "./NavMenu";
 
 type NavbarProps = {
     isAppRoute?: false | true
@@ -18,22 +20,39 @@ const Navbar = ({ isAppRoute = true }: NavbarProps) => {
     return (
         <div className="fixed top-0 pl-20 pr-10 right-0 w-full h-14 border-b shadow-sm bg-white flex items-center z-10 py-4">
             <div className="md:max-w-screen-2xl mx-auto flex items-center w-full justify-between">
-                <h1>BeinPARK</h1>
+                <div className="flex gap-4 items-center">
+                    <HeaderLogo />
+
+                    <Button variant="outline" size="sm">
+                        <Link to="/emails/new">
+                            New Email
+                        </Link>
+                    </Button>
+                </div>
+
                 <div className="flex gap-2">
                     {user.isAuthenticated ? (
                         <>
                             {isAppRoute ? (
-                                <Button size="sm" asChild>
-                                    <Link to="/settings/profile">{user.credentials.first_name}</Link>
-                                </Button>
+                                <>
+                                    <ProfileMenubar user={user}/>
+                                    <Button onClick={handleLogout} variant="destructive">
+                                        Log Out
+                                    </Button>
+                                </>
+
                             ) : (
-                                <Button size="sm" asChild>
-                                    <Link to="/dashboard">Dashboard</Link>
-                                </Button>
+                                <>
+                                    <Button size="sm" asChild>
+                                        <Link to="/dashboard">Dashboard</Link>
+                                    </Button>
+                                    <Button onClick={handleLogout} variant="outline" size="sm">
+                                        Log Out
+                                    </Button>
+                                </>
+
                             )}
-                            <Button onClick={handleLogout} variant="outline" size="sm">
-                                Log Out
-                            </Button>
+
                         </>
                     ) : (
                         <>

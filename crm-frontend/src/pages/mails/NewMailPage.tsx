@@ -4,6 +4,7 @@ import MailForm from "./MailForm";
 import BulkMailForm from "./BulkMailForm";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import NoEmailConfigDialog from "@/components/NoEmailConfigDialog";
 
 const NewMailPage = () => {
 
@@ -12,6 +13,7 @@ const NewMailPage = () => {
     
     return (
         <section className="bg-primary-50 bg-dotted-pattern bg-center bg-cover py-2  md:py-3">
+            <NoEmailConfigDialog />
             <h1 className="text-4xl font-bold mb-10">Send & Schedule Emails</h1>
             <div className="flex gap-6">
                 <Link to="/emails/new?type=single">

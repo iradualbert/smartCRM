@@ -2,8 +2,9 @@ import { useSelector } from "react-redux";
 import { Outlet, Navigate } from "react-router-dom";
 import SideBar from "./components/SideBar";
 import { useQuery } from "./lib/hooks";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/navbar/Navbar";
 import { Toaster } from "@/components/ui/toaster";
+import LoadingPage from "./components/LoadingPage";
 
 
 export const MainRoute = () => {
@@ -17,8 +18,10 @@ export const MainRoute = () => {
 
 
 export const AuthRoute = () => {
-    const { isAuthenticated } = useSelector((state) => state.user);
+    const { isAuthenticated, isLoading } = useSelector((state: any) => state.user);
     const next = useQuery().get('next');
+
+    if(isLoading) return <LoadingPage />
 
     if (isAuthenticated) {
         const redirectUrl = next || "/dashboard"
@@ -30,10 +33,11 @@ export const AuthRoute = () => {
 };
 
 export const PrivateRoute = () => {
-    const { user: { isAuthenticated } } = useSelector(state => state);
+    const { user: { isAuthenticated, isLoading } } = useSelector((state: any) => state);
     const next = window.location.pathname + window.location.search;
     const redirectUrl = `/login?next=${next}`;
 
+    if(isLoading) return <LoadingPage />
 
     if (isAuthenticated) {
         return (

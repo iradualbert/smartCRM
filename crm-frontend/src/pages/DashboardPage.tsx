@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import DashboardCard from "./dashboard-components/DashboardCard"
 import { Typography } from "@mui/material";
 import UpcomingAndRecent from "@/components/UpcomingAndRecent";
+import MailDashoardPage from "./mails/MailDashboardPage";
 
 const DashboardPage = () => {
     const [dashboardData, setDashboardData] = useState({
@@ -15,9 +16,12 @@ const DashboardPage = () => {
     });
 
     useEffect(() => {
+        return 
         axios.get("/accounts/dashboard_data")
             .then(res => setDashboardData(res.data))
     }, [])
+
+    return <MailDashoardPage />
 
     return (
         <div className="bg-gray-50 p-3 md:p-6">

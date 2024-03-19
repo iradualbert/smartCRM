@@ -24,7 +24,16 @@ const ImportBulkMailRows = ({ children, parameters, onImportRows}: ImportBulkMai
     const [fieldMapping, setFieldMapping] = useState(parameters);
     const [rowTitles, setRowTitles] = useState<string[]>([]);
     const [excelFile, setExcelFile] = useState(null);
-    const [excelData, setExcelData] = useState<object>();
+    const [excelData, setExcelData] = useState<object | undefined>();
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const reset = () => {
+        setCurrentStep(1)
+        setFieldMapping(parameters);
+        setRowTitles([]);
+        setExcelFile(null);
+        setExcelData(undefined)
+    }
 
     const handleSubmit = () => {
         if (excelFile == null) return;
@@ -36,7 +45,7 @@ const ImportBulkMailRows = ({ children, parameters, onImportRows}: ImportBulkMai
         setRowTitles(Object.keys(data[0] as string[]))
     }
 
-    const handleFileChange = (e) => {
+    const handleFileChange = (e: any) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
             const reader = new FileReader();
@@ -57,10 +66,12 @@ const ImportBulkMailRows = ({ children, parameters, onImportRows}: ImportBulkMai
             fieldMapping,
             rows: excelData
         })
+        reset();
+        setIsDialogOpen(false);
     }
 
     return (
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className={"lg:max-w-screen-lg overflow-y-scroll max-h-screen"}>
                 <DialogHeader>

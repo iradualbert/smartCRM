@@ -13,17 +13,17 @@ import FormWrapper from "./FormWrapper";
 const LoginPage = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [errors, setErrors] = useState(null);
+    const [errors, setErrors] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const next = useQuery().get('next')
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: any) => {
         e.preventDefault();
         setIsLoading(true);
         const userData = { email, password };
-        const newErrors = await dispatch(loginUser(userData, navigate, next));
+        const newErrors = await dispatch(loginUser(userData, navigate, next as string) as any);
         setErrors(newErrors);
         setIsLoading(false);
     };

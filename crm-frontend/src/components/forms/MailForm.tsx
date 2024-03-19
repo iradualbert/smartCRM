@@ -35,7 +35,7 @@ const MailForm = ({
 
     const attachInputRef = useRef()
 
-    const onChange = (callback) => {
+    const onChange = (callback: any) => {
         const currentState = {};
         const updatedState = callback(currentState);
         // do something with update status

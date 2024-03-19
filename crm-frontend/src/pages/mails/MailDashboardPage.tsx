@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import PageTitle from "@/components/PageTitle";
 import MailHistoryTable from "./MailHistoryTable";
+import NoEmailConfigDialog from "@/components/NoEmailConfigDialog";
 
 
 const MailDashoardPage = () => {
@@ -15,7 +16,9 @@ const MailDashoardPage = () => {
     return (
         <div>
             <PageTitle title="Emails - Dashboard" />
-            <h1 className="text-3xl font-bold">Email Dashboard</h1>
+            <NoEmailConfigDialog />
+            <h1 className=" text-4xl font-bold">Email Dashboard</h1>
+
             <div className="flex gap-4 mt-6 mb-5 md:mb-10">
                 <DashboardCard
                     cardTitle="Sent"
@@ -33,15 +36,16 @@ const MailDashoardPage = () => {
                     borderBottomColor="warning.main"
                 />
             </div>
-            <div className="flex gap-3 mb-7">
+
+            <div className="flex gap-5 mt-10">
                 <Link to="/emails/new?type=single">
                     <Button size="lg" variant="secondary">Send & Schedule Email</Button>
                 </Link>
                 <Link to="/emails/new?type=multiple">
-                    <Button size="lg">New Bulk Emails</Button>
+                    <Button size="lg" variant="outline">+ New Bulk Emails</Button>
                 </Link>
             </div>
-
+            
             <div className="flex gap-4 flex-wrap">
                 <MailHistoryTable />
             </div>
