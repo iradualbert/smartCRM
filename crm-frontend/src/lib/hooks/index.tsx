@@ -8,6 +8,7 @@ import { IToast } from "./types";
 
 export * from "./useAPI";
 
+
 export const useDashboardData = () => {
     const [dashboardData, setDashboardData] = useState({
         sent_emails: 0,
@@ -16,6 +17,8 @@ export const useDashboardData = () => {
         total_contacts: 0,
         newsletter_subs: 0,
         mail_templates: 0,
+        max_emails_per_day:100,
+        emails_sent_today: 0,
     });
     useEffect(() => {
         axios.get("/accounts/dashboard_data")
@@ -23,6 +26,21 @@ export const useDashboardData = () => {
     }, [])
     return { data: dashboardData }
 }
+export const useDashboardData_ = () => {
+    const [dashboardData, setDashboardData] = useState({
+        emailsSent: 0,
+        emailsScheduled:0,
+        emailsFailed: 0,
+        emailsSentToday: 0,
+        dailyLimit: 0,
+    });
+    useEffect(() => {
+        axios.get("/accounts/dashboard_data")
+            .then(res => setDashboardData(res.data))
+    }, [])
+    return dashboardData
+}
+
 
 
 export const useToasts = () => {

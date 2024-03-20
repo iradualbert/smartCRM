@@ -3,13 +3,13 @@ Hi {{ user.first_name }},
 
 Thank you for creating account on BEINPARK
 
-Please click the link below to confirm your registration,
-
-http://localhost:5127/accounts/verify?url=http://{{ domain }}{% url 'activate' uidb64=uid token=token %}
-
-Or use this Verification Code:
+Please use this Verification Code to verify your email address:
 
 {{verification_code}}
+
+Or click the link below to confirm your registration,
+
+https://beinpark.com{% url 'activate' uidb64=uid token=token %}
 
 
 {% endautoescape %}

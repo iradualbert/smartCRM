@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom"
 import HeaderLogo from "../HeaderLogo";
 import ProfileMenubar from "./NavMenu";
+import NewEmailButton from "./NewEmailButton";
 
 type NavbarProps = {
     isAppRoute?: false | true
@@ -22,12 +23,7 @@ const Navbar = ({ isAppRoute = true }: NavbarProps) => {
             <div className="md:max-w-screen-2xl mx-auto flex items-center w-full justify-between">
                 <div className="flex gap-4 items-center">
                     <HeaderLogo />
-
-                    <Button variant="outline" size="sm">
-                        <Link to="/emails/new">
-                            New Email
-                        </Link>
-                    </Button>
+                    <NewEmailButton />
                 </div>
 
                 <div className="flex gap-2">

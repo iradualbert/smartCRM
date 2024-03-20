@@ -201,9 +201,6 @@ class MailAttachment(models.Model):
     mail = models.ForeignKey(Mail, on_delete=models.CASCADE, related_name="attachments", null=True)
     attachment_file = models.FileField(
         upload_to=attachment_upload_path, 
-        validators=[
-            MaxValueValidator(limit_value=20 * 1024 * 1024)  # 20 MB
-        ]
         )
     
     def __str__(self):

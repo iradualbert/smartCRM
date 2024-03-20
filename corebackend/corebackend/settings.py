@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY", 'django-insecure-mmyv4uu61&_l_825ium-ss640f)g*b=ya%o(am&gz!+i#=7pkg')
 
-
+ENV = os.environ.get("ENV", "DEV")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'knox',
+    'storages',
     'common',
     'mail_service',
     'appointments',
@@ -95,7 +96,7 @@ DATABASES_PROD = {
     }
 }
 
-DATABASES_PROD = {
+DATABASES_TEST = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DATABASE_NAME', "verceldb"),
@@ -107,8 +108,22 @@ DATABASES_PROD = {
         
     }
 }
+DATABASES_PROD = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DATABASE_NAME', "BEINPARK"),
+        'USER':os.environ.get('DATABASE_USER', "albert"),
+        'PASSWORD':os.environ.get('DATABASE_PASSWORD', 'clM78oqxpx2aGcYyHJNe'),
+        'HOST': os.environ.get('DATABASE_HOST', 'beinpark.cdo6qy6yw1ug.us-east-1.rds.amazonaws.com'), 
+        'PORT': os.environ.get('DATABASE_PORT', 5432),
+        # "OPTIONS": {'sslmode': 'require'}
+        
+    }
+}
 
-DATABASES = DATABASES_sqllite 
+
+
+DATABASES = DATABASES_PROD if ENV == "PRODUCTION"  else DATABASES_TEST if ENV=="TEST" else DATABASES_sqllite
 
 
 # Password validation
@@ -193,6 +208,23 @@ EMAIL_PORT = os.environ.get("EMAIL_PORT", 587)
 
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 3
 
+REST_KNOX = {
+       'TOKEN_TTL': None,  # will create tokens that never expire
+    }
+
+AWS_ACCESS_KEY_ID=os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY=os.environ.get("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME=os.environ.get("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_SIGNATURE_NAME='s3v4'
+AWS_S3_REGION_NAME='us-east-1'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL =  None
+AWS_S3_VERITY = True
+
+if ENV=="PRODUCTION":
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+LOGGING = {}
 
 if not DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = ('rest_framework.renderers.JSONRenderer', ),
