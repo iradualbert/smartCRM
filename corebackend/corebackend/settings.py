@@ -108,22 +108,11 @@ DATABASES_TEST = {
         
     }
 }
-DATABASES_PROD = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DATABASE_NAME', "BEINPARK"),
-        'USER':os.environ.get('DATABASE_USER', "albert"),
-        'PASSWORD':os.environ.get('DATABASE_PASSWORD', 'clM78oqxpx2aGcYyHJNe'),
-        'HOST': os.environ.get('DATABASE_HOST', 'beinpark.cdo6qy6yw1ug.us-east-1.rds.amazonaws.com'), 
-        'PORT': os.environ.get('DATABASE_PORT', 5432),
-        # "OPTIONS": {'sslmode': 'require'}
-        
-    }
-}
 
 
 
-DATABASES = DATABASES_PROD if ENV == "PRODUCTION"  else DATABASES_TEST if ENV=="TEST" else DATABASES_sqllite
+
+DATABASES = DATABASES_PROD  if ENV == "PRODUCTION"  else DATABASES_TEST if ENV=="TEST" else DATABASES_sqllite
 
 
 # Password validation

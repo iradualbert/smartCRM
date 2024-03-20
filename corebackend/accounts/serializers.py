@@ -47,7 +47,10 @@ class UserSerializer(serializers.ModelSerializer):
                 }
     
     def get_config(self, obj):
-        return {"email_provider": obj.account.email_provider}
+        try:
+            return {"email_provider": obj.account.email_provider}
+        except Exception as e:
+            return {"email_provider": None }
 
 # Register Serializer
 class RegisterSerializer(serializers.ModelSerializer):
