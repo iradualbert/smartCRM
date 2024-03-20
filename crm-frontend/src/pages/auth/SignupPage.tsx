@@ -35,9 +35,11 @@ const SignupPage = () => {
     }
 
     const handleVerifyCode = async (e) => {
+        setIsLoading(true)
         e.preventDefault();
         const newErrors = await dispatch(verify_code({ code: verificationCode, email }, navigate));
         setErrors(newErrors)
+        setIsLoading(false);
     }
 
     const hanldeResend = async () => {

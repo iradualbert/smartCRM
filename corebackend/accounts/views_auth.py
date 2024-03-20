@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import generics, permissions
 from rest_framework.response import Response
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from knox.models import AuthToken
 from knox.auth import TokenAuthentication
 from .serializers import PasswordResetSerializer, UserEmailConfigSerializer, UserSerializer, RegisterSerializer, LoginSerializer
@@ -132,6 +132,7 @@ class RegisterAPI(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         send_confirmation_email(user, request)
+        
         return Response({
         "user": UserSerializer(user, context=self.get_serializer_context()).data,
         })
@@ -198,7 +199,7 @@ class UserAPI(generics.RetrieveUpdateAPIView):
 
 
 # activate through email
-@api_view(["POST"])
+@api_view(["POST", "GET"])
 @permission_classes([permissions.AllowAny])
 def activate_account(request, uidb64, token):
     uid = force_bytes(urlsafe_base64_decode(uidb64))
@@ -206,11 +207,14 @@ def activate_account(request, uidb64, token):
         user = User.objects.get(pk=uid)
         if user is not None and account_activation_token.check_token(user, token):
             user.is_active = True
+            profile = Account.objects.create(user=user)
+            profile.save()
             user.save()
-            return JsonResponse({
-                'status': f"{user}", 
-                "token" : AuthToken.objects.create(user)[0]}, 
-            )
+            text = """
+            <h1>Your account has been activated!</h1>
+            <a href="/login">Log in now</a>
+            """
+            return HttpResponse(text)
     finally:
         pass
     return JsonResponse({'error': 'invalid activation link'})
@@ -223,7 +227,7 @@ def activate_account_code(request):
     data = json.loads(request.body)
     code = data.get('code')
     if not code:
-        return JsonResponse({'error': 'Invalid code'})
+        return JsonResponse({'error': 'Invalid code'}, status=401)
     email = data.get('email')
     try:
         user = User.objects.get(email=email)

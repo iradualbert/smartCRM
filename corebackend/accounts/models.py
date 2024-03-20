@@ -84,7 +84,13 @@ class VerificationCode(models.Model):
     
     def check_code(user, code, new_email=None):
         try:
-            v_code = VerificationCode.objects.get(user=user, code=code, new_email=new_email)
+            v_code = None
+            if new_email:
+                v_code = VerificationCode.objects.get(user=user, code=code)
+            else:
+                import time 
+                time.sleep(4)
+                v_code = VerificationCode.objects.get(user=user, code=code, new_email=new_email)
             if v_code and v_code.expire_date > timezone.now():
                 return True, v_code
              
