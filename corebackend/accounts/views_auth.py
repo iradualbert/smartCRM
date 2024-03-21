@@ -227,25 +227,26 @@ def activate_account_code(request):
     data = json.loads(request.body)
     code = data.get('code')
     if not code:
-        return JsonResponse({'error': 'Invalid code'}, status=401)
+        return JsonResponse({'non_field_errors': 'Invalid code'}, status=401)
     email = data.get('email')
     try:
         user = User.objects.get(email=email)
     except ObjectDoesNotExist:
-        return JsonResponse({"error": "Invalid email address"}, status=401)
+        return JsonResponse({"non_field_errors": "Invalid email address"}, status=401)
    
     if VerificationCode.check_code(user, code):
-        user.is_active = True
-        profile = Account.objects.create(user=user)
-        profile.save()
-        user.save()
+        if not user.is_active:
+            user.is_active = True
+            profile = Account.objects.create(user=user)
+            profile.save()
+            user.save()
         _, token = AuthToken.objects.create(user)
         return JsonResponse({
             "user": data,
             "token": token,
             "is_active": True
         })
-    return JsonResponse({'error': 'invalid code'}, status=400)
+    return JsonResponse({'non_field_errors': 'invalid code'}, status=400)
 
 @api_view(['POST'])
 @permission_classes([])

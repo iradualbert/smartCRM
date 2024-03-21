@@ -18,7 +18,8 @@ def send_confirmation_email(user, request):
         'uid': urlsafe_base64_encode(force_bytes(user.pk)),
         'token': account_activation_token.make_token(user),
     })
-    confirmation_email = EmailMessage(email_subject, message,from_email="Beinpark", to=[user.email])
+    from_email = f"BEINPARK <hello@beinpark.com>"
+    confirmation_email = EmailMessage(email_subject, message, from_email, to=[user.email])
     # confirmation_email.content_subtype = "html"
     confirmation_email.send()
     
@@ -33,7 +34,8 @@ def send_mail_verification_code(request, user, new_email):
         'domain': current_site.domain,
         'verification_code': verification_code
     })
-    verification_email = EmailMessage(email_subject, message,from_email="Beinpark", to=[new_email])
+    from_email = f"BEINPARK <hello@beinpark.com>"
+    verification_email = EmailMessage(email_subject, message,from_email, to=[new_email])
     # confirmation_email.content_subtype = "html"
     verification_email.send()
     
@@ -41,7 +43,7 @@ def send_mail_verification_code(request, user, new_email):
 def send_password_reset_email(user, request):
     current_site = get_current_site(request)
     email_subject = f"Beinpark - Password Reset"
-    
+    from_email = f"BEINPARK <hello@beinpark.com>"
     message = render_to_string('reset-password.html', {
         "user": user,
         "domain": current_site.domain,
@@ -49,6 +51,6 @@ def send_password_reset_email(user, request):
         'token': account_activation_token.make_token(user)
     })
     
-    password_reset_email = EmailMessage(email_subject, message, from_email="Beinpark", to=[user.email])
+    password_reset_email = EmailMessage(email_subject, message, from_email, to=[user.email])
     # password_reset_email.content_subtype = "html"
     password_reset_email.send()

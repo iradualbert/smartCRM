@@ -431,10 +431,10 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
                                             setScheduleAt(e.target.value);
                                         }}
                                     />
-                                    <div className="flex gap-4 items-center">
+                                    {/* <div className="flex gap-4 items-center">
                                         <Checkbox />
                                         <span>Only for Emails without custom schedule</span>
-                                    </div>
+                                    </div> */}
 
                                     <Button
                                         type="button"
