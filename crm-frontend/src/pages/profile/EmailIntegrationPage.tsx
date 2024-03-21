@@ -85,6 +85,7 @@ const EmailIntegrationPage = () => {
                     type: SET_EMAIL_PROVIDER,
                     payload: "smtp",
                 })
+                setErrors({})
             })
             .catch((err: any) => setErrors(err.response?.data))
             .finally(() => {

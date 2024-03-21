@@ -392,7 +392,6 @@ const BulkMailForm = ({ mailContent, onAfterSend }: BulkMailFormProps) => {
                     <span>Total: {gridRows.length} </span>
                 </div>
             </div >
-            {JSON.stringify(gridRows)}
             <div className="flex gap-8 my-16">
                 <Button
                     type="button"
