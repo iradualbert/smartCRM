@@ -228,7 +228,7 @@ const MailHistoryTable = () => {
         {
             accessorKey: "scheduleTime",
             header: "Sending Date",
-            cell: ({ row }) => parseTime(row.original.schedule_datetime)
+            cell: ({ row }) => parseTime(row.original.schedule_datetime || row.original.sent_datetime )
 
         },
         {
