@@ -52,7 +52,7 @@ const EmailIntegrationPage = () => {
         axios.delete('/accounts/email_provider')
             .then(res => {
                 setCurrentConfig(res.data);
-                setFormData(res.data)
+                setFormData(prev => ({...prev, ...res.data}))
                 toast({ title: "Disconnected" })
                 dispatch({
                     type: SET_EMAIL_PROVIDER,
@@ -185,7 +185,7 @@ const EmailIntegrationPage = () => {
 
                 <form onSubmit={handleSave} className="flex flex-col gap-3">
 
-                    <div className='flex flex-col gap-2'>
+                    <div className='flex flex-col gap-1'>
                         <Label>Hostname</Label>
                         <Input
                             required
@@ -204,27 +204,7 @@ const EmailIntegrationPage = () => {
                             </p>
                         )}
                     </div>
-                    {/* <div className='flex flex-col gap-2'>
-                        <Label>Port</Label>
-                        <Input
-                            required
-                            type="number"
-                            disabled={isDisabled}
-                            value={formData.port}
-                            placeholder="587"
-                            onChange={setPort}
-                            className={cn({
-                                'focus-visible:ring-red-500':
-                                    errors?.port,
-                            })}
-                        />
-                        {errors?.port && (
-                            <p className='text-sm text-red-500'>
-                                {errors.port}
-                            </p>
-                        )}
-                    </div> */}
-                    <div className='flex flex-col gap-2'>
+                    <div className='flex flex-col gap-1'>
                         <Label>Email</Label>
                         <Input
                             required
@@ -243,7 +223,7 @@ const EmailIntegrationPage = () => {
                             </p>
                         )}
                     </div>
-                    <div className='flex flex-col gap-2'>
+                    <div className='flex flex-col'>
                         <Label>App Password</Label>
                         <Input
                             required
@@ -263,7 +243,7 @@ const EmailIntegrationPage = () => {
                             </p>
                         )}
                     </div>
-                    <div className='flex flex-col gap-2'>
+                    <div className='flex flex-col gap-1'>
                         <Label>Sender Name</Label>
                         <Input
                             required
