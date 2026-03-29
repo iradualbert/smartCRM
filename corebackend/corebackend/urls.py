@@ -6,17 +6,20 @@ from rest_framework import routers
 from mail_service.urls import router as router_mail
 from appointments.urls import router as router_appoint
 from contacts.urls import router as router_contact
+from sales.urls import router as router_sales
 
 router = routers.DefaultRouter()
 router.registry.extend(router_mail.registry)
 router.registry.extend(router_appoint.registry)
 router.registry.extend(router_contact.registry)
+router.registry.extend(router_sales.registry)
 
 
 urlpatterns = [
     
-    path('admin-beinpark/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path("api/", include("sales.urls")),
     path('', include('accounts.urls')),
     path("api/", include('contacts.urls')),
     path("", include("common.urls")),

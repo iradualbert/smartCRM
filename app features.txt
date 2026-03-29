@@ -48,3 +48,69 @@ AI powered All-In-One Platform & Confirmation is required to not annoy people
 
 3. Newsletter & Subscriber Management 
 
+
+3. Invoice & Quotation & Performa
+
+
+Core
+-- Organizations
+
+Users
+Organization memberships
+Customers
+Products or saved line-item catalog
+Quotations
+Proforma invoices
+Invoices
+Document line items
+Company profile
+Templates
+Payments or invoice payment records
+Numbering settings
+Nice to have in MVP
+PDF generation
+Word template upload
+Customer lookup by phone
+Document duplication: quotation → proforma → invoice
+Status tracking
+Leave for later
+Inventory
+Purchase orders
+Full accounting ledger
+Multi-warehouse
+Tax engine by country
+CRM pipeline
+
+quotation
+
+draft
+sent
+accepted
+rejected
+expired
+
+proforma
+
+draft
+sent
+approved
+expired
+
+invoice
+
+draft
+sent
+partially_paid
+paid
+overdue
+cancelled
+
+delivery_note
+
+draft
+dispatched
+delivered
+cancelled
+receipt
+issued
+void

@@ -1,5 +1,8 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +40,7 @@ INSTALLED_APPS = [
     'appointments',
     'contacts',
     'accounts',
+    'sales'
 ]
 
 MIDDLEWARE = [
@@ -170,6 +174,10 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "DEFAULT_PAGINATION_CLASS": 'rest_framework.pagination.LimitOffsetPagination',
 }
+
+if ENV != "PRODUCTION":
+    REST_FRAMEWORK["DEFAULT_PERMISSION_CLASSES"] = ['rest_framework.permissions.AllowAny', ]
+    
 
 ALLOWED_HOSTS = ['*']
 
