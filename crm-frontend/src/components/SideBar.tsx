@@ -4,8 +4,9 @@ import { IoShareSocialSharp } from "react-icons/io5";
 import { BsNewspaper, BsFillCalendarDateFill } from "react-icons/bs";
 import { SiChatbot } from "react-icons/si";
 import { IoIosContacts, IoMdSettings } from "react-icons/io";
-import { FaHome, FaUser } from "react-icons/fa";
+import { FaHome, FaUser, FaBuilding } from "react-icons/fa";
 import { SiAutomattic } from "react-icons/si";
+import { } from "react-icons/ai";
 
 
 const SideBar = () => {
@@ -14,6 +15,7 @@ const SideBar = () => {
             <SideBarIcon icon={<FaHome size={30} />} text="Home" to="/" />
             <SideBarIcon icon={<TfiEmail size={30} />} text="Emails" to="/emails" />
             <SideBarIcon icon={<FaUser size={30} />} text="Profile" to="/settings/profile" />
+            <SideBarIcon icon={<FaBuilding size={30} />} text="Create Company" to="/companies" />
             {/* <SideBarIcon icon={<IoShareSocialSharp size={30} />} text="Social Manager" to="/social-manager" />
             <SideBarIcon icon={<IoIosContacts size={30} />} text="Contacts: Send Emails, Schedule Meetings" to="/contacts-manager" />
             <SideBarIcon icon={<BsNewspaper size={30} />} text="Newsletter" to="/newsletter-manager"/>

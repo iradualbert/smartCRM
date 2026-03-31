@@ -5,8 +5,6 @@ import store from "./redux/store";
 import { checkAuthToken } from "./redux/actions/userActions";
 import BookingCalendar from "./pages/booking/BookingPage";
 import ContactsManagerPage from "./pages/contacts/ContactsPage";
-import SocialManagerPage from "./pages/social-media/SocialManagerPage";
-import NewsletterManagerPage from "./pages/newsletter/NewsletterManagerPage";
 import MailTemplatesPage from "./pages/mails/MailTemplatesPage";
 import NewMailPage from "./pages/mails/NewMailPage";
 import { AuthRoute, MainRoute, PrivateRoute } from "./routes";
@@ -14,7 +12,7 @@ import { Provider } from "react-redux";
 import LoginPage from "./pages/auth/LoginPage";
 import Dashboard from "./pages/DashboardPage";
 import MailDashoardPage from "./pages/mails/MailDashboardPage";
-import AutomationPage from "./pages/automation/AutomationPage";
+
 import LandingPage from "./pages/landing/LandingPage";
 import SignupPage from "./pages/auth/SignupPage";
 import SubscribePage from "./pages/external_pages/SubscribePage";
@@ -25,6 +23,10 @@ import EmailIntegrationPage from "./pages/profile/EmailIntegrationPage";
 import { PrivacyPage, RefundPolicyPage, TermsPage } from "./pages/static_content";
 import Footer from "./components/Footer";
 import NotFound from "./components/404";
+import CreateCompanyPage from "./pages/sales/companies/CreateCompanyPage";
+import CompanyListPage from "@/pages/sales/companies/CompanyListPage";
+import CompanyDetailPage from "./pages/sales/companies/CompanyDetailPage";
+import CompanySettingsPage from "./pages/sales/companies/CompanySettingsPage";
 
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
@@ -57,14 +59,16 @@ function App() {
               <Route path="/emails" element={<MailDashoardPage />} />
               <Route path="/emails/templates" element={<MailTemplatesPage />} />
               <Route path="/emails/new" element={<NewMailPage />} />
-              <Route path="/social-manager" element={<SocialManagerPage />} />
+             
               <Route path="/schedule-manager" element={<BookingCalendar />} />
               <Route path="/contacts-manager" element={<ContactsManagerPage />} />
-              <Route path="/newsletter-manager" element={<NewsletterManagerPage />} />
-              <Route path="/automation" element={<AutomationPage />} />
               <Route path="/settings/integration" element={<EmailIntegrationPage />} />
               <Route path="/settings/profile" element={<ProfilePage />} />
               <Route path="/settings/password-reset" element={<PasswordResetPage />} />
+              <Route path="/companies" element={<CompanyListPage />} />
+              <Route path="/companies/new" element={<CreateCompanyPage />} />
+              <Route path="/companies/:id" element={<CompanyDetailPage />} />
+              <Route path="/companies/:id/settings" element={<CompanySettingsPage />} />
             </Route>
             <Route path="" element={<AuthRoute />}>
               <Route path="/login" element={<LoginPage />} />
