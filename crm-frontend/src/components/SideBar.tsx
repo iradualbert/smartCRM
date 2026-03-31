@@ -7,6 +7,7 @@ import { IoIosContacts, IoMdSettings } from "react-icons/io";
 import { FaHome, FaUser, FaBuilding } from "react-icons/fa";
 import { SiAutomattic } from "react-icons/si";
 import { } from "react-icons/ai";
+import { MdOutlinePointOfSale } from "react-icons/md";
 
 
 const SideBar = () => {
@@ -16,6 +17,7 @@ const SideBar = () => {
             <SideBarIcon icon={<TfiEmail size={30} />} text="Emails" to="/emails" />
             <SideBarIcon icon={<FaUser size={30} />} text="Profile" to="/settings/profile" />
             <SideBarIcon icon={<FaBuilding size={30} />} text="Create Company" to="/companies" />
+            <SideBarIcon icon={<MdOutlinePointOfSale size={30} />} text="Quotations / Offers" to="/quotations" />
             {/* <SideBarIcon icon={<IoShareSocialSharp size={30} />} text="Social Manager" to="/social-manager" />
             <SideBarIcon icon={<IoIosContacts size={30} />} text="Contacts: Send Emails, Schedule Meetings" to="/contacts-manager" />
             <SideBarIcon icon={<BsNewspaper size={30} />} text="Newsletter" to="/newsletter-manager"/>

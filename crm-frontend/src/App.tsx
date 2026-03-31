@@ -27,6 +27,11 @@ import CreateCompanyPage from "./pages/sales/companies/CreateCompanyPage";
 import CompanyListPage from "@/pages/sales/companies/CompanyListPage";
 import CompanyDetailPage from "./pages/sales/companies/CompanyDetailPage";
 import CompanySettingsPage from "./pages/sales/companies/CompanySettingsPage";
+import CreateQuotationPage from "./pages/sales/quotations/CreateQuotationPage";
+import UpdateQuotationPage from "./pages/sales/quotations/UpdateQuotationPage";
+import QuotationDetailPage from "./pages/sales/quotations/QuotationDetailPage";
+import SalesDashboardPage from "./pages/sales/SalesDashboardPage";
+import QuotationListPage from "./pages/sales/quotations/QuotationListPage";
 
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
@@ -47,7 +52,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="" element={<MainRoute />}>
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/landing" element={<LandingPage />} />
               <Route path="/subs/:linkId" element={<SubscribePage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy-policy" element={<PrivacyPage />} />
@@ -55,7 +60,8 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Route>
             <Route path="" element={<PrivateRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="" element={<SalesDashboardPage />} />
+              <Route path="/mail-dashboard" element={<Dashboard />} />
               <Route path="/emails" element={<MailDashoardPage />} />
               <Route path="/emails/templates" element={<MailTemplatesPage />} />
               <Route path="/emails/new" element={<NewMailPage />} />
@@ -65,10 +71,19 @@ function App() {
               <Route path="/settings/integration" element={<EmailIntegrationPage />} />
               <Route path="/settings/profile" element={<ProfilePage />} />
               <Route path="/settings/password-reset" element={<PasswordResetPage />} />
+
+              <Route path="/sales" element={<SalesDashboardPage />} />
+
               <Route path="/companies" element={<CompanyListPage />} />
               <Route path="/companies/new" element={<CreateCompanyPage />} />
               <Route path="/companies/:id" element={<CompanyDetailPage />} />
               <Route path="/companies/:id/settings" element={<CompanySettingsPage />} />
+
+              <Route path="/quotations" element={<QuotationListPage />} />
+              <Route path="/quotations/new" element={<CreateQuotationPage />} />
+              <Route path="/quotations/:id" element={<QuotationDetailPage />} />
+              <Route path="/quotations/:id/edit" element={<UpdateQuotationPage />} />
+
             </Route>
             <Route path="" element={<AuthRoute />}>
               <Route path="/login" element={<LoginPage />} />
