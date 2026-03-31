@@ -112,6 +112,47 @@ class Company(TimeStampedModel):
         return self.name
 
 
+from django.contrib.auth.models import User
+from django.db import models
+
+
+class CompanyMembership(TimeStampedModel):
+    class Role(models.TextChoices):
+        OWNER = "owner", "Owner"
+        ADMIN = "admin", "Admin"
+        STAFF = "staff", "Staff"
+        VIEWER = "viewer", "Viewer"
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="company_memberships",
+    )
+
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="memberships",
+    )
+
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.STAFF)
+    is_active = models.BooleanField(default=True)
+
+    # 👇 company-specific user info
+    display_name = models.CharField(max_length=255, blank=True, null=True)
+    job_title = models.CharField(max_length=255, blank=True, null=True)
+    department = models.CharField(max_length=255, blank=True, null=True)
+    work_email = models.EmailField(blank=True, null=True)
+    work_phone = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        unique_together = ("user", "company")
+        ordering = ["company", "user__email"]
+
+    def __str__(self):
+        return f"{self.display_name or self.user.email} @ {self.company.name}"
+
+
 class Template(TimeStampedModel):
     DOCUMENT_TYPE_CHOICES = [
         ("invoice", "Invoice"),

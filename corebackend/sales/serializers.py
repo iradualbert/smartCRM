@@ -1,7 +1,9 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from .models import (
     Company,
+    CompanyMembership,
     Customer,
     DeliveryNote,
     DeliveryNoteLine,
@@ -40,6 +42,66 @@ class CurrencyListValidationMixin:
                 f"Unsupported currency codes: {', '.join(invalid)}"
             )
         return value
+
+
+class AddCompanyUserByEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    display_name = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    job_title = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    department = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    work_email = serializers.EmailField(required=False, allow_blank=True)
+    work_phone = serializers.CharField(required=False, allow_blank=True, max_length=50)
+    role = serializers.ChoiceField(
+        choices=CompanyMembership.Role.choices,
+        required=False,
+        default=CompanyMembership.Role.STAFF,
+    )
+
+
+class CompanyMembershipSerializer(UserStampMixin, serializers.ModelSerializer):
+    user_email = serializers.EmailField(source="user.email", read_only=True)
+    user_first_name = serializers.CharField(source="user.first_name", read_only=True)
+    user_last_name = serializers.CharField(source="user.last_name", read_only=True)
+    company_name = serializers.CharField(source="company.name", read_only=True)
+
+    class Meta:
+        model = CompanyMembership
+        fields = (
+            "id",
+            "company",
+            "company_name",
+            "user",
+            "user_email",
+            "user_first_name",
+            "user_last_name",
+            "display_name",
+            "job_title",
+            "department",
+            "work_email",
+            "work_phone",
+            "role",
+            "is_active",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+        )
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+            "user_email",
+            "user_first_name",
+            "user_last_name",
+            "company_name",
+        )
+
+    def create(self, validated_data):
+        return super().create(self._set_user_fields(validated_data))
+
+    def update(self, instance, validated_data):
+        return super().update(instance, self._set_user_fields(validated_data))
 
 
 class CompanySerializer(UserStampMixin, CurrencyListValidationMixin, serializers.ModelSerializer):

@@ -3,6 +3,7 @@ from django.utils.html import format_html
 
 from .models import (
     Company,
+    CompanyMembership,
     Customer,
     DeliveryNote,
     DeliveryNoteLine,
@@ -38,6 +39,22 @@ class InvoiceLineInline(admin.TabularInline):
 class DeliveryNoteLineInline(admin.TabularInline):
     model = DeliveryNoteLine
     extra = 1
+
+
+class CompanyMembershipInline(admin.TabularInline):
+    model = CompanyMembership
+    extra = 0
+    autocomplete_fields = ("user",)
+    fields = (
+        "user",
+        "display_name",
+        "job_title",
+        "department",
+        "work_email",
+        "work_phone",
+        "role",
+        "is_active",
+    )
 
 
 class PDFAdminMixin:
@@ -117,6 +134,34 @@ class CompanyAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "default_currency", "is_active", "created_at", "created_by")
     search_fields = ("name", "legal_name", "email", "tax_number")
     list_filter = ("default_currency", "is_active")
+    readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
+    inlines = [CompanyMembershipInline]
+
+
+@admin.register(CompanyMembership)
+class CompanyMembershipAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "company",
+        "user",
+        "display_name",
+        "job_title",
+        "role",
+        "is_active",
+        "created_at",
+    )
+    search_fields = (
+        "company__name",
+        "user__email",
+        "user__username",
+        "display_name",
+        "job_title",
+        "department",
+        "work_email",
+        "work_phone",
+    )
+    list_filter = ("role", "is_active", "company")
+    autocomplete_fields = ("company", "user")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by")
 
 
