@@ -13,7 +13,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import Dashboard from "./pages/DashboardPage";
 import MailDashoardPage from "./pages/mails/MailDashboardPage";
 
-import LandingPage from "./pages/landing/LandingPage";
+import LandingPage from "./pages/landing-sales/LandingPage";
 import SignupPage from "./pages/auth/SignupPage";
 import SubscribePage from "./pages/external_pages/SubscribePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -32,12 +32,30 @@ import UpdateQuotationPage from "./pages/sales/quotations/UpdateQuotationPage";
 import QuotationDetailPage from "./pages/sales/quotations/QuotationDetailPage";
 import SalesDashboardPage from "./pages/sales/SalesDashboardPage";
 import QuotationListPage from "./pages/sales/quotations/QuotationListPage";
+import ContactUsPage from "./pages/landing/ContactUsPage";
+import SalesWorkflowLifecycle from "./pages/sales/LifeCycle";
+import InvoiceListPage from "./pages/sales/invoices/InvoiceListPage";
+import InvoiceDetailPage from "./pages/sales/invoices/InvoiceDetailPage";
+import UpdateInvoicePage from "./pages/sales/invoices/UpdateInvoicePage";
+import CreateInvoicePage from "./pages/sales/invoices/CreateInvoicePage";
+
+import CreateProformaPage from "./pages/sales/proforma/CreateProformaPage";
+import ProformaDetailPage from "./pages/sales/proforma/ProformaDetailPage";
+import UpdateProformaPage from "./pages/sales/proforma/UpdateProformaPage";
+import CreateReceiptPage from "./pages/sales/receipts/CreateReceiptPage";
+import ReceiptDetailPage from "./pages/sales/receipts/ReceiptDetailPage";
+import UpdateReceiptPage from "./pages/sales/receipts/UpdateReceiptPage";
+import CreateDeliveryNotePage from "./pages/sales/delivery-notes/CreateDeliveryNotePage";
+import DeliveryNoteDetailPage from "./pages/sales/delivery-notes/DeliveryNoteDetailPage";
+import UpdateDeliveryNotePage from "./pages/sales/delivery-notes/UpdateDeliveryNotePage";
+import DeliveryNoteListPage from "./pages/sales/delivery-notes/DeliveryNotePageList";
+import ProformaListPage from "./pages/sales/proforma/ProformaListPage";
 
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
 
 
-axios.defaults.baseURL =location.hostname === "localhost" ? dev : prod
+axios.defaults.baseURL = location.hostname === "localhost" ? dev : prod
 
 
 
@@ -53,10 +71,13 @@ function App() {
           <Routes>
             <Route path="" element={<MainRoute />}>
               <Route path="/landing" element={<LandingPage />} />
+              <Route path="/contact-us" element={<ContactUsPage />} />
               <Route path="/subs/:linkId" element={<SubscribePage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy-policy" element={<PrivacyPage />} />
               <Route path="/refund-policy" element={<RefundPolicyPage />} />
+              <Route path="/sales-workflow" element={<SalesWorkflowLifecycle />} />
+
               <Route path="*" element={<NotFound />} />
             </Route>
             <Route path="" element={<PrivateRoute />}>
@@ -65,7 +86,7 @@ function App() {
               <Route path="/emails" element={<MailDashoardPage />} />
               <Route path="/emails/templates" element={<MailTemplatesPage />} />
               <Route path="/emails/new" element={<NewMailPage />} />
-             
+
               <Route path="/schedule-manager" element={<BookingCalendar />} />
               <Route path="/contacts-manager" element={<ContactsManagerPage />} />
               <Route path="/settings/integration" element={<EmailIntegrationPage />} />
@@ -83,6 +104,39 @@ function App() {
               <Route path="/quotations/new" element={<CreateQuotationPage />} />
               <Route path="/quotations/:id" element={<QuotationDetailPage />} />
               <Route path="/quotations/:id/edit" element={<UpdateQuotationPage />} />
+
+
+              <Route path="/proformas" element={<ProformaListPage/>} />
+              <Route path="/proformas/new" element={<CreateProformaPage />} />
+              <Route path="/proformas/:id" element={<ProformaDetailPage />} />
+              <Route path="/proformas/:id/edit" element={<UpdateProformaPage />} />
+
+              
+              
+
+
+              
+
+              <Route path="/invoices" element={<InvoiceListPage />} />
+              <Route path="/invoices/new" element={<CreateInvoicePage />} />
+              <Route path="/invoices/:id/edit" element={<UpdateInvoicePage />} />
+              <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+
+
+              <Route path="/receipts" element={<ReceiptDetailPage />} />
+              <Route path="/receipts/new" element={<CreateReceiptPage />} />
+              <Route path="/receipts/:id" element={<ReceiptDetailPage />} />
+              <Route path="/receipts/:id/edit" element={<UpdateReceiptPage />} />
+
+              <Route path="/delivery-notes" element={<DeliveryNoteListPage />} />
+              <Route path="/delivery-notes/new" element={<CreateDeliveryNotePage />} />
+              <Route path="/delivery-notes/:id" element={<DeliveryNoteDetailPage />} />
+              <Route path="/delivery-notes/:id/edit" element={<UpdateDeliveryNotePage />} />
+
+              
+
+
+
 
             </Route>
             <Route path="" element={<AuthRoute />}>

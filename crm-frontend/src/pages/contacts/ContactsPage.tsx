@@ -1,195 +1,219 @@
 import { useState, useEffect } from "react";
-import { Typography, Alert, Snackbar } from "@mui/material";
 import ContactView from "../../components/ContactView";
 import { ContactType } from "@/components/forms/ContactForm";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-    ColumnDef,
-    flexRender,
-    getCoreRowModel,
-    useReactTable,
-} from "@tanstack/react-table"
 
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 import { parseTime } from "@/lib/utils";
 import ImportContacts from "@/pages/contacts/ImportContacts";
 import { getCategories, getContacts } from "@/redux/actions/contactActions";
 import { useSelector } from "react-redux";
 import EmailContactDialog from "./EmailContactDialog";
 import CategoryFormDialog from "./CategoryFormDialog";
-import store from "@/redux/store";
 import { Badge } from "@/components/ui/badge";
 
-
+// 🔥 shadcn toast
+import { useToast } from "@/components/ui/use-toast";
 
 const ContactsManagerPage = () => {
+  const [_contacts, setContacts] = useState<any>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { categories: contactCategories, all_contacts } = useSelector(
+    (state: any) => state.contacts
+  );
 
-    const [_contacts, setContacts] = useState(null);
-    const [searchParams, setSearchParams] = useSearchParams();
-    const { categories: contactCategories, all_contacts } = useSelector(state => state.contacts);
-    const [toast, setToast] = useState({
-        isOpen: false,
-        message: "",
-        severity: "",
-    })
+  const { toast } = useToast();
 
-    useEffect(() => {
-        getContacts();
-        getCategories();
-    }, [])
+  useEffect(() => {
+    getContacts();
+    getCategories();
+  }, []);
 
-    const showToast = (message: string, severity: "error" | "info" | "success") => {
-        setToast({
-            isOpen: true,
-            message,
-            severity
-        })
-    }
+  const showToast = (message: string, variant: "default" | "destructive") => {
+    toast({
+      title: message,
+      variant,
+    });
+  };
 
-    const handleToastClose = () => {
-        setToast({
-            isOpen: false,
-            message: "",
-            severity: "info"
-        })
-    }
+  const handleOnContactCreated = (contact: ContactType) => {
+    setContacts((prev) => ({
+      ...prev,
+      results: [contact, ...(prev?.results || [])],
+    }));
 
-    const handleOnContactCreated = (contact: ContactType) => {
-        setContacts((prev) => {
-            const results = [contact, ...prev.results];
-            return {
-                ...prev,
-                results
-            }
-        })
-        showToast("New Contact Created", "success")
-    }
+    showToast("New Contact Created", "default");
+  };
 
-    const handleOnContactUpdated = (updatedContact: ContactType) => {
-        setContacts((prev) => {
-            const results = prev.results.map(currentContact => (
-                currentContact.id === updatedContact.id) ? updatedContact : currentContact
-            )
-            return {
-                ...prev,
-                results,
-            }
-        })
-        showToast("Contact Updated", "info")
-    }
+  const handleOnContactUpdated = (updatedContact: ContactType) => {
+    setContacts((prev) => ({
+      ...prev,
+      results: prev.results.map((c: ContactType) =>
+        c.id === updatedContact.id ? updatedContact : c
+      ),
+    }));
 
-    const handleOnContactDeleted = (id: string | number) => {
-        setContacts((prev) => {
-            const results = prev.results.filter((contact: ContactType) => contact.id !== id)
-            return {
-                ...prev,
-                results,
-            }
-        })
-        showToast("Contact Deleted", "error")
-    }
+    showToast("Contact Updated", "default");
+  };
 
-    const send_email = () => { }
+  const handleOnContactDeleted = (id: string | number) => {
+    setContacts((prev) => ({
+      ...prev,
+      results: prev.results.filter((c: ContactType) => c.id !== id),
+    }));
 
-    const send_multiple_emails = () => { }
+    showToast("Contact Deleted", "destructive");
+  };
 
-    const categoryId = searchParams.get("categoryId") 
+  const categoryId = searchParams.get("categoryId");
 
+  const category = categoryId
+    ? contactCategories?.find((cat) => cat.id === parseInt(categoryId))
+    : null;
 
-    const category = categoryId ? contactCategories?.filter(cat => cat.id === parseInt(categoryId))[0] : null
+  return (
+    <div className="flex flex-col gap-4 bg-muted/30 p-3 md:p-6">
+      <h1 className="text-2xl font-semibold">My Contacts</h1>
 
+      <div className="flex gap-8">
+        {/* Sidebar */}
+        <div className="w-48 flex flex-col gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => setSearchParams({})}
+            className="justify-start"
+          >
+            All
+          </Button>
 
-    return (
-        <div className="flex flex-col gap-2 bg-slate-50 p-3 md:p-6">
-            <Typography component="h1" variant="h5">My Contacts</Typography>
-            <div className="flex gap-8">
-                <div className="w-40 flex flex-col gap-6">
-                    <div className="flex items-center justify-between p-2 text-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                        <Button variant="link" className="ms-3" onClick={() => setSearchParams({})}>All</Button>
-                    </div>
-                    {contactCategories?.map(_category => (
-                        <div key={_category.id} className="flex items-center justify-between p-2 text-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                            <Button variant="link" className="ms-3" onClick={() => setSearchParams({ categoryId: _category.id })}>
-                                {_category.name}
-                            </Button>
-                            <span>{_category.total_contacts}</span>
-                        </div>
-                    ))}
-                    <CategoryFormDialog>
-                        <Button>+ New Category</Button>
-                    </CategoryFormDialog>
-
-                </div>
-                <div className="flex flex-col gap-6">
-                    {category ?
-                        (
-                            <>
-                                <h1 className="text-4xl">{category.name}</h1>
-                                <div className="flex gap-3">
-                                    <ContactView onCreate={handleOnContactCreated} type="create">
-                                        + New Contact
-                                    </ContactView>
-                                    <ImportContacts>
-                                        <Button variant="outline">Import Contacts</Button>
-                                    </ImportContacts>
-                                    <Button >{"Send Email ->"}</Button>
-                                    <CategoryFormDialog key={category.id} category={category}>
-                                        <Button>Update</Button>
-                                    </CategoryFormDialog>
-                                    <Button variant="destructive">{"Delete Category"}</Button>
-                                </div>
-                            </>
-                        ) :
-                        (<h1 className="text-4xl">All Contacts</h1>)}
-
-                    <Table>
-                        <TableHeader>
-                            <TableHead>Contact</TableHead>
-                            <TableHead>Company</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead>Categories</TableHead>
-                            <TableHead>Created At</TableHead>
-                            <TableHead>Actions</TableHead>
-                        </TableHeader>
-                        <TableBody>
-                            {all_contacts.results.map((contact) => (
-                                <TableRow key={contact.id}>
-                                    <TableCell className="flex flex-col gap-2">
-                                        <span className="text-xl">{contact.first_name} {contact.last_name}</span>
-                                        <span>{contact.email}</span>
-                                    </TableCell>
-                                    <TableCell>{contact.company}</TableCell>
-                                    <TableCell>{contact.phone_number}</TableCell>
-                                    <TableCell className="flex flex-wrap gap-2">
-                                        {contact.categories.map(cat => <Badge variant="outline" key={cat.id}>{cat.name}</Badge>)}
-                                    </TableCell>
-                                    <TableCell>{parseTime(contact.created_at)}</TableCell>
-                                    <TableCell>
-                                        <EmailContactDialog contact={contact}>
-                                            <Button variant="secondary">Send Email</Button>
-                                        </EmailContactDialog>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
+          {contactCategories?.map((cat) => (
+            <div key={cat.id} className="flex justify-between items-center">
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() =>
+                  setSearchParams({ categoryId: String(cat.id) })
+                }
+              >
+                {cat.name}
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {cat.total_contacts}
+              </span>
             </div>
-            <Snackbar anchorOrigin={{ vertical: "bottom", horizontal: "center" }} open={toast.isOpen} autoHideDuration={6000} onClose={handleToastClose}>
-                <Alert onClose={handleToastClose} severity={toast.severity as "info"} sx={{ width: '100%' }}>
-                    {toast.message}
-                </Alert>
-            </Snackbar>
+          ))}
+
+          <CategoryFormDialog>
+            <Button className="w-full">+ New Category</Button>
+          </CategoryFormDialog>
         </div>
-    )
-}
+
+        {/* Main */}
+        <div className="flex flex-col gap-6 flex-1">
+          {category ? (
+            <>
+              <h2 className="text-3xl font-bold">{category.name}</h2>
+
+              <div className="flex flex-wrap gap-3">
+                <ContactView
+                                  onCreate={handleOnContactCreated}
+                                  type="create" contact={{
+                                      id: undefined,
+                                      first_name: "",
+                                      last_name: "",
+                                      email: "",
+                                      company: "",
+                                      phone_number: "",
+                                      address: ""
+                                  }}                >
+                  + New Contact
+                </ContactView>
+
+                <ImportContacts>
+                  <Button variant="outline">Import Contacts</Button>
+                </ImportContacts>
+
+                <Button>Send Email →</Button>
+
+                <CategoryFormDialog category={category}>
+                  <Button variant="secondary">Update</Button>
+                </CategoryFormDialog>
+
+                <Button variant="destructive">Delete Category</Button>
+              </div>
+            </>
+          ) : (
+            <h2 className="text-3xl font-bold">All Contacts</h2>
+          )}
+
+          {/* Table */}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Contact</TableHead>
+                <TableHead>Company</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Categories</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {all_contacts?.results?.map((contact: any) => (
+                <TableRow key={contact.id}>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-medium">
+                        {contact.first_name} {contact.last_name}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {contact.email}
+                      </span>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>{contact.company}</TableCell>
+                  <TableCell>{contact.phone_number}</TableCell>
+
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      {contact.categories.map((cat: any) => (
+                        <Badge key={cat.id} variant="outline">
+                          {cat.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    {parseTime(contact.created_at)}
+                  </TableCell>
+
+                  <TableCell>
+                    <EmailContactDialog contact={contact}>
+                      <Button size="sm" variant="secondary">
+                        Send Email
+                      </Button>
+                    </EmailContactDialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default ContactsManagerPage;

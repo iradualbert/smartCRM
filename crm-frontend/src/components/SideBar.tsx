@@ -14,10 +14,18 @@ const SideBar = () => {
     return (
         <div className="fixed top-0 left-0 h-screen w-16 m-0 flex flex-col shadow-lg text-white bg-black z-20">
             <SideBarIcon icon={<FaHome size={30} />} text="Home" to="/" />
+            <SideBarIcon icon={<MdOutlinePointOfSale size={30} />} text="Sales Dashboard" to="/sales-dashboard" />
             <SideBarIcon icon={<TfiEmail size={30} />} text="Emails" to="/emails" />
             <SideBarIcon icon={<FaUser size={30} />} text="Profile" to="/settings/profile" />
             <SideBarIcon icon={<FaBuilding size={30} />} text="Create Company" to="/companies" />
             <SideBarIcon icon={<MdOutlinePointOfSale size={30} />} text="Quotations / Offers" to="/quotations" />
+            
+            <SideBarIcon icon={<MdOutlinePointOfSale size={30} />} text="Proformas" to="/proformas" />
+            <SideBarIcon icon={<MdOutlinePointOfSale size={30} />} text="Invoices" to="/invoices" />
+            <SideBarIcon icon={<MdOutlinePointOfSale size={30} />} text="receipts" to="/receipts" />
+
+            <SideBarIcon icon={<MdOutlinePointOfSale size={30} />} text="Delivery Notes" to="/delivery-notes" />
+            
             {/* <SideBarIcon icon={<IoShareSocialSharp size={30} />} text="Social Manager" to="/social-manager" />
             <SideBarIcon icon={<IoIosContacts size={30} />} text="Contacts: Send Emails, Schedule Meetings" to="/contacts-manager" />
             <SideBarIcon icon={<BsNewspaper size={30} />} text="Newsletter" to="/newsletter-manager"/>

@@ -1,28 +1,32 @@
-import { DialogTitle, IconButton, Button } from "@mui/material";
-import { IoMdClose } from "react-icons/io"; 
+import { DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { IoMdClose } from "react-icons/io";
 
-function ModalTitle(props) {
-    const { children, onClose, ...other } = props;
-  
-    return (
-      <DialogTitle sx={{ m: 0, p: 2 }} {...other}>
+type ModalTitleProps = {
+  children: React.ReactNode;
+  onClose?: () => void;
+};
+
+function ModalTitle({ children, onClose, ...props }: ModalTitleProps) {
+  return (
+    <div className="relative flex items-center">
+      <DialogTitle className="text-lg font-semibold" {...props}>
         {children}
-        {onClose ? (
-          <IconButton
-            aria-label="close"
-            onClick={onClose}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: (theme) => theme.palette.grey[500],
-            }}
-          >
-            <IoMdClose />
-          </IconButton>
-        ) : null}
       </DialogTitle>
-    );
-  }
 
-  export default ModalTitle
+      {onClose && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="absolute right-0 top-0 text-muted-foreground hover:text-foreground"
+          aria-label="close"
+        >
+          <IoMdClose className="h-5 w-5" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export default ModalTitle;

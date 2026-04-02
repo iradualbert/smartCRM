@@ -1,13 +1,15 @@
 import MailTemplateForm from "@/components/forms/MailTemplateForm";
-import { Typography } from "@mui/material";
 
 const MailTemplatesPage = () => {
   return (
-    <div className="flex flex-col">
-        <Typography variant="h3" marginBottom={5}>Create New Template</Typography>
-        <MailTemplateForm />
-    </div>
-  )
-}
+    <div className="flex flex-col gap-6">
+      <h1 className="text-3xl font-bold tracking-tight">
+        Create New Template
+      </h1>
 
-export default MailTemplatesPage
+      <MailTemplateForm />
+    </div>
+  );
+};
+
+export default MailTemplatesPage;

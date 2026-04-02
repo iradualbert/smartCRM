@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { listQuotations, type Quotation } from "./api"
 
+
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     draft: "bg-slate-100 text-slate-700",
@@ -65,6 +66,7 @@ const QuotationListPage = () => {
 
   return (
     <div className="mx-auto max-w-7xl p-6">
+   
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Quotations</h1>

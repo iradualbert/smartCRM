@@ -1,140 +1,191 @@
 import { Button } from "@/components/ui/button";
-import { FormControl, FormLabel, TextField, Typography } from "@mui/material";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import Logo from "@/components/Logo";
 
-
-
-
 const SubscribePage = () => {
-    const [isLoadingInfo, setIsLoadingInfo] = useState(true);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [hasSubmitted, setHasSubmitted] = useState(false);
-    const [linkData, setLinkData] = useState({});
-    const [isInvalidLink, setIsInvalidLink] = useState(false);
+  const [isLoadingInfo, setIsLoadingInfo] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [linkData, setLinkData] = useState<any>({});
+  const [isInvalidLink, setIsInvalidLink] = useState(false);
 
-    const { linkId } = useParams();
-    const [formData, setFormData] = useState({
-        "first_name": "",
-        "last_name": "",
-        "email": "",
-    })
-    const [errors, setErrors] = useState({});
+  const { linkId } = useParams();
 
-    useEffect(() => {
-        axios.get(`/subscriptions/${linkId}`)
-            .then(res => {
-                setIsLoadingInfo(false);
-                setLinkData(res.data)
-            })
-            .catch(() => {
-                setIsInvalidLink(true)
-            })
-            .finally(() => setIsLoadingInfo(false))
-    }, [])
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+  });
 
-    const onFieldChange = e => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
-    }
+  const [errors, setErrors] = useState<any>({});
 
-    const handleSubmit = e => {
-        e.preventDefault();
-        setIsSubmitting(true)
-        axios.post(`/subscriptions/${linkId}`, formData).then(() => {
-            setHasSubmitted(true);
-            setErrors({});
-            setFormData({
-                first_name: "",
-                last_name:"",
-                email: ""
-            })
-        })
-            .catch(err => {
-                setErrors(err.response?.data)
-            })
-            .finally(() => {
-                setIsSubmitting(false)
-            })
-    }
+  useEffect(() => {
+    axios
+      .get(`/subscriptions/${linkId}`)
+      .then((res) => {
+        setLinkData(res.data);
+      })
+      .catch(() => {
+        setIsInvalidLink(true);
+      })
+      .finally(() => setIsLoadingInfo(false));
+  }, []);
 
-    const handleSubmitAgain = e => {
-        setHasSubmitted(false);
-    }
-    if (isLoadingInfo) return <Typography>Loading....</Typography>
-    if (isInvalidLink) return <Typography>Invalid or Expired Link</Typography>
+  const onFieldChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
-    if (hasSubmitted) return (
-        <div>
-            <Typography>Thank you from subscribing to {linkData.title}</Typography>
-            <Button onClick={handleSubmitAgain}>Submit Again</Button>
-        </div>
-    )
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
+    axios
+      .post(`/subscriptions/${linkId}`, formData)
+      .then(() => {
+        setHasSubmitted(true);
+        setErrors({});
+        setFormData({
+          first_name: "",
+          last_name: "",
+          email: "",
+        });
+      })
+      .catch((err) => {
+        setErrors(err.response?.data);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
+  };
+
+  const handleSubmitAgain = () => {
+    setHasSubmitted(false);
+  };
+
+  // 🔄 Loading
+  if (isLoadingInfo) {
     return (
-        <div className="mx-auto flex w-full flex-col justify-center pt-10 space-y-6 sm:w-[600px]">
-            <form className="flex flex-col gap-2  md:px-10" onSubmit={handleSubmit}>
-                <Typography variant="h3" component="p" textAlign="center">{linkData.title}</Typography>
-                <Logo />
-                <Typography textAlign="center">{linkData.description}</Typography>
-                {errors?.non_field_errors && <p>{errors.non_field_errors}</p>}
-                <FormControl fullWidth>
-                    <FormLabel component="p">First Name *</FormLabel>
-                    <TextField
-                        className="input"
-                        value={formData.first_name}
-                        disabled={isSubmitting}
-                        size="small"
-                        variant="outlined"
-                        name="first_name"
-                        onChange={onFieldChange}
-                        error={errors?.first_name}
-                        helperText={errors?.first_name}
-                    />
-                </FormControl>
-                <FormControl fullWidth>
-                    <FormLabel component="p">Last Name *</FormLabel>
-                    <TextField
-                        className="input"
-                        value={formData.last_name}
-                        disabled={isSubmitting}
-                        size="small"
-                        variant="outlined"
-                        name="last_name"
-                        onChange={onFieldChange}
-                        error={errors?.last_name}
-                        helperText={errors?.last_name}
-                    />
-                </FormControl>
-                <FormControl fullWidth>
-                    <FormLabel component="p">Email *</FormLabel>
-                    <TextField
-                        className="input"
-                        type="email"
-                        value={formData.email}
-                        size="small"
-                        variant="outlined"
-                        disabled={isSubmitting}
-                        onChange={onFieldChange}
-                        name="email"
-                        error={errors?.email}
-                        helperText={errors?.email}
-                    />
-                </FormControl>
-                <Button disabled={isSubmitting} type="submit">
-                    {isSubmitting && (
-                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    )}
-                    Subscribe
-                </Button>
-            </form>
+      <div className="flex justify-center pt-20">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
+
+  // ❌ Invalid link
+  if (isInvalidLink) {
+    return (
+      <div className="flex justify-center pt-20 text-destructive">
+        Invalid or expired link
+      </div>
+    );
+  }
+
+  // ✅ Success
+  if (hasSubmitted) {
+    return (
+      <div className="flex flex-col items-center gap-4 pt-20">
+        <p className="text-lg font-medium">
+          Thank you for subscribing to {linkData.title}
+        </p>
+
+        <Button onClick={handleSubmitAgain}>
+          Submit Again
+        </Button>
+      </div>
+    );
+  }
+
+  // 📝 Form
+  return (
+    <div className="mx-auto flex w-full flex-col justify-center space-y-6 pt-10 sm:w-[600px]">
+      <form
+        className="flex flex-col gap-4 md:px-10"
+        onSubmit={handleSubmit}
+      >
+        <h1 className="text-center text-3xl font-bold">
+          {linkData.title}
+        </h1>
+
+        <Logo />
+
+        <p className="text-center text-muted-foreground">
+          {linkData.description}
+        </p>
+
+        {errors?.non_field_errors && (
+          <p className="text-sm text-destructive">
+            {errors.non_field_errors}
+          </p>
+        )}
+
+        {/* First Name */}
+        <div className="flex flex-col gap-2">
+          <Label>First Name *</Label>
+          <Input
+            name="first_name"
+            value={formData.first_name}
+            onChange={onFieldChange}
+            disabled={isSubmitting}
+          />
+          {errors?.first_name && (
+            <p className="text-sm text-destructive">
+              {errors.first_name}
+            </p>
+          )}
         </div>
 
-    )
+        {/* Last Name */}
+        <div className="flex flex-col gap-2">
+          <Label>Last Name *</Label>
+          <Input
+            name="last_name"
+            value={formData.last_name}
+            onChange={onFieldChange}
+            disabled={isSubmitting}
+          />
+          {errors?.last_name && (
+            <p className="text-sm text-destructive">
+              {errors.last_name}
+            </p>
+          )}
+        </div>
 
-}
+        {/* Email */}
+        <div className="flex flex-col gap-2">
+          <Label>Email *</Label>
+          <Input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={onFieldChange}
+            disabled={isSubmitting}
+          />
+          {errors?.email && (
+            <p className="text-sm text-destructive">
+              {errors.email}
+            </p>
+          )}
+        </div>
 
+        <Button disabled={isSubmitting} type="submit">
+          {isSubmitting && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Subscribe
+        </Button>
+      </form>
+    </div>
+  );
+};
 
-export default SubscribePage
+export default SubscribePage;
