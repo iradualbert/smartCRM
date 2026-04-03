@@ -88,7 +88,7 @@ class SubscriptionEvent(models.Model):
         ("payment_failed", "Payment Failed"),
     ]
 
-    company = models.ForeignKey("yourapp.Company", on_delete=models.CASCADE, related_name="subscription_events")
+    company = models.ForeignKey("sales.Company", on_delete=models.CASCADE, related_name="subscription_events")
     subscription = models.ForeignKey(
         Subscription,
         on_delete=models.CASCADE,
@@ -106,7 +106,7 @@ class SubscriptionEvent(models.Model):
     
 
 class BillingUsage(models.Model):
-    company = models.ForeignKey("yourapp.Company", on_delete=models.CASCADE, related_name="billing_usages")
+    company = models.ForeignKey("sales.Company", on_delete=models.CASCADE, related_name="billing_usages")
 
     year = models.PositiveIntegerField()
     month = models.PositiveIntegerField()
