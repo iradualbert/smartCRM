@@ -50,6 +50,10 @@ import DeliveryNoteDetailPage from "./pages/sales/delivery-notes/DeliveryNoteDet
 import UpdateDeliveryNotePage from "./pages/sales/delivery-notes/UpdateDeliveryNotePage";
 import DeliveryNoteListPage from "./pages/sales/delivery-notes/DeliveryNotePageList";
 import ProformaListPage from "./pages/sales/proforma/ProformaListPage";
+import UpdateTemplatePage from "./pages/sales/templates/UpdateTemplatePage";
+import TemplateDetailPage from "./pages/sales/templates/TemplateDetailPage";
+import CreateTemplatePage from "./pages/sales/templates/CreateTemplatePage";
+import TemplateListPage from "./pages/sales/templates/TemplateListPage";
 
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
@@ -106,16 +110,16 @@ function App() {
               <Route path="/quotations/:id/edit" element={<UpdateQuotationPage />} />
 
 
-              <Route path="/proformas" element={<ProformaListPage/>} />
+              <Route path="/proformas" element={<ProformaListPage />} />
               <Route path="/proformas/new" element={<CreateProformaPage />} />
               <Route path="/proformas/:id" element={<ProformaDetailPage />} />
               <Route path="/proformas/:id/edit" element={<UpdateProformaPage />} />
 
-              
-              
 
 
-              
+
+
+
 
               <Route path="/invoices" element={<InvoiceListPage />} />
               <Route path="/invoices/new" element={<CreateInvoicePage />} />
@@ -133,8 +137,10 @@ function App() {
               <Route path="/delivery-notes/:id" element={<DeliveryNoteDetailPage />} />
               <Route path="/delivery-notes/:id/edit" element={<UpdateDeliveryNotePage />} />
 
-              
-
+              <Route path="/templates" element={<TemplateListPage />} />
+              <Route path="/templates/new" element={<CreateTemplatePage />} />
+              <Route path="/templates/:id" element={<TemplateDetailPage />} />
+              <Route path="/templates/:id/edit" element={<UpdateTemplatePage />} />
 
 
 

@@ -304,16 +304,19 @@ class DocumentViewSet(BaseModelViewSet):
 
 
 class TemplateViewSet(BaseModelViewSet):
-    queryset = Template.objects.select_related("company").all().order_by("-created_at")
+    queryset =  Template.objects.select_related("company").all().order_by("-created_at")
     serializer_class = TemplateSerializer
 
     @action(detail=True, methods=["post"])
     def inspect(self, request, pk=None):
         template = self.get_object()
+        result = inspect_template_file(template)
+        return Response(result)
         try:
             result = inspect_template_file(template)
             return Response(result)
         except Exception as exc:
+            
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
 

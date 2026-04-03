@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux";
 import { Outlet, Navigate } from "react-router-dom";
-import SideBar from "./components/SideBar";
+import SideBar from "./components/sidebar/SideBar";
 import { useQuery } from "./lib/hooks";
 import Navbar from "@/components/navbar/Navbar";
 import { Toaster } from "@/components/ui/toaster";

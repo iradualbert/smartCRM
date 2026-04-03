@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -515,3 +516,40 @@ class DeliveryNoteLine(BaseLineItem):
     def __str__(self):
         product_name = self.product.name if self.product else "Custom Item"
         return f"{self.delivery_note.delivery_note_number} - {product_name}"
+    
+    
+    
+class DocumentEvent(models.Model):
+    EVENT_TYPES = [
+        ("created", "Created"),
+        ("updated", "Updated"),
+        ("converted", "Converted"),
+        ("pdf_generated", "PDF Generated"),
+        ("email_sent", "Email Sent"),
+        ("status_changed", "Status Changed"),
+        ("viewed", "Viewed")
+    ]
+
+    document = models.ForeignKey(
+        "Document",
+        on_delete=models.CASCADE,
+        related_name="events"
+    )
+
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
+
+    message = models.TextField(blank=True)
+
+    metadata = models.JSONField(default=dict, blank=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]

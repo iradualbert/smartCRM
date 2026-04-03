@@ -28,6 +28,7 @@ import {
   type Invoice,
   type InvoiceStatus,
 } from "./api"
+import DocumentTimeline from "@/shared/DocumentTimeLine"
 
 function statusTone(status: InvoiceStatus) {
   switch (status) {
@@ -370,8 +371,39 @@ const InvoiceDetailPage = () => {
           </Card>
         </div>
       </div>
+      {events.length > 0 && <DocumentTimeline events={events} />}
     </div>
   )
 }
+
+const events = [
+  {
+    id: 1,    
+    event_type: "created",
+    created_at: "2024-01-01T10:00:00Z",
+  },
+  {
+    id: 2,
+    event_type: "pdf_generated",
+    created_at: "2024-01-02T12:00:00Z",
+  },
+  {
+    id: 3,
+    event_type: "email_sent",
+    created_at: "2024-01-03T14:00:00Z",
+    metadata: {
+      email: "customer@example.com",
+    },
+  },  
+  {
+    id: 4,
+    event_type: "status_changed", 
+    created_at: "2024-01-04T16:00:00Z",
+    metadata: {
+      from: "draft",
+      to: "sent",
+    },
+  },
+]
 
 export default InvoiceDetailPage
