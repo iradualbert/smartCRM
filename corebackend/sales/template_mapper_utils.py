@@ -143,6 +143,35 @@ DOCUMENT_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "ItemQty": "LineQty",
         },
     },
+    
+    "receipt": {
+        "label": "Receipt",
+        "suggested_mapping": {
+            "DocumentNumber": "document.number",
+            "DocumentDate": "document.date",
+            "CompanyName": "company.name",
+            "CompanyAddress": "company.address",
+            "CompanyEmail": "company.email",
+            "CompanyPhone": "company.phone",
+            "ClientName": "client.name",
+            "ClientDetails": "client.details",
+            "Currency": "document.currency",
+            "SubTotal": "totals.subtotal",
+            "Discount": "totals.discount",
+            "Tax": "totals.tax",
+            "Total": "totals.total",
+            "TaxRatePercent": "totals.tax_rate_percent",
+            "Notes": "notes",
+            "AmountPaid": "totals.total",
+            "PaymentDate": "document.date",
+            "PaymentMethod": "custom.payment_method",
+            "InvoiceNumber": "custom.invoice_number",
+        },
+        "aliases": {
+            "ReceiptNumber": "DocumentNumber",
+            "ReceiptDate": "DocumentDate",
+        },
+    },
 }
 
 

@@ -157,6 +157,9 @@ STATIC_URL = 'static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+MEDIA_URL = "/files/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "files")
+
 MAIN_DIR = Path(__file__).resolve().parent.parent.parent
 
 REACT_APP_BUILD_PATH = MAIN_DIR / "crm-frontend/dist"

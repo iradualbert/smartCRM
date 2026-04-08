@@ -8,6 +8,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from .services.email_template import build_email_draft_for_instance
+
 from .models import (
     Company,
     CompanyMembership,
@@ -119,6 +121,22 @@ class DocumentLifecycleMixin:
                 },
                 status=status.HTTP_200_OK,
             )
+        except Exception as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def email_draft(self, request, pk=None):
+        instance = self.get_object()
+
+        try:
+            draft = build_email_draft_for_instance(
+                instance=instance,
+                document_type=self.document_type,
+                user=request.user,
+            )
+            draft["attachment_url"] = request.build_absolute_uri(draft.get("attachment_url")) if draft.get("attachment_url") else None
+            return Response(draft, status=status.HTTP_200_OK)
         except Exception as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 

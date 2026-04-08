@@ -29,7 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
     config = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'app_usage', 'config')
+        fields = ('id', 'email', 'first_name', 'last_name', 'app_usage', 'config', 'company_memberships')
         
     
     def get_app_usage(self, obj):
@@ -46,6 +46,10 @@ class UserSerializer(serializers.ModelSerializer):
                 "max_emails_per_day": 100
                 }
     
+    def get_membership_companies(self, obj):
+        company_memberships = obj.company_memberships.all()
+        return [membership.company.name for membership in company_memberships]
+
     def get_config(self, obj):
         try:
             return {"email_provider": obj.account.email_provider}
