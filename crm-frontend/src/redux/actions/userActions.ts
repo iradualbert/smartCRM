@@ -1,5 +1,5 @@
 import axios from "axios";
-import { SET_USER, SET_UNAUTHENTICATED, SET_TOKEN_VERIFIED } from "../types";
+import { SET_USER, SET_UNAUTHENTICATED, SET_TOKEN_VERIFIED, SET_COMPANIES } from "../types";
 
 const api = {
     LOGIN: "/auth/login/",
@@ -8,7 +8,8 @@ const api = {
     LOGOUT: "/auth/logout/",
     LOGOUT_ALL: "/auth/logoutall/",
 	VERIFY_CODE: "/accounts/activate/code/",
-	RESEND_CODE: "/accounts/activate/resend/"
+	RESEND_CODE: "/accounts/activate/resend/",
+	MEMBERSHIP_COMPANIES: "/companies/"
 }
 
 const config = {
@@ -104,6 +105,20 @@ export const getUser = () => async (dispatch: any) => {
 	}
 };
 
+export const getMembershipOrganizations = () => async (dispatch: any) => {
+	try {
+		const {data } = await axios.get(api.MEMBERSHIP_COMPANIES);
+		dispatch({type: SET_COMPANIES, payload: data.results});
+	}
+	catch(err: any){
+		if (err.response) {
+			console.error("Error fetching membership organizations:", err.response.data);
+		} else {
+			console.error("Error fetching membership organizations:", err);
+		}
+}
+}	
+
 export const logoutUser = () => {
 	axios.post(api.LOGOUT)
 		.then(() => {
@@ -128,6 +143,7 @@ export const checkAuthToken = () => async (dispatch: any) => {
 	if (token) {
 		axios.defaults.headers.common["Authorization"] = `Token ${token}`;
 		dispatch(getUser());
+		dispatch(getMembershipOrganizations());
 	} else {
 		dispatch({ type: SET_TOKEN_VERIFIED });
 	}

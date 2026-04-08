@@ -54,6 +54,7 @@ import UpdateTemplatePage from "./pages/sales/templates/UpdateTemplatePage";
 import TemplateDetailPage from "./pages/sales/templates/TemplateDetailPage";
 import CreateTemplatePage from "./pages/sales/templates/CreateTemplatePage";
 import TemplateListPage from "./pages/sales/templates/TemplateListPage";
+import QuotationEmailPage from "./pages/sales/quotations/QuotationEmailPage";
 
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
@@ -108,6 +109,7 @@ function App() {
               <Route path="/quotations/new" element={<CreateQuotationPage />} />
               <Route path="/quotations/:id" element={<QuotationDetailPage />} />
               <Route path="/quotations/:id/edit" element={<UpdateQuotationPage />} />
+              <Route path="/quotations/:id/email" element={<QuotationEmailPage />} />
 
 
               <Route path="/proformas" element={<ProformaListPage />} />

@@ -1,4 +1,5 @@
 import axios from "axios"
+import { EmailComposerSubmitPayload } from "../shared-components/EmailComposer"
 
 export type PaginatedResponse<T> = {
   count: number
@@ -328,4 +329,25 @@ export async function updateQuotationWithLines(input: {
   }
 
   return getQuotation(input.quotationId)
+}
+
+export async function getQuotationEmailDraft(id: number | string) {
+  const response = await axios.get(`/quotations/${id}/email_draft/`)
+  return response.data
+}
+
+export async function sendQuotationEmail(
+  quotationId: number | string,
+  payload: EmailComposerSubmitPayload
+) {
+  const response = await axios.post(`/quotations/${quotationId}/send-email/`, {
+    to: payload.to,
+    cc: payload.cc ? payload.cc.split(",").map((v) => v.trim()).filter(Boolean) : [],
+    subject: payload.subject,
+    body_html: payload.bodyHtml,
+    include_attachment: payload.includeAttachment,
+    sending_config_id: payload.sendingConfigId,
+  })
+
+  return response.data
 }

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import type { TemplateDocumentType } from "./api"
 
+
 export type TemplateFormValues = {
   company: number | null
   name: string
@@ -26,13 +27,13 @@ type TemplateUploadCardProps = {
   currentFileUrl?: string | null
 }
 
-const DOCUMENT_TYPES: TemplateDocumentType[] = [
-  "invoice",
-  "quotation",
-  "proforma",
-  "delivery_note",
-  "receipt",
-]
+const DocumentTypeLabels: Record<string, string> = {
+  invoice: "Invoice",
+  quotation: "Quotation", 
+  proforma: "Proforma",
+  delivery_note: "Delivery Note",
+  receipt: "Receipt",
+}
 
 const CURRENCIES = ["USD", "EUR", "GBP", "TRY", "KES", "UGX", "TZS"]
 
@@ -42,6 +43,9 @@ export default function TemplateUploadCard({
   onChange,
   currentFileUrl,
 }: TemplateUploadCardProps) {
+
+ 
+
   const toggleCurrency = (currency: string) => {
     const exists = values.supported_currencies.includes(currency)
     onChange({
@@ -80,8 +84,8 @@ export default function TemplateUploadCard({
               onChange({ document_type: e.target.value as TemplateDocumentType })
             }
           >
-            {DOCUMENT_TYPES.map((type) => (
-              <option key={type} value={type}>
+            {Object.entries(DocumentTypeLabels).map(([key, type] ) => (
+              <option key={key} value={key}>
                 {type}
               </option>
             ))}
@@ -99,20 +103,7 @@ export default function TemplateUploadCard({
           />
         </Field>
 
-        <Field>
-          <FieldLabel>Company Id</FieldLabel>
-          <Input
-            type="number"
-            className="rounded-xl"
-            value={values.company ?? ""}
-            onChange={(e) =>
-              onChange({
-                company: e.target.value ? Number(e.target.value) : null,
-              })
-            }
-          />
-          <FieldDescription>Replace later with active company context.</FieldDescription>
-        </Field>
+      
 
         <Field>
           <FieldLabel>Template File</FieldLabel>
@@ -153,11 +144,10 @@ export default function TemplateUploadCard({
                   onClick={() => toggleCurrency(currency)}
                 >
                   <Badge
-                    className={`rounded-full border px-3 py-1 ${
-                      active
-                        ? "border-sky-200 bg-sky-50 text-sky-700"
-                        : "border-slate-200 bg-white text-slate-600"
-                    }`}
+                    className={`rounded-full border px-3 py-1 ${active
+                      ? "border-sky-200 bg-sky-50 text-sky-700"
+                      : "border-slate-200 bg-white text-slate-600"
+                      }`}
                   >
                     {currency}
                   </Badge>

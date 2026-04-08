@@ -108,13 +108,14 @@ const QuotationDetailPage = () => {
     if (!quotation) return
     try {
       setActionLoading("proforma")
-      await createProformaFromQuotation({
+      const data = await createProformaFromQuotation({
         quotation: quotation.id,
         company: quotation.company ?? 1,
         customer: quotation.customer,
         proforma_number: createProformaNumberFromQuote(quotation.quote_number),
         currency: quotation.currency ?? undefined,
       })
+      navigate(`/proformas/${data.id}`)
     } catch (error) {
       console.error(error)
       setError("Failed to create proforma.")
@@ -183,6 +184,10 @@ const QuotationDetailPage = () => {
             <a href={quotationPdfUrl(quotation.id)} target="_blank" rel="noreferrer">
               Open PDF
             </a>
+          </Button>
+
+          <Button asChild variant="outline">
+            <Link to={`/quotations/${quotation.id}/email`}>Send Email</Link>  
           </Button>
 
           <Button

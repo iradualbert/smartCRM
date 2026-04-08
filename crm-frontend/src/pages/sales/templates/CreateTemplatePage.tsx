@@ -5,12 +5,15 @@ import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import TemplateUploadCard, { type TemplateFormValues } from "./TemplateUploadCard"
 import { createTemplate } from "./api"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 export default function CreateTemplatePage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
+  const { organizations, defaultOrganization } = useOrganizations();
 
   const [values, setValues] = React.useState<TemplateFormValues>({
-    company: 1,
+    company: defaultOrganization?.id || 2,
     name: "",
     description: "",
     document_type: "invoice",

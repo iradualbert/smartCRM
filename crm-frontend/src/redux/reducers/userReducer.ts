@@ -4,6 +4,7 @@ const initialState = {
     isAuthenticated: false,
     isLoading: true,
     credentials: {},
+    organizations: []
 }
 
 export default function (state = initialState, action:{ type: string, payload?: object}) {
@@ -42,6 +43,23 @@ export default function (state = initialState, action:{ type: string, payload?: 
                         email_provider: action.payload
                     }
                 }
+            }
+
+        case Types.SET_COMPANIES:
+            return {
+                ...state,
+                organizations: action.payload
+            }
+        case Types.ADD_COMPANY:
+            return {
+                ...state,
+                organizations: [...state.organizations, action.payload]
+            }
+        
+        case Types.REMOVE_COMPANY:
+            return {
+                ...state,
+                organizations: state.organizations.filter((org: any) => org.id !== action.payload)
             }
         default:
             return state

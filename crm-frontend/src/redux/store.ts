@@ -12,7 +12,7 @@ const reducers = combineReducers({
     root: rootReducer,
     user: UserReducer,
     ui: uiReducer,
-    contacts: contactReducer
+    contacts: contactReducer,
 })
 
 const composeEnhancers =
