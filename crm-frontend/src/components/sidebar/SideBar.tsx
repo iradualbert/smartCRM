@@ -20,8 +20,11 @@ import {
   ChevronRight,
   Plus,
   PanelLeft,
+  BookOpen,
+  ClipboardList,
+  Users2,
 } from "lucide-react"
-import CreateDocumentModal  from "./CreateDocumentModal"
+import CreateDocumentModal from "./CreateDocumentModal"
 
 type NavItem = {
   label: string
@@ -36,20 +39,34 @@ type NavSection = {
 
 const sections: NavSection[] = [
   {
-    title: "Workspace",
+    title: "Overview",
     items: [
       { label: "Dashboard", to: "/", icon: LayoutGrid },
       { label: "Sales Dashboard", to: "/sales-dashboard", icon: BarChart3 },
     ],
   },
   {
-    title: "Sales Documents",
+    title: "Sales",
     items: [
       { label: "Quotations", to: "/quotations", icon: FileText },
       { label: "Proformas", to: "/proformas", icon: FileSpreadsheet },
       { label: "Invoices", to: "/invoices", icon: Receipt },
       { label: "Receipts", to: "/receipts", icon: Receipt },
       { label: "Delivery Notes", to: "/delivery-notes", icon: Truck },
+    ],
+  },
+  {
+    title: "Catalogues",
+    items: [
+      { label: "Catalogues", to: "/catalogues", icon: BookOpen },
+      { label: "Quote Requests", to: "/quote-requests", icon: ClipboardList },
+    ],
+  },
+  {
+    title: "CRM",
+    items: [
+      { label: "Customers", to: "/customers", icon: Users },
+      { label: "Products", to: "/products", icon: Package },
     ],
   },
   {
@@ -60,23 +77,17 @@ const sections: NavSection[] = [
     ],
   },
   {
-    title: "Resources",
-    items: [
-      { label: "Customers", to: "/customers", icon: Users },
-      { label: "Products", to: "/products", icon: Package },
-    ],
-  },
-  {
     title: "Templates",
     items: [
       { label: "Document Templates", to: "/templates", icon: Layers3 },
     ],
   },
   {
-    title: "Admin",
+    title: "Organization",
     items: [
-      { label: "Company", to: "/admin/company", icon: Building2 },
-      { label: "Billing", to: "/admin/billing", icon: CreditCard },
+      { label: "Organization", to: "/organization", icon: Building2 },
+      { label: "Members", to: "/organization/members", icon: Users2 },
+      { label: "Billing", to: "/organization/billing", icon: CreditCard },
       { label: "Integrations", to: "/settings/integration", icon: PlugZap },
       { label: "Settings", to: "/settings", icon: Settings2 },
     ],
@@ -90,7 +101,7 @@ export default function SideBar() {
   return (
     <>
       <aside
-        className={`fixed left-0 top-0 z-30 flex h-screen flex-col border-r border-slate-200 bg-white/95 backdrop-blur transition-all duration-300 ${
+        className={`fixed left-0 top-0 z-30 flex h-screen flex-col border-r border-slate-200 bg-white transition-all duration-300 ${
           collapsed ? "w-[84px]" : "w-[280px]"
         }`}
       >
@@ -106,7 +117,7 @@ export default function SideBar() {
                   Modura CRM
                 </div>
                 <div className="truncate text-xs text-slate-500">
-                  Sales workspace
+                  Commercial workspace
                 </div>
               </div>
             ) : null}
@@ -134,7 +145,7 @@ export default function SideBar() {
             }`}
           >
             <Plus className="h-4 w-4 shrink-0" />
-            {!collapsed ? <span>New</span> : null}
+            {!collapsed ? <span>Create</span> : null}
           </button>
         </div>
 
@@ -158,16 +169,16 @@ export default function SideBar() {
             }`}
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
-              M
+              O
             </div>
 
             {!collapsed ? (
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium text-slate-900">
-                  My Workspace
+                  Active organization
                 </div>
                 <div className="truncate text-xs text-slate-500">
-                  Admin access
+                  Workspace context
                 </div>
               </div>
             ) : null}
@@ -244,7 +255,7 @@ function SideBarLink({
       </Link>
 
       {collapsed ? (
-        <div className="pointer-events-none absolute left-full top-1/2 ml-3 -translate-y-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 opacity-0 shadow-lg transition group-hover:opacity-100">
+        <div className="pointer-events-none absolute left-full top-1/2 z-[120] ml-3 -translate-y-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 opacity-0 shadow-lg transition group-hover:opacity-100">
           {label}
         </div>
       ) : null}

@@ -2,34 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-:root {
-  height: 100%;
-  
-}
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
-* {
-  box-sizing: border-box;
-}
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-@layer components {
-  .sidebar-icon {
-    @apply relative flex items-center justify-center h-12 w-12 mx-auto mt-2 mb-2;
-  }
-  .sidebar-tooltip {
-    @apply absolute w-auto p-2 m-2 min-w-max left-14 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 174 72% 28%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 16% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 16% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 233 74% 66%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 347 77% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 174 72% 28%;
+
+    --radius: 1rem;
   }
 
-  .btn {
-    @apply bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center
-  }
-  
-  .input {
-    @apply p-2 border border-gray-300 rounded mb-4
+  * {
+    @apply border-border;
+    box-sizing: border-box;
   }
 
-  .label {
-    @apply text-sm font-medium text-gray-600 mb-2 w-32 text-start
+  body {
+    @apply bg-background text-foreground;
   }
 }

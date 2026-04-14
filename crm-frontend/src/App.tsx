@@ -23,10 +23,9 @@ import EmailIntegrationPage from "./pages/profile/EmailIntegrationPage";
 import { PrivacyPage, RefundPolicyPage, TermsPage } from "./pages/static_content";
 import Footer from "./components/Footer";
 import NotFound from "./components/404";
-import CreateCompanyPage from "./pages/sales/companies/CreateCompanyPage";
-import CompanyListPage from "@/pages/sales/companies/CompanyListPage";
-import CompanyDetailPage from "./pages/sales/companies/CompanyDetailPage";
-import CompanySettingsPage from "./pages/sales/companies/CompanySettingsPage";
+import CreateCompanyPage from "./pages/organizations/CreateOrganizationPage";
+import CompanyDetailPage from "./pages/organizations/OrganizationDetailPage";
+import CompanySettingsPage from "./pages/organizations/OrganizationSettingsPage";
 import CreateQuotationPage from "./pages/sales/quotations/CreateQuotationPage";
 import UpdateQuotationPage from "./pages/sales/quotations/UpdateQuotationPage";
 import QuotationDetailPage from "./pages/sales/quotations/QuotationDetailPage";
@@ -55,6 +54,7 @@ import TemplateDetailPage from "./pages/sales/templates/TemplateDetailPage";
 import CreateTemplatePage from "./pages/sales/templates/CreateTemplatePage";
 import TemplateListPage from "./pages/sales/templates/TemplateListPage";
 import QuotationEmailPage from "./pages/sales/quotations/QuotationEmailPage";
+import OrganizationListPage from "@/pages/organizations/OrganizationListPage";
 
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
@@ -100,10 +100,10 @@ function App() {
 
               <Route path="/sales" element={<SalesDashboardPage />} />
 
-              <Route path="/companies" element={<CompanyListPage />} />
-              <Route path="/companies/new" element={<CreateCompanyPage />} />
-              <Route path="/companies/:id" element={<CompanyDetailPage />} />
-              <Route path="/companies/:id/settings" element={<CompanySettingsPage />} />
+              <Route path="/settings/organizations" element={<OrganizationListPage />} />
+              <Route path="/settings/organizations/new" element={<CreateCompanyPage />} />
+              <Route path="/settings/organizations/:id" element={<CompanyDetailPage />} />
+              <Route path="/settings/organizations/:id/settings" element={<CompanySettingsPage />} />
 
               <Route path="/quotations" element={<QuotationListPage />} />
               <Route path="/quotations/new" element={<CreateQuotationPage />} />

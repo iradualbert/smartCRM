@@ -58,6 +58,27 @@ export const companySchema = z
 
 export type CompanyFormValues = z.infer<typeof companySchema>
 
+export type CompanyMembershipRole = "owner" | "admin" | "staff" | "viewer"
+
+export type CompanyMembership = {
+  id: number
+  company: number
+  company_name: string
+  user: number
+  user_email: string
+  user_first_name: string
+  user_last_name: string
+  display_name: string | null
+  job_title: string | null
+  department: string | null
+  work_email: string | null
+  work_phone: string | null
+  role: CompanyMembershipRole
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type Company = {
   id: number
   name: string
@@ -81,7 +102,29 @@ export type Company = {
   created_by: number | null
   updated_by: number | null
   currency_symbol?: string
+  member_count?: number
+  current_membership?: CompanyMembership | null
 }
+
+export type AddMemberPayload = {
+  email: string
+  display_name?: string
+  job_title?: string
+  department?: string
+  work_email?: string
+  work_phone?: string
+  role?: CompanyMembershipRole
+}
+
+export type UpdateMemberPayload = Partial<{
+  display_name: string
+  job_title: string
+  department: string
+  work_email: string
+  work_phone: string
+  role: CompanyMembershipRole
+  is_active: boolean
+}>
 
 export type PaginatedResponse<T> = {
   count: number
@@ -96,6 +139,17 @@ export type ApiValidationError = {
 }
 
 export const api = axios;
+
+function normalizeValidationError(error: unknown): never {
+  if (axios.isAxiosError(error) && error.response?.status === 400) {
+    throw {
+      type: "validation",
+      errors: (error.response.data as Record<string, string[]>) ?? {},
+    } satisfies ApiValidationError
+  }
+
+  throw error
+}
 
 export function normalizeCompanyPayload(values: CompanyFormValues) {
   return {
@@ -124,14 +178,7 @@ export async function createCompany(values: CompanyFormValues): Promise<Company>
     const response = await api.post<Company>("/companies/", payload)
     return response.data
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 400) {
-      throw {
-        type: "validation",
-        errors: (error.response.data as Record<string, string[]>) ?? {},
-      } satisfies ApiValidationError
-    }
-
-    throw error
+    normalizeValidationError(error)
   }
 }
 
@@ -150,18 +197,60 @@ export async function updateCompany(
     const response = await api.put<Company>(`/companies/${companyId}/`, payload)
     return response.data
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 400) {
-      throw {
-        type: "validation",
-        errors: (error.response.data as Record<string, string[]>) ?? {},
-      } satisfies ApiValidationError
-    }
-
-    throw error
+    normalizeValidationError(error)
   }
 }
 
 export async function listCompanies(): Promise<PaginatedResponse<Company>> {
   const response = await api.get<PaginatedResponse<Company>>("/companies/")
   return response.data
+}
+
+export async function listCompanyMembers(
+  companyId: number | string
+): Promise<CompanyMembership[]> {
+  const response = await api.get<CompanyMembership[]>(`/companies/${companyId}/members/`)
+  return response.data
+}
+
+export async function addCompanyMember(
+  companyId: number | string,
+  payload: AddMemberPayload
+): Promise<{
+  detail: string
+  user_created: boolean
+  membership_created: boolean
+  membership: CompanyMembership
+}> {
+  const response = await api.post(`/companies/${companyId}/add_user_by_email/`, payload)
+  return response.data
+}
+
+export async function updateCompanyMember(
+  companyId: number | string,
+  membershipId: number | string,
+  payload: UpdateMemberPayload
+): Promise<CompanyMembership> {
+  const response = await api.patch(
+    `/companies/${companyId}/members/${membershipId}/`,
+    payload
+  )
+  return response.data
+}
+
+export async function deactivateCompanyMember(
+  companyId: number | string,
+  membershipId: number | string
+): Promise<{ detail: string }> {
+  const response = await api.post(
+    `/companies/${companyId}/members/${membershipId}/deactivate/`
+  )
+  return response.data
+}
+
+export async function removeCompanyMember(
+  companyId: number | string,
+  membershipId: number | string
+): Promise<void> {
+  await api.delete(`/companies/${companyId}/members/${membershipId}/`)
 }
