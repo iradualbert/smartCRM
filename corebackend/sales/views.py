@@ -384,6 +384,7 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
             created_by=self.request.user,
             updated_by=self.request.user,
         )
+        
 
         log_event(
             instance,

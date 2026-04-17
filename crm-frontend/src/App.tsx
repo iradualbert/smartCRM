@@ -29,7 +29,6 @@ import CompanySettingsPage from "./pages/organizations/OrganizationSettingsPage"
 import CreateQuotationPage from "./pages/sales/quotations/CreateQuotationPage";
 import UpdateQuotationPage from "./pages/sales/quotations/UpdateQuotationPage";
 import QuotationDetailPage from "./pages/sales/quotations/QuotationDetailPage";
-import SalesDashboardPage from "./pages/sales/SalesDashboardPage";
 import QuotationListPage from "./pages/sales/quotations/QuotationListPage";
 import ContactUsPage from "./pages/landing/ContactUsPage";
 import SalesWorkflowLifecycle from "./pages/sales/LifeCycle";
@@ -55,6 +54,12 @@ import CreateTemplatePage from "./pages/sales/templates/CreateTemplatePage";
 import TemplateListPage from "./pages/sales/templates/TemplateListPage";
 import QuotationEmailPage from "./pages/sales/quotations/QuotationEmailPage";
 import OrganizationListPage from "@/pages/organizations/OrganizationListPage";
+import ProductDetailPage from "./pages/crm/products/ProductDetailPage";
+import ProductListPage from "./pages/crm/products/ProductListPage";
+import CustomerListPage from "./pages/crm/customers/CustomerListPage";
+import CustomerDetailPage from "./pages/crm/customers/CustomerDetailPage";
+import DashboardPage from "./pages/dashboard/DashboardPage";
+import SalesDashboardPage from "./pages/sales/sales-dashboard/SalesDashboardPages";
 
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
@@ -86,7 +91,10 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Route>
             <Route path="" element={<PrivateRoute />}>
-              <Route path="" element={<SalesDashboardPage />} />
+
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/sales-dashboard" element={<SalesDashboardPage />} />
+           
               <Route path="/mail-dashboard" element={<Dashboard />} />
               <Route path="/emails" element={<MailDashoardPage />} />
               <Route path="/emails/templates" element={<MailTemplatesPage />} />
@@ -98,7 +106,7 @@ function App() {
               <Route path="/settings/profile" element={<ProfilePage />} />
               <Route path="/settings/password-reset" element={<PasswordResetPage />} />
 
-              <Route path="/sales" element={<SalesDashboardPage />} />
+             
 
               <Route path="/settings/organizations" element={<OrganizationListPage />} />
               <Route path="/settings/organizations/new" element={<CreateCompanyPage />} />
@@ -143,6 +151,12 @@ function App() {
               <Route path="/templates/new" element={<CreateTemplatePage />} />
               <Route path="/templates/:id" element={<TemplateDetailPage />} />
               <Route path="/templates/:id/edit" element={<UpdateTemplatePage />} />
+
+              <Route path="/products" element={<ProductListPage />} /> 
+              <Route path="/products/:id" element={<ProductDetailPage />} />
+
+              <Route path="/customers" element={<CustomerListPage />} />
+              <Route path="/customers/:id" element={<CustomerDetailPage />} />
 
 
 

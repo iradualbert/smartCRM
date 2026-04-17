@@ -1,9 +1,9 @@
 import * as React from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
-import EmailComposer, { type EmailComposerSubmitPayload } from "../shared-components/EmailComposer";
+import EmailComposer, { type EmailComposerSubmitPayload } from "../shared-components/EmailComposer"
 import { Button } from "@/components/ui/button"
-import { getQuotationEmailDraft, sendQuotationEmail } from "./api";
+import { getQuotationEmailDraft, sendQuotationEmail } from "./api"
 
 type QuotationEmailDraft = {
   to: string
@@ -14,11 +14,6 @@ type QuotationEmailDraft = {
   attachment_url?: string | null
   quotation_number?: string
 }
-
-
-
-
-
 
 export default function QuotationEmailPage() {
   const { id } = useParams()

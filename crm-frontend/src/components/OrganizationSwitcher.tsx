@@ -1,13 +1,13 @@
-import { useMemo } from "react";
-import { Check, ChevronsUpDown, Building2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { useMemo } from "react"
+import { Check, ChevronsUpDown, Building2 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/popover"
 import {
   Command,
   CommandEmpty,
@@ -15,44 +15,54 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { useOrganizations } from "@/redux/hooks/useOrganizations";
+} from "@/components/ui/command"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 type Organization = {
-  id?: string;
-  _id?: string;
-  name?: string;
-  title?: string;
-  slug?: string;
-};
+  id?: string | number
+  _id?: string | number
+  name?: string
+  title?: string
+  slug?: string
+}
 
 type OrganizationSwitcherProps = {
-  value?: string | null;
-  onChange?: (organization: Organization) => void;
-};
+  value?: string | null
+  onChange?: (organization: Organization) => void
+}
 
-const getOrgLabel = (org: Organization) =>
-  org?.name || org?.title || org?.slug || "Untitled organization";
+const getOrgLabel = (org?: Organization | null) =>
+  org?.name || org?.title || org?.slug || "Untitled organization"
 
-const getOrgId = (org: Organization) => org?.id || org?._id || getOrgLabel(org);
+const getOrgId = (org?: Organization | null) =>
+  org?.id?.toString() || org?._id?.toString() || getOrgLabel(org)
 
 const OrganizationSwitcher = ({
   value,
   onChange,
 }: OrganizationSwitcherProps) => {
-  const navigate = useNavigate();
-  const { organizations = [], defaultOrganization } = useOrganizations();
+  const navigate = useNavigate()
+  const {
+    organizations = [],
+    currentOrganization,
+    setCurrentOrganization,
+  } = useOrganizations()
 
   const selectedOrg = useMemo(() => {
-    if (!organizations.length) return null;
-    return (
-      organizations.find((org: Organization) => getOrgId(org) === value) ||
-      defaultOrganization ||
-      organizations[0]
-    );
-  }, [organizations, defaultOrganization, value]);
+    if (!organizations.length) return null
 
-  if (!organizations.length) return null;
+    if (value) {
+      return (
+        organizations.find((org: Organization) => getOrgId(org) === value) ||
+        currentOrganization ||
+        organizations[0]
+      )
+    }
+
+    return currentOrganization || organizations[0]
+  }, [organizations, currentOrganization, value])
+
+  if (!organizations.length) return null
 
   return (
     <Popover>
@@ -71,25 +81,28 @@ const OrganizationSwitcher = ({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent align="start" sideOffset={10} className="z-[120] w-[320] rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl">
+      <PopoverContent
+        align="start"
+        sideOffset={10}
+        className="z-[120] w-[320px] rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl"
+      >
         <Command>
           <CommandInput placeholder="Search organizations..." />
           <CommandList>
             <CommandEmpty>No organization found.</CommandEmpty>
+
             <CommandGroup heading="Organizations">
               {organizations.map((org: Organization) => {
-                const orgId = getOrgId(org);
-                const isActive = getOrgId(selectedOrg) === orgId;
+                const orgId = getOrgId(org)
+                const isActive = getOrgId(selectedOrg) === orgId
 
                 return (
                   <CommandItem
                     key={orgId}
                     value={getOrgLabel(org)}
                     onSelect={() => {
-                      onChange?.(org);
-
-                      // optional route pattern:
-                      // navigate(`/app/${org.slug || orgId}/dashboard`);
+                      onChange?.(org)
+                      setCurrentOrganization(org)
                     }}
                     className="cursor-pointer"
                   >
@@ -101,7 +114,7 @@ const OrganizationSwitcher = ({
                     />
                     <span className="truncate">{getOrgLabel(org)}</span>
                   </CommandItem>
-                );
+                )
               })}
             </CommandGroup>
 
@@ -118,7 +131,7 @@ const OrganizationSwitcher = ({
         </Command>
       </PopoverContent>
     </Popover>
-  );
-};
+  )
+}
 
-export default OrganizationSwitcher;
+export default OrganizationSwitcher

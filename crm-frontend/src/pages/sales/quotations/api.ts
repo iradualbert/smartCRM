@@ -46,6 +46,8 @@ export type QuotationStatus =
   | "rejected"
   | "expired"
 
+export type QuotationTaxMode = "exclusive" | "inclusive"
+
 export type QuotationLine = {
   id: number
   quotation: number
@@ -73,6 +75,15 @@ export type Quotation = {
   status: QuotationStatus
   subtotal: string
   total: string
+
+  // backend additions expected
+  issue_date?: string | null
+  valid_until?: string | null
+  tax_mode?: QuotationTaxMode
+  tax_label?: string | null
+  tax_rate?: string | null
+  tax_total?: string | null
+
   created_at: string
   updated_at: string
   lines?: QuotationLine[]
@@ -86,6 +97,14 @@ export type CustomerPayload = {
   address?: string
 }
 
+export type ProductPayload = {
+  company: number
+  name: string
+  description?: string
+  sku?: string
+  default_price: string
+}
+
 export type QuotationPayload = {
   company: number
   customer: number
@@ -95,6 +114,13 @@ export type QuotationPayload = {
   description?: string
   quote_number: string
   status?: QuotationStatus
+
+  // backend additions expected
+  issue_date?: string | null
+  valid_until?: string | null
+  tax_mode?: QuotationTaxMode
+  tax_label?: string
+  tax_rate?: string
 }
 
 export type QuotationLinePayload = {
@@ -105,27 +131,55 @@ export type QuotationLinePayload = {
   unit_price: string
 }
 
-export async function listCustomers(params?: { search?: string }) {
-  const response = await axios.get<PaginatedResponse<Customer>>("/customers/", {
+export type ListQuotationParams = {
+  company: number
+  limit?: number
+  offset?: number
+  search?: string
+  status?: QuotationStatus | "all"
+  customer?: number | "all"
+}
+
+const api = axios
+
+export async function listCustomers(params?: {
+  company?: number
+  search?: string
+  limit?: number
+  offset?: number
+}) {
+  const response = await api.get<PaginatedResponse<Customer>>("/customers/", {
     params,
   })
   return response.data
 }
 
 export async function createCustomer(payload: CustomerPayload) {
-  const response = await axios.post<Customer>("/customers/", payload)
+  const response = await api.post<Customer>("/customers/", payload)
   return response.data
 }
 
-export async function listProducts(params?: { search?: string }) {
-  const response = await axios.get<PaginatedResponse<Product>>("/products/", {
+export async function listProducts(params?: {
+  company?: number
+  search?: string
+  limit?: number
+  offset?: number
+}) {
+  const response = await api.get<PaginatedResponse<Product>>("/products/", {
     params,
   })
   return response.data
 }
 
-export async function listQuotationTemplates() {
-  const response = await axios.get<PaginatedResponse<Template>>("/templates/")
+export async function createProduct(payload: ProductPayload) {
+  const response = await api.post<Product>("/products/", payload)
+  return response.data
+}
+
+export async function listQuotationTemplates(params?: { company?: number }) {
+  const response = await api.get<PaginatedResponse<Template>>("/templates/", {
+    params,
+  })
   return {
     ...response.data,
     results: response.data.results.filter(
@@ -134,30 +188,45 @@ export async function listQuotationTemplates() {
   }
 }
 
-export async function listQuotations(params?: { search?: string }) {
-  const response = await axios.get<PaginatedResponse<Quotation>>("/quotations/", {
-    params,
+export async function listQuotations(params: ListQuotationParams) {
+  const response = await api.get<PaginatedResponse<Quotation>>("/quotations/", {
+    params: {
+      company: params.company,
+      limit: params.limit ?? 10,
+      offset: params.offset ?? 0,
+      search: params.search ?? "",
+      status: params.status && params.status !== "all" ? params.status : undefined,
+      customer:
+        params.customer && params.customer !== "all" ? params.customer : undefined,
+    },
   })
   return response.data
 }
 
 export async function getQuotation(id: number | string) {
-  const response = await axios.get<Quotation>(`/quotations/${id}/`)
+  const response = await api.get<Quotation>(`/quotations/${id}/`)
   return response.data
 }
 
 export async function createQuotation(payload: QuotationPayload) {
-  const response = await axios.post<Quotation>("/quotations/", payload)
+  const response = await api.post<Quotation>("/quotations/", payload)
   return response.data
 }
 
-export async function updateQuotation(id: number | string, payload: Partial<QuotationPayload>) {
-  const response = await axios.patch<Quotation>(`/quotations/${id}/`, payload)
+export async function updateQuotation(
+  id: number | string,
+  payload: Partial<QuotationPayload>
+) {
+  const response = await api.patch<Quotation>(`/quotations/${id}/`, payload)
   return response.data
+}
+
+export async function deleteQuotation(id: number | string) {
+  await api.delete(`/quotations/${id}/`)
 }
 
 export async function createQuotationLine(payload: QuotationLinePayload) {
-  const response = await axios.post<QuotationLine>("/quotation-lines/", payload)
+  const response = await api.post<QuotationLine>("/quotation-lines/", payload)
   return response.data
 }
 
@@ -165,24 +234,21 @@ export async function updateQuotationLine(
   id: number | string,
   payload: Partial<QuotationLinePayload>
 ) {
-  const response = await axios.patch<QuotationLine>(
-    `/quotation-lines/${id}/`,
-    payload
-  )
+  const response = await api.patch<QuotationLine>(`/quotation-lines/${id}/`, payload)
   return response.data
 }
 
 export async function deleteQuotationLine(id: number | string) {
-  await axios.delete(`/quotation-lines/${id}/`)
+  await api.delete(`/quotation-lines/${id}/`)
 }
 
 export async function generateQuotationPdf(id: number | string) {
-  const response = await axios.post(`/quotations/${id}/generate_pdf/`)
+  const response = await api.post(`/quotations/${id}/generate_pdf/`)
   return response.data
 }
 
 export async function regenerateQuotationPdf(id: number | string) {
-  const response = await axios.post(`/quotations/${id}/regenerate_pdf/`)
+  const response = await api.post(`/quotations/${id}/regenerate_pdf/`)
   return response.data
 }
 
@@ -199,7 +265,7 @@ export async function createProformaFromQuotation(payload: {
   currency?: string | null
   selected_template?: number | null
 }) {
-  const response = await axios.post("/proformas/", {
+  const response = await api.post("/proformas/", {
     ...payload,
     status: payload.status ?? "draft",
   })
@@ -223,6 +289,11 @@ export async function createQuotationWithLines(input: {
     currency?: string
     selected_template?: number | null
     status?: QuotationStatus
+    issue_date?: string | null
+    valid_until?: string | null
+    tax_mode?: QuotationTaxMode
+    tax_label?: string
+    tax_rate?: string
   }
   lines: Array<{
     product?: number | null
@@ -262,6 +333,11 @@ export async function createQuotationWithLines(input: {
     currency: input.quotation.currency || undefined,
     selected_template: input.quotation.selected_template ?? null,
     status: input.quotation.status ?? "draft",
+    issue_date: input.quotation.issue_date ?? null,
+    valid_until: input.quotation.valid_until ?? null,
+    tax_mode: input.quotation.tax_mode ?? "exclusive",
+    tax_label: input.quotation.tax_label ?? "VAT",
+    tax_rate: input.quotation.tax_rate ?? "0.00",
   })
 
   for (const line of input.lines) {
@@ -274,7 +350,7 @@ export async function createQuotationWithLines(input: {
     })
   }
 
-  return quotation
+  return getQuotation(quotation.id)
 }
 
 export async function updateQuotationWithLines(input: {
@@ -286,6 +362,11 @@ export async function updateQuotationWithLines(input: {
     currency?: string
     selected_template?: number | null
     status?: QuotationStatus
+    issue_date?: string | null
+    valid_until?: string | null
+    tax_mode?: QuotationTaxMode
+    tax_label?: string
+    tax_rate?: string
   }
   lines: Array<{
     id?: number
@@ -303,6 +384,11 @@ export async function updateQuotationWithLines(input: {
     currency: input.quotation.currency || undefined,
     selected_template: input.quotation.selected_template ?? null,
     status: input.quotation.status ?? "draft",
+    issue_date: input.quotation.issue_date ?? null,
+    valid_until: input.quotation.valid_until ?? null,
+    tax_mode: input.quotation.tax_mode ?? "exclusive",
+    tax_label: input.quotation.tax_label ?? "VAT",
+    tax_rate: input.quotation.tax_rate ?? "0.00",
   })
 
   for (const lineId of input.removedLineIds) {
@@ -332,7 +418,7 @@ export async function updateQuotationWithLines(input: {
 }
 
 export async function getQuotationEmailDraft(id: number | string) {
-  const response = await axios.get(`/quotations/${id}/email_draft/`)
+  const response = await api.get(`/quotations/${id}/email_draft/`)
   return response.data
 }
 
@@ -340,7 +426,7 @@ export async function sendQuotationEmail(
   quotationId: number | string,
   payload: EmailComposerSubmitPayload
 ) {
-  const response = await axios.post(`/quotations/${quotationId}/send-email/`, {
+  const response = await api.post(`/quotations/${quotationId}/send-email/`, {
     to: payload.to,
     cc: payload.cc ? payload.cc.split(",").map((v) => v.trim()).filter(Boolean) : [],
     subject: payload.subject,

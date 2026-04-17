@@ -1,4 +1,13 @@
-Best Email and Scheduling App
+
+frontend stack:
+React Redux, shadcn, lucide-react, tailwindcss
+
+frontend folder strcuture:
+
+ - src / sales / pages / templates : api.ts, CreateTemplatePage.tsx, TemplateDetailPage.tsx, TemplateInspectPanel.tsx TemplateListPage.tsx TemplateMappingEditor.tsx TemplateUploadCard.tsx UpdateTemplatePage.tsx
+
+
+
 
 AI powered All-In-One Platform & Confirmation is required to not annoy people 
 
@@ -114,3 +123,73 @@ cancelled
 receipt
 issued
 void
+
+
+# Templates
+
+
+
+# Project Management 
+
+### Tabs: [Overview, Vendors (Suppliers, Subcontractors, ), Expenses, Documents ]
+
+After sales service
+
+what was sold
+what needs to be delivered
+what is outsourced
+what is purchased
+what was spent
+what was completed
+what to invoice next
+what to communicate to the customer
+
+
+customer
+quotation
+invoice
+scope
+milestones
+purchases
+outsourced work
+expenses
+status updates
+
+
+Expenses
+
+Track internal spend:
+
+materials purchased
+transport
+labor
+permits
+subcontractor invoices
+miscellaneous costs
+
+Vendors / Outsourcing
+
+Track internal spend:
+
+materials purchased
+transport
+labor
+permits
+subcontractor invoices
+miscellaneous costs
+
+Track outsourced work:
+
+vendor
+service type
+agreed amount
+status
+due date
+
+Simple timeline (status):
+
+started
+materials ordered
+site visit complete
+installation in progress
+completed

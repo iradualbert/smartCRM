@@ -41,7 +41,7 @@ const sections: NavSection[] = [
   {
     title: "Overview",
     items: [
-      { label: "Dashboard", to: "/", icon: LayoutGrid },
+      { label: "Dashboard", to: "/dashboard", icon: LayoutGrid },
       { label: "Sales Dashboard", to: "/sales-dashboard", icon: BarChart3 },
     ],
   },
@@ -85,9 +85,9 @@ const sections: NavSection[] = [
   {
     title: "Organization",
     items: [
-      { label: "Organization", to: "/organization", icon: Building2 },
-      { label: "Members", to: "/organization/members", icon: Users2 },
-      { label: "Billing", to: "/organization/billing", icon: CreditCard },
+      { label: "Organizations", to: "/settings/organizations", icon: Building2 },
+      { label: "Members", to: "/settings/members", icon: Users2 },
+      { label: "Billing", to: "/settings/billing", icon: CreditCard },
       { label: "Integrations", to: "/settings/integration", icon: PlugZap },
       { label: "Settings", to: "/settings", icon: Settings2 },
     ],
