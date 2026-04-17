@@ -61,16 +61,16 @@ import {
 
 export const quotationFormSchema = z
   .object({
-    companyId: z.number(),
+    companyId: z.string(),
     customerMode: z.enum(["existing", "manual"]),
-    existingCustomerId: z.coerce.number().nullable().optional(),
+    existingCustomerId: z.coerce.string().nullable().optional(),
     manualCustomerName: z.string().optional(),
     manualCustomerEmail: z.string().optional(),
     manualCustomerPhone: z.string().optional(),
     manualCustomerAddress: z.string().optional(),
 
     name: z.string().min(1, "Quotation name is required"),
-    quote_number: z.string().min(1, "Quote number is required"),
+    quote_number: z.string().optional(),
     description: z.string().optional(),
     currency: z.string().min(1, "Currency is required"),
     selected_template: z.coerce.number().nullable().optional(),
@@ -85,8 +85,8 @@ export const quotationFormSchema = z
     lines: z
       .array(
         z.object({
-          id: z.number().optional(),
-          product: z.coerce.number().nullable().optional(),
+          id: z.string().optional(),
+          product: z.coerce.string().nullable().optional(),
           description: z.string().min(1, "Line description is required"),
           quantity: z.string().min(1, "Quantity is required"),
           unit_price: z.string().min(1, "Unit price is required"),
@@ -117,7 +117,7 @@ export type QuotationFormValues = z.infer<typeof quotationFormSchema>
 type Props = {
   mode: "create" | "edit"
   initialValues: QuotationFormValues
-  onSubmit: (values: QuotationFormValues, removedLineIds: number[]) => Promise<void>
+  onSubmit: (values: QuotationFormValues, removedLineIds: string[]) => Promise<void>
   submitting?: boolean
 }
 
@@ -125,14 +125,7 @@ function money(n: number) {
   return Number.isFinite(n) ? n.toFixed(2) : "0.00"
 }
 
-function makeQuoteNumber() {
-  const date = new Date()
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  const random = Math.floor(Math.random() * 900 + 100)
-  return `QUO-${y}${m}${d}-${random}`
-}
+
 
 function SearchSelect<T extends { id: number; name: string }>({
   value,
@@ -206,15 +199,16 @@ export default function QuotationForm({
   submitting = false,
 }: Props) {
   const [submitError, setSubmitError] = React.useState<string | null>(null)
-  const [removedLineIds, setRemovedLineIds] = React.useState<number[]>([])
+  const [removedLineIds, setRemovedLineIds] = React.useState<string[]>([])
 
   const [templates, setTemplates] = React.useState<Template[]>([])
   const [customerSearchOpen, setCustomerSearchOpen] = React.useState(false)
-  const [productOpenIndex, setProductOpenIndex] = React.useState<number | null>(null)
+  const [productOpenIndex, setProductOpenIndex] = React.useState<string | null>(null)
 
   const [customerSearch, setCustomerSearch] = React.useState("")
   const [customerResults, setCustomerResults] = React.useState<Customer[]>([])
   const [customerLoading, setCustomerLoading] = React.useState(false)
+  const hydratedCustomerIdRef = React.useRef<number | null>(null)
 
   const [productSearch, setProductSearch] = React.useState<Record<number, string>>({})
   const [productResults, setProductResults] = React.useState<Record<number, Product[]>>({})
@@ -288,16 +282,36 @@ export default function QuotationForm({
   }, [customerMode, customerSearch, initialValues.companyId])
 
   React.useEffect(() => {
-    if (customerMode === "existing" && selectedCustomerId && !customerResults.some((c) => c.id === selectedCustomerId)) {
-      listCustomers({
-        company: initialValues.companyId,
-        limit: 8,
-        offset: 0,
-      })
-        .then((data) => setCustomerResults(data.results))
-        .catch(console.error)
+    if (customerMode !== "existing") {
+      hydratedCustomerIdRef.current = null
     }
-  }, [customerMode, selectedCustomerId, customerResults, initialValues.companyId])
+  }, [customerMode])
+
+  React.useEffect(() => {
+    if (customerMode !== "existing" || !selectedCustomerId) return
+    if (customerResults.some((customer) => customer.id === selectedCustomerId)) return
+    if (hydratedCustomerIdRef.current === selectedCustomerId) return
+
+    hydratedCustomerIdRef.current = selectedCustomerId
+
+    listCustomers({
+      company: initialValues.companyId,
+      limit: 8,
+      offset: 0,
+    })
+      .then((data) => {
+        setCustomerResults((prev) => {
+          const merged = [...prev]
+          for (const customer of data.results) {
+            if (!merged.some((item) => item.id === customer.id)) {
+              merged.push(customer)
+            }
+          }
+          return merged
+        })
+      })
+      .catch(console.error)
+  }, [customerMode, selectedCustomerId, initialValues.companyId, customerResults])
 
   React.useEffect(() => {
     if (productOpenIndex === null) return
@@ -354,8 +368,10 @@ export default function QuotationForm({
 
   const handleRemoveLine = (index: number) => {
     const line = form.getValues(`lines.${index}`)
-    if (line?.id) {
-      setRemovedLineIds((prev) => [...prev, line.id])
+    const lineId = line?.id
+
+    if (typeof lineId === "number") {
+      setRemovedLineIds((prev) => [...prev, lineId])
     }
     remove(index)
   }
@@ -373,14 +389,17 @@ export default function QuotationForm({
   const createCustomerInline = async () => {
     try {
       const customer = await createCustomer({
-        company: initialValues.companyId,
+        company: String(initialValues.companyId),
         name: manualCustomer.name.trim(),
         email: manualCustomer.email.trim(),
         phone_number: manualCustomer.phone_number.trim(),
         address: manualCustomer.address.trim(),
       })
 
-      setCustomerResults((prev) => [customer, ...prev])
+      hydratedCustomerIdRef.current = customer.id
+      setCustomerResults((prev) =>
+        prev.some((item) => item.id === customer.id) ? prev : [customer, ...prev]
+      )
       form.setValue("customerMode", "existing")
       form.setValue("existingCustomerId", customer.id)
       setCustomerDialogOpen(false)
@@ -395,7 +414,7 @@ export default function QuotationForm({
 
     try {
       const product = await createProduct({
-        company: initialValues.companyId,
+        company: String(initialValues.companyId),
         name: manualProduct.name.trim(),
         description: manualProduct.description.trim(),
         sku: manualProduct.sku.trim(),
@@ -464,7 +483,11 @@ export default function QuotationForm({
                   onOpenChange={setCustomerSearchOpen}
                   onSearch={setCustomerSearch}
                   onSelect={(customer) => {
+                    hydratedCustomerIdRef.current = customer.id
                     form.setValue("existingCustomerId", customer.id)
+                    setCustomerResults((prev) =>
+                      prev.some((item) => item.id === customer.id) ? prev : [customer, ...prev]
+                    )
                   }}
                   renderExtra={
                     <Button
@@ -563,14 +586,7 @@ export default function QuotationForm({
                   <FieldLabel>Quote number</FieldLabel>
                   <div className="flex gap-2">
                     <Input {...field} className="rounded-2xl" placeholder="QUO-20260416-100" />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-2xl"
-                      onClick={() => form.setValue("quote_number", makeQuoteNumber())}
-                    >
-                      Generate
-                    </Button>
+                    
                   </div>
                   {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>

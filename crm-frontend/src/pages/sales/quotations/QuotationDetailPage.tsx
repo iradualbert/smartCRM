@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import axios from "axios"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import PdfActionsMenu from "@/shared/PdfActionsMenu"
+
 import {
-  Download,
-  Mail,
-  FileText,
   ArrowRight,
-  Printer,
-  RefreshCcw,
+  FileText,
+  Mail,
   Pencil,
 } from "lucide-react"
-import axios from "axios"
 
 const api = axios
 
@@ -26,36 +27,37 @@ const statusColor: Record<string, string> = {
 export default function QuotationDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { currentOrganizationId } = useOrganizations()
 
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [busyAction, setBusyAction] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!id || !currentOrganizationId) return
     fetchData()
-  }, [id])
+  }, [id, currentOrganizationId])
 
   const fetchData = async () => {
-    const res = await api.get(`/quotations/${id}/`)
-    setData(res.data)
-    setLoading(false)
-  }
-
-  const generatePDF = async (force = false) => {
     try {
-      setBusyAction(force ? "regenerate" : "generate")
-      await api.post(`/quotations/${id}/${force ? "regenerate_pdf" : "generate_pdf"}/`)
-      window.open(`/api/quotations/${id}/pdf/`, "_blank")
-      await fetchData()
+      setLoading(true)
+      const res = await api.get(`/quotations/${id}/?company=${currentOrganizationId}`, {
+        withCredentials: true,
+      })
+      setData(res.data)
     } finally {
-      setBusyAction(null)
+      setLoading(false)
     }
   }
 
   const createInvoice = async () => {
     try {
       setBusyAction("invoice")
-      const res = await api.post(`/quotations/${id}/create-invoice/`)
+      const res = await api.post(
+        `/quotations/${id}/create-invoice/?company=${currentOrganizationId}`,
+        {},
+        { withCredentials: true }
+      )
       navigate(`/invoices/${res.data.invoice_id}`)
     } finally {
       setBusyAction(null)
@@ -65,28 +67,40 @@ export default function QuotationDetailPage() {
   const createProforma = async () => {
     try {
       setBusyAction("proforma")
-      const res = await api.post(`/quotations/${id}/create-proforma/`)
+      const res = await api.post(
+        `/quotations/${id}/create-proforma/?company=${currentOrganizationId}`,
+        {},
+        { withCredentials: true }
+      )
       navigate(`/proformas/${res.data.proforma_id}`)
     } finally {
       setBusyAction(null)
     }
   }
 
+  const hasPdf = Boolean(data?.pdf_generated_at || data?.document)
+
   if (loading) {
     return <div className="p-6 text-sm text-gray-500">Loading quotation...</div>
   }
 
+  if (!data) {
+    return <div className="p-6 text-sm text-red-500">Quotation not found.</div>
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
-      <div className="flex flex-col gap-4 rounded-2xl border bg-white p-6 shadow-sm md:flex-row md:items-start md:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-4 rounded-2xl border bg-white p-6 shadow-sm lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-semibold tracking-tight">{data.quote_number}</h1>
-            <Badge className={`px-3 py-1 text-xs capitalize ${statusColor[data.status]}`}>
+            <Badge className={`px-3 py-1 text-xs capitalize ${statusColor[data.status] || ""}`}>
               {data.status}
             </Badge>
           </div>
+
           <p className="mt-2 text-sm text-gray-500">{data.name || "Quotation"}</p>
+
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
             <span>Issue date: {data.issue_date || "—"}</span>
             <span>Valid until: {data.valid_until || "—"}</span>
@@ -94,72 +108,56 @@ export default function QuotationDetailPage() {
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <Button
-            className="justify-start rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+            className="rounded-xl bg-slate-900 text-white hover:bg-slate-800"
             onClick={() => navigate(`/quotations/${id}/email`)}
           >
             <Mail className="mr-2 h-4 w-4" />
             Send by Email
           </Button>
 
-          <Button
-            variant="outline"
-            className="justify-start rounded-xl"
-            onClick={() => window.print()}
-          >
-            <Printer className="mr-2 h-4 w-4" />
-            Print Quotation
-          </Button>
+          <PdfActionsMenu
+            entityLabel="PDF"
+            hasPdf={hasPdf}
+            pdfUrl={`/quotations/${id}/pdf/?company=${currentOrganizationId}`}
+            generateUrl={`/quotations/${id}/generate_pdf/?company=${currentOrganizationId}`}
+            regenerateUrl={`/quotations/${id}/regenerate_pdf/?company=${currentOrganizationId}`}
+            onAfterGenerate={fetchData}
+          />
 
           <Button
             variant="outline"
-            className="justify-start rounded-xl"
-            onClick={() => generatePDF(false)}
-            disabled={busyAction === "generate"}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download PDF
-          </Button>
-
-          <Button
-            variant="outline"
-            className="justify-start rounded-xl"
-            onClick={() => generatePDF(true)}
-            disabled={busyAction === "regenerate"}
-          >
-            <RefreshCcw className="mr-2 h-4 w-4" />
-            Regenerate PDF
-          </Button>
-
-          <Button
-            variant="outline"
-            className="justify-start rounded-xl"
+            className="rounded-xl"
             onClick={() => navigate(`/quotations/${id}/edit`)}
           >
             <Pencil className="mr-2 h-4 w-4" />
             Edit Quotation
           </Button>
 
-          <Button
-            variant="outline"
-            className="justify-start rounded-xl"
-            onClick={createProforma}
-            disabled={busyAction === "proforma" || Boolean(data.proforma)}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            {data.proforma ? "Proforma Created" : "Create Proforma"}
-          </Button>
+          {!data.proforma && (
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={createProforma}
+              disabled={busyAction === "proforma"}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Create Proforma
+            </Button>
+          )}
 
-          <Button
-            variant="outline"
-            className="justify-start rounded-xl"
-            onClick={createInvoice}
-            disabled={busyAction === "invoice" || Boolean(data.invoice)}
-          >
-            <ArrowRight className="mr-2 h-4 w-4" />
-            {data.invoice ? "Invoice Created" : "Create Invoice"}
-          </Button>
+          {!data.invoice && (
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={createInvoice}
+              disabled={busyAction === "invoice"}
+            >
+              <ArrowRight className="mr-2 h-4 w-4" />
+              Create Invoice
+            </Button>
+          )}
         </div>
       </div>
 
@@ -170,10 +168,19 @@ export default function QuotationDetailPage() {
 
             <div className="space-y-1">
               <p className="text-base font-semibold text-gray-900">{data.customer_name}</p>
-              {data.customer_email ? <p className="text-sm text-gray-600">{data.customer_email}</p> : null}
-              {data.customer_phone_number ? <p className="text-sm text-gray-600">{data.customer_phone_number}</p> : null}
+
+              {data.customer_email ? (
+                <p className="text-sm text-gray-600">{data.customer_email}</p>
+              ) : null}
+
+              {data.customer_phone_number ? (
+                <p className="text-sm text-gray-600">{data.customer_phone_number}</p>
+              ) : null}
+
               {data.customer_address ? (
-                <p className="whitespace-pre-line text-sm text-gray-600">{data.customer_address}</p>
+                <p className="whitespace-pre-line text-sm text-gray-600">
+                  {data.customer_address}
+                </p>
               ) : null}
             </div>
           </div>
@@ -184,14 +191,20 @@ export default function QuotationDetailPage() {
 
               <div className="flex flex-wrap gap-3">
                 {data.proforma ? (
-                  <Button variant="secondary" onClick={() => navigate(`/proformas/${data.proforma}`)}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate(`/proformas/${data.proforma}`)}
+                  >
                     <FileText className="mr-2 h-4 w-4" />
                     View Proforma
                   </Button>
                 ) : null}
 
                 {data.invoice ? (
-                  <Button variant="secondary" onClick={() => navigate(`/invoices/${data.invoice}`)}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate(`/invoices/${data.invoice}`)}
+                  >
                     <FileText className="mr-2 h-4 w-4" />
                     View Invoice
                   </Button>
@@ -218,13 +231,16 @@ export default function QuotationDetailPage() {
                       <div className="font-medium text-gray-900">
                         {line.product_name || line.description}
                       </div>
+
                       {line.product_sku ? (
                         <div className="text-xs text-gray-500">SKU: {line.product_sku}</div>
                       ) : null}
+
                       {line.description && line.product_name ? (
                         <div className="text-xs text-gray-500">{line.description}</div>
                       ) : null}
                     </td>
+
                     <td>{line.quantity}</td>
                     <td>{line.unit_price}</td>
                     <td className="pr-4 text-right font-medium">{line.line_total}</td>

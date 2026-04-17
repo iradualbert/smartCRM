@@ -9,7 +9,7 @@ export type PaginatedResponse<T> = {
 }
 
 export type Customer = {
-  id: number
+  id: string
   company: number | null
   name: string
   email: string | null
@@ -31,8 +31,8 @@ export type Product = {
 }
 
 export type Template = {
-  id: number
-  company: number | null
+  id: string
+  company: string | null
   name: string
   document_type: "invoice" | "quotation" | "proforma" | "delivery_note" | "receipt"
   is_active: boolean
@@ -61,11 +61,11 @@ export type QuotationLine = {
 }
 
 export type Quotation = {
-  id: number
-  company: number | null
-  customer: number
-  selected_template: number | null
-  document: number | null
+  id: string
+  company: string | null
+  customer: string
+  selected_template: string | null
+  document: string | null
   currency: string | null
   pdf_generated_at: string | null
   pdf_needs_regeneration: boolean
@@ -90,7 +90,7 @@ export type Quotation = {
 }
 
 export type CustomerPayload = {
-  company: number
+  company: string
   name: string
   email?: string
   phone_number?: string
@@ -98,7 +98,7 @@ export type CustomerPayload = {
 }
 
 export type ProductPayload = {
-  company: number
+  company: string
   name: string
   description?: string
   sku?: string
@@ -106,9 +106,9 @@ export type ProductPayload = {
 }
 
 export type QuotationPayload = {
-  company: number
-  customer: number
-  selected_template?: number | null
+  company: string
+  customer: string
+  selected_template?: string | null
   currency?: string
   name: string
   description?: string
@@ -124,26 +124,26 @@ export type QuotationPayload = {
 }
 
 export type QuotationLinePayload = {
-  quotation: number
-  product?: number | null
+  quotation: string
+  product?: string | null
   description?: string
   quantity: string
   unit_price: string
 }
 
 export type ListQuotationParams = {
-  company: number
+  company: string
   limit?: number
   offset?: number
   search?: string
   status?: QuotationStatus | "all"
-  customer?: number | "all"
+  customer?: string | "all"
 }
 
 const api = axios
 
 export async function listCustomers(params?: {
-  company?: number
+  company?: string
   search?: string
   limit?: number
   offset?: number
@@ -160,7 +160,7 @@ export async function createCustomer(payload: CustomerPayload) {
 }
 
 export async function listProducts(params?: {
-  company?: number
+  company?: string
   search?: string
   limit?: number
   offset?: number
@@ -176,7 +176,7 @@ export async function createProduct(payload: ProductPayload) {
   return response.data
 }
 
-export async function listQuotationTemplates(params?: { company?: number }) {
+export async function listQuotationTemplates(params?: { company?: string }) {
   const response = await api.get<PaginatedResponse<Template>>("/templates/", {
     params,
   })
@@ -203,8 +203,8 @@ export async function listQuotations(params: ListQuotationParams) {
   return response.data
 }
 
-export async function getQuotation(id: number | string) {
-  const response = await api.get<Quotation>(`/quotations/${id}/`)
+export async function getQuotation(id: string, companyId: string) {
+  const response = await api.get<Quotation>(`/quotations/${id}/` + `?company=${companyId}`)
   return response.data
 }
 
@@ -238,32 +238,32 @@ export async function updateQuotationLine(
   return response.data
 }
 
-export async function deleteQuotationLine(id: number | string) {
+export async function deleteQuotationLine(id: string) {
   await api.delete(`/quotation-lines/${id}/`)
 }
 
-export async function generateQuotationPdf(id: number | string) {
+export async function generateQuotationPdf(id: string) {
   const response = await api.post(`/quotations/${id}/generate_pdf/`)
   return response.data
 }
 
-export async function regenerateQuotationPdf(id: number | string) {
+export async function regenerateQuotationPdf(id: string) {
   const response = await api.post(`/quotations/${id}/regenerate_pdf/`)
   return response.data
 }
 
-export function quotationPdfUrl(id: number | string) {
+export function quotationPdfUrl(id: string) {
   return `/quotations/${id}/pdf/`
 }
 
 export async function createProformaFromQuotation(payload: {
-  quotation: number
-  company: number
-  customer: number
+  quotation: string
+  company: string
+  customer: string
   proforma_number: string
   status?: "draft" | "sent" | "paid" | "cancelled"
   currency?: string | null
-  selected_template?: number | null
+  selected_template?: string | null
 }) {
   const response = await api.post("/proformas/", {
     ...payload,
@@ -273,9 +273,9 @@ export async function createProformaFromQuotation(payload: {
 }
 
 export async function createQuotationWithLines(input: {
-  companyId: number
+  companyId: string
   customerMode: "existing" | "manual"
-  existingCustomerId?: number | null
+  existingCustomerId?: string | null
   manualCustomer?: {
     name: string
     email?: string
@@ -287,7 +287,7 @@ export async function createQuotationWithLines(input: {
     description?: string
     quote_number: string
     currency?: string
-    selected_template?: number | null
+    selected_template?: string | null
     status?: QuotationStatus
     issue_date?: string | null
     valid_until?: string | null
@@ -296,7 +296,7 @@ export async function createQuotationWithLines(input: {
     tax_rate?: string
   }
   lines: Array<{
-    product?: number | null
+    product?: string | null
     description?: string
     quantity: string
     unit_price: string
@@ -350,17 +350,19 @@ export async function createQuotationWithLines(input: {
     })
   }
 
-  return getQuotation(quotation.id)
+  return getQuotation(quotation.id, input.companyId)
 }
 
 export async function updateQuotationWithLines(input: {
-  quotationId: number
+  quotationId: string
+  companyId: string
   quotation: {
+    customer: string
     name: string
     description?: string
     quote_number: string
     currency?: string
-    selected_template?: number | null
+    selected_template?: string | null
     status?: QuotationStatus
     issue_date?: string | null
     valid_until?: string | null
@@ -369,15 +371,16 @@ export async function updateQuotationWithLines(input: {
     tax_rate?: string
   }
   lines: Array<{
-    id?: number
-    product?: number | null
+    id?: string
+    product?: string | null
     description?: string
     quantity: string
     unit_price: string
   }>
-  removedLineIds: number[]
+  removedLineIds: string[]
 }) {
   await updateQuotation(input.quotationId, {
+    customer: input.quotation.customer,
     name: input.quotation.name.trim(),
     description: input.quotation.description?.trim() || "",
     quote_number: input.quotation.quote_number.trim(),
@@ -414,19 +417,20 @@ export async function updateQuotationWithLines(input: {
     }
   }
 
-  return getQuotation(input.quotationId)
+  return getQuotation(input.quotationId, input.companyId)
 }
 
-export async function getQuotationEmailDraft(id: number | string) {
-  const response = await api.get(`/quotations/${id}/email_draft/`)
+export async function getQuotationEmailDraft(id: string, companyId: string ) {
+  const response = await api.get(`/quotations/${id}/email_draft/` + `?company=${companyId}`)
   return response.data
 }
 
 export async function sendQuotationEmail(
-  quotationId: number | string,
+  quotationId: string,
+  companyId: string,
   payload: EmailComposerSubmitPayload
 ) {
-  const response = await api.post(`/quotations/${quotationId}/send-email/`, {
+  const response = await api.post(`/quotations/${quotationId}/send-email/?company=${companyId}`, {
     to: payload.to,
     cc: payload.cc ? payload.cc.split(",").map((v) => v.trim()).filter(Boolean) : [],
     subject: payload.subject,

@@ -78,7 +78,7 @@ export default function QuotationListPage() {
 
       const [quotationRes, customerRes] = await Promise.all([
         listQuotations({
-          company: Number(currentOrganizationId),
+          company: currentOrganizationId,
           limit,
           offset,
           search: appliedSearch,

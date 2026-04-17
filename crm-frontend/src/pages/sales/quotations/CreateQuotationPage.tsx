@@ -25,14 +25,14 @@ export default function CreateQuotationPage() {
 
   if (!currentOrganizationId) {
     return (
-      <div className="mx-auto max-w-5xl p-6 md:p-8 text-sm text-rose-700">
+      <div className="mx-auto max-w-5xl p-6 text-sm text-rose-700 md:p-8">
         No current organization selected.
       </div>
     )
   }
 
   const initialValues: QuotationFormValues = {
-    companyId: Number(currentOrganizationId),
+    companyId: String(currentOrganizationId),
     customerMode: "existing",
     existingCustomerId: null,
     manualCustomerName: "",
@@ -41,7 +41,7 @@ export default function CreateQuotationPage() {
     manualCustomerAddress: "",
 
     name: "",
-    quote_number: `QUO-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}-${Math.floor(Math.random() * 900 + 100)}`,
+    quote_number: "",
     description: "",
     currency: "USD",
     selected_template: null,
@@ -104,6 +104,23 @@ export default function CreateQuotationPage() {
           try {
             setSubmitting(true)
 
+            const quotationPayload: Record<string, unknown> = {
+              name: values.name,
+              description: values.description || "",
+              currency: values.currency || "USD",
+              selected_template: values.selected_template ?? null,
+              status: "draft",
+              issue_date: values.issue_date || null,
+              valid_until: values.valid_until || null,
+              tax_mode: values.tax_mode,
+              tax_label: values.tax_label,
+              tax_rate: values.tax_rate,
+            }
+
+            if (values.quote_number?.trim()) {
+              quotationPayload.quote_number = values.quote_number.trim()
+            }
+
             const quotation = await createQuotationWithLines({
               companyId: values.companyId,
               customerMode: values.customerMode,
@@ -114,19 +131,7 @@ export default function CreateQuotationPage() {
                 phone_number: values.manualCustomerPhone || "",
                 address: values.manualCustomerAddress || "",
               },
-              quotation: {
-                name: values.name,
-                quote_number: values.quote_number,
-                description: values.description || "",
-                currency: values.currency || "USD",
-                selected_template: values.selected_template ?? null,
-                status: "draft",
-                issue_date: values.issue_date || null,
-                valid_until: values.valid_until || null,
-                tax_mode: values.tax_mode,
-                tax_label: values.tax_label,
-                tax_rate: values.tax_rate,
-              },
+              quotation: quotationPayload,
               lines: values.lines.map((line) => ({
                 product: line.product ?? null,
                 description: line.description,

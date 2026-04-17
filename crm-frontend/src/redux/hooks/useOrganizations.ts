@@ -12,47 +12,45 @@ type Organization = {
 }
 
 const getOrgId = (org?: Organization | null) =>
-  org?.id?.toString() || org?._id?.toString()
+  org?.id?.toString() || org?._id?.toString() || null
 
 export const useOrganizations = () => {
   const { user } = useSelector((state: any) => state)
   const organizations: Organization[] = user?.organizations || []
 
   const [storedOrgId, setStoredOrgId] = useState<string | null>(null)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [isStorageLoaded, setIsStorageLoaded] = useState(false)
 
-  // ✅ Load from localStorage FIRST
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) setStoredOrgId(saved)
-    setIsLoaded(true)
+    setStoredOrgId(saved)
+    setIsStorageLoaded(true)
   }, [])
 
-  // ✅ Resolve current org
   const currentOrganization = useMemo(() => {
+    if (!isStorageLoaded) return null
     if (!organizations.length) return null
 
     if (storedOrgId) {
-      const match = organizations.find(
-        (org) => getOrgId(org) === storedOrgId
-      )
+      const match = organizations.find((org) => getOrgId(org) === storedOrgId)
       if (match) return match
     }
 
-    return organizations[0]
-  }, [organizations, storedOrgId])
+    return organizations[0] || null
+  }, [organizations, storedOrgId, isStorageLoaded])
 
-  // ✅ ONLY persist AFTER localStorage is loaded
   useEffect(() => {
-    if (!isLoaded) return
+    if (!isStorageLoaded) return
     if (!currentOrganization) return
 
     const id = getOrgId(currentOrganization)
     if (!id) return
 
-    localStorage.setItem(STORAGE_KEY, id)
-    setStoredOrgId(id)
-  }, [currentOrganization, isLoaded])
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved !== id) {
+      localStorage.setItem(STORAGE_KEY, id)
+    }
+  }, [currentOrganization, isStorageLoaded])
 
   const setCurrentOrganization = (org: Organization) => {
     const id = getOrgId(org)
@@ -60,18 +58,15 @@ export const useOrganizations = () => {
 
     localStorage.setItem(STORAGE_KEY, id)
     setStoredOrgId(id)
-
-    // window.location.reload()
-    // reload and go to the dashboard
     window.location.href = "/dashboard"
-
   }
 
   return {
     organizations,
     currentOrganization,
     currentOrganizationId: getOrgId(currentOrganization),
-    defaultOrganization: organizations[0] || null,
+    defaultOrganization: isStorageLoaded ? organizations[0] || null : null,
+    isStorageLoaded,
     setCurrentOrganization,
   }
 }

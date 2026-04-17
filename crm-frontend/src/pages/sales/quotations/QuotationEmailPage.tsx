@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import EmailComposer, { type EmailComposerSubmitPayload } from "../shared-components/EmailComposer"
 import { Button } from "@/components/ui/button"
 import { getQuotationEmailDraft, sendQuotationEmail } from "./api"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 type QuotationEmailDraft = {
   to: string
@@ -24,15 +25,16 @@ export default function QuotationEmailPage() {
   const [sending, setSending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState<string | null>(null)
+  const { currentOrganizationId } = useOrganizations()
 
   React.useEffect(() => {
     const run = async () => {
-      if (!id) return
+      if (!id || !currentOrganizationId) return
 
       try {
         setLoading(true)
         setError(null)
-        const data = await getQuotationEmailDraft(id)
+        const data = await getQuotationEmailDraft(id, currentOrganizationId)
         setDraft(data)
       } catch (err) {
         console.error(err)
@@ -43,17 +45,17 @@ export default function QuotationEmailPage() {
     }
 
     run()
-  }, [id])
+  }, [id, currentOrganizationId])
 
   const handleSend = async (payload: EmailComposerSubmitPayload) => {
-    if (!id) return
+    if (!id || !currentOrganizationId) return
 
     try {
       setSending(true)
       setError(null)
       setSuccess(null)
 
-      await sendQuotationEmail(id, payload)
+      await sendQuotationEmail(id, currentOrganizationId, payload)
 
       setSuccess("Quotation email sent successfully.")
     } catch (err) {
