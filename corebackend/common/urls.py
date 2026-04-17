@@ -15,5 +15,5 @@ urlpatterns = [
     # path("manifest.json", manifest_view),
     # path("snugtop.jpg", snugtop_view),
     re_path(r"^files/(?P<path>.*)$", serve_static, {"document_root": settings.MEDIA_ROOT}),
-    re_path(r"^(?P<path>.*)$", serve_static, {"document_root": settings.REACT_APP_BUILD_PATH}),
+    # re_path(r"^(?P<path>.*)$", serve_static, {"document_root": settings.REACT_APP_BUILD_PATH}),
     ]

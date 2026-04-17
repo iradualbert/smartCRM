@@ -1,13 +1,20 @@
+from datetime import timezone
+from decimal import Decimal
 import os
 
 from django.contrib.auth.models import User
 from django.http import FileResponse, Http404
 from django.db import transaction
+from django.db import models
+from django.utils.text import slugify
+
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from .services.document_email_sender import send_document_email_with_config
+from .models_email import EmailSendingConfig
 from .services.email_template import build_email_draft_for_instance
 
 from .models import (
@@ -17,6 +24,7 @@ from .models import (
     DeliveryNote,
     DeliveryNoteLine,
     Document,
+    DocumentEvent,
     Invoice,
     InvoiceLine,
     Product,
@@ -51,6 +59,9 @@ from .services.document_generation import (
     get_existing_document_or_raise,
     inspect_template_file,
 )
+from .services.events import log_event
+from .services.company import _build_company_dashboard_context, _next_document_number
+from .serializers_dashboard import WorkspaceDashboardSerializer, SalesDashboardSerializer
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
@@ -59,6 +70,33 @@ class BaseModelViewSet(viewsets.ModelViewSet):
 
 class DocumentLifecycleMixin:
     document_type = None
+
+    def _build_download_filename(self, instance):
+        customer_name = ""
+        if hasattr(instance, "customer") and instance.customer:
+            customer_name = instance.customer.name
+        elif hasattr(instance, "proforma") and instance.proforma and instance.proforma.customer:
+            customer_name = instance.proforma.customer.name
+        elif (
+            hasattr(instance, "invoice")
+            and instance.invoice
+            and instance.invoice.customer
+        ):
+            customer_name = instance.invoice.customer.name
+
+        company_name = instance.company.name if getattr(instance, "company", None) else ""
+        identifier = (
+            getattr(instance, "quote_number", None)
+            or getattr(instance, "proforma_number", None)
+            or getattr(instance, "invoice_number", None)
+            or getattr(instance, "receipt_number", None)
+            or getattr(instance, "delivery_note_number", None)
+            or f"{self.document_type}-{instance.pk}"
+        )
+
+        parts = [customer_name or company_name, identifier]
+        safe = "-".join(slugify(part) for part in parts if part)
+        return f"{safe or identifier}.pdf"
 
     @action(detail=True, methods=["get"])
     def pdf(self, request, pk=None):
@@ -74,7 +112,7 @@ class DocumentLifecycleMixin:
         return FileResponse(
             open(document.file.path, "rb"),
             content_type="application/pdf",
-            filename=os.path.basename(document.file.name),
+            filename=self._build_download_filename(instance),
         )
 
     @action(detail=True, methods=["post"])
@@ -87,6 +125,17 @@ class DocumentLifecycleMixin:
                 user=request.user,
                 force=False,
             )
+
+            log_event(
+                instance,
+                "pdf_generated",
+                metadata={
+                    "generated": generated,
+                    "document_id": document.id,
+                },
+                user=request.user,
+            )
+
             response_status = status.HTTP_201_CREATED if generated else status.HTTP_200_OK
             return Response(
                 {
@@ -111,6 +160,17 @@ class DocumentLifecycleMixin:
                 user=request.user,
                 force=True,
             )
+
+            log_event(
+                instance,
+                "pdf_generated",
+                metadata={
+                    "regenerated": True,
+                    "document_id": document.id,
+                },
+                user=request.user,
+            )
+
             return Response(
                 {
                     "detail": "PDF regenerated.",
@@ -123,8 +183,7 @@ class DocumentLifecycleMixin:
             )
         except Exception as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-        
-        
+
     @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
     def email_draft(self, request, pk=None):
         instance = self.get_object()
@@ -135,15 +194,572 @@ class DocumentLifecycleMixin:
                 document_type=self.document_type,
                 user=request.user,
             )
-            draft["attachment_url"] = request.build_absolute_uri(draft.get("attachment_url")) if draft.get("attachment_url") else None
+            draft["attachment_url"] = (
+                request.build_absolute_uri(draft.get("attachment_url"))
+                if draft.get("attachment_url")
+                else None
+            )
             return Response(draft, status=status.HTTP_200_OK)
         except Exception as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated], url_path="send-email")
+    def send_email(self, request, pk=None):
+        instance = self.get_object()
+
+        to_value = request.data.get("to")
+        cc_value = request.data.get("cc", [])
+        bcc_value = request.data.get("bcc", [])
+        subject = (request.data.get("subject") or "").strip()
+        body_html = request.data.get("body_html") or ""
+        sending_config_id = request.data.get("sending_config_id")
+        include_attachment = request.data.get("include_attachment", True)
+
+        if not to_value:
+            return Response({"detail": "Recipient email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not subject:
+            return Response({"detail": "Subject is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not body_html.strip():
+            return Response({"detail": "Email body is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not sending_config_id:
+            return Response({"detail": "sending_config_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        def normalize_email_list(value):
+            if value is None:
+                return []
+            if isinstance(value, str):
+                return [item.strip() for item in value.split(",") if item.strip()]
+            if isinstance(value, list):
+                return [str(item).strip() for item in value if str(item).strip()]
+            return []
+
+        to_emails = normalize_email_list(to_value)
+        cc_emails = normalize_email_list(cc_value)
+        bcc_emails = normalize_email_list(bcc_value)
+
+        if not to_emails:
+            return Response(
+                {"detail": "At least one recipient email is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            sending_config = EmailSendingConfig.objects.get(
+                pk=sending_config_id,
+                is_active=True,
+            )
+        except EmailSendingConfig.DoesNotExist:
+            return Response(
+                {"detail": "Selected sending configuration was not found or is inactive."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        user_can_use_config = False
+
+        if sending_config.user_id == request.user.id:
+            user_can_use_config = True
+        elif (
+            sending_config.company_id
+            and CompanyMembership.objects.filter(
+                company_id=sending_config.company_id,
+                user=request.user,
+                is_active=True,
+            ).exists()
+        ):
+            user_can_use_config = True
+
+        if not user_can_use_config:
+            return Response(
+                {"detail": "You do not have permission to use this sending configuration."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        sent_count = send_document_email_with_config(
+            config=sending_config,
+            subject=subject,
+            body_html=body_html,
+            to=to_emails,
+            cc=cc_emails,
+            bcc=bcc_emails,
+            include_attachment=bool(include_attachment),
+            document_file=instance.document.file if getattr(instance, "document", None) else None,
+        )
+
+        log_event(
+            instance,
+            "email_sent",
+            metadata={
+                "to": to_emails,
+                "cc": cc_emails,
+                "bcc": bcc_emails,
+                "include_attachment": bool(include_attachment),
+                "sent_count": sent_count,
+            },
+            user=request.user,
+        )
+
+        return Response(
+            {
+                "detail": "Email sent successfully.",
+                "sent_count": sent_count,
+                "used_sending_config_id": sending_config.id,
+                "include_attachment": bool(include_attachment),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class DocumentViewSet(BaseModelViewSet):
+    queryset = Document.objects.select_related("template").all().order_by("-created_at")
+    serializer_class = DocumentSerializer
+
+
+class TemplateViewSet(BaseModelViewSet):
+    queryset = Template.objects.select_related("company").all().order_by("-created_at")
+    serializer_class = TemplateSerializer
+
+    @action(detail=True, methods=["post"])
+    def inspect(self, request, pk=None):
+        template = self.get_object()
+        result = inspect_template_file(template)
+        return Response(result)
+
+
+class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
+    document_type = "quotation"
+    queryset = Quotation.objects.select_related(
+        "customer", "company", "document", "selected_template", "created_by", "updated_by"
+    ).prefetch_related("lines", "proformas", "invoices").all().order_by("-created_at")
+    serializer_class = QuotationSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        company_id = self.request.query_params.get("company")
+        status_value = self.request.query_params.get("status")
+        customer_id = self.request.query_params.get("customer")
+        search = (self.request.query_params.get("search") or "").strip()
+
+        if company_id:
+            queryset = queryset.filter(company_id=company_id)
+        else:
+            user = self.request.user
+            if not user.is_superuser:
+                queryset = queryset.filter(
+                    company__memberships__user=user,
+                    company__memberships__is_active=True,
+                )
+
+        if status_value:
+            queryset = queryset.filter(status=status_value)
+
+        if customer_id:
+            queryset = queryset.filter(customer_id=customer_id)
+
+        if search:
+            queryset = queryset.filter(
+                models.Q(quote_number__icontains=search)
+                | models.Q(name__icontains=search)
+                | models.Q(customer__name__icontains=search)
+            )
+
+        return queryset.distinct().order_by("-created_at")
+
+    def perform_create(self, serializer):
+        company = serializer.validated_data["company"]
+        quote_number = serializer.validated_data.get("quote_number")
+
+        if not quote_number:
+            quote_number = _next_document_number(
+                company=company,
+                field_name="quote_number",
+                prefix=company.quotation_prefix or "QUO",
+            )
+
+        instance = serializer.save(
+            quote_number=quote_number,
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+        log_event(
+            instance,
+            "created",
+            metadata={"quote_number": instance.quote_number},
+            user=self.request.user,
+        )
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        old_status = instance.status
+
+        updated = serializer.save(updated_by=self.request.user)
+
+        log_event(
+            updated,
+            "updated",
+            metadata={"fields": list(serializer.validated_data.keys())},
+            user=self.request.user,
+        )
+
+        if "status" in serializer.validated_data and old_status != updated.status:
+            log_event(
+                updated,
+                "status_changed",
+                metadata={"from": old_status, "to": updated.status},
+                user=self.request.user,
+            )
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated], url_path="activity")
+    def activity(self, request, pk=None):
+        quotation = self.get_object()
+
+        document_ids = []
+
+        if quotation.document_id:
+            document_ids.append(quotation.document_id)
+
+        for proforma in quotation.proformas.select_related("document").all():
+            if proforma.document_id:
+                document_ids.append(proforma.document_id)
+
+        for invoice in quotation.invoices.select_related("document").all():
+            if invoice.document_id:
+                document_ids.append(invoice.document_id)
+
+        events = (
+            DocumentEvent.objects.filter(document_id__in=document_ids)
+            .select_related("created_by", "document")
+            .order_by("-created_at")
+        )
+
+        payload = [
+            {
+                "id": event.id,
+                "event_type": event.event_type,
+                "created_at": event.created_at,
+                "created_by": (
+                    event.created_by.get_full_name() or event.created_by.email
+                    if event.created_by
+                    else ""
+                ),
+                "metadata": event.metadata or {},
+            }
+            for event in events
+        ]
+
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated], url_path="create-proforma")
+    def create_proforma(self, request, pk=None):
+        quotation = self.get_object()
+
+        existing = quotation.proformas.order_by("created_at").first()
+        if existing:
+            return Response(
+                {
+                    "detail": "Proforma already exists for this quotation.",
+                    "proforma_id": existing.id,
+                    "proforma_number": existing.proforma_number,
+                    "existing": True,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        if not quotation.company_id:
+            return Response(
+                {"detail": "Quotation must belong to a company."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        proforma_number = _next_document_number(
+            company=quotation.company,
+            field_name="proforma_number",
+            prefix=quotation.company.proforma_prefix or "PRO",
+        )
+
+        with transaction.atomic():
+            proforma = Proforma.objects.create(
+                quotation=quotation,
+                customer=quotation.customer,
+                company=quotation.company,
+                currency=quotation.currency,
+                selected_template=None,
+                proforma_number=proforma_number,
+                status=Proforma.Status.DRAFT,
+                issue_date=quotation.issue_date,
+                valid_until=quotation.valid_until,
+                tax_mode=quotation.tax_mode,
+                tax_label=quotation.tax_label,
+                tax_rate=quotation.tax_rate,
+                created_by=request.user,
+                updated_by=request.user,
+            )
+
+            for line in quotation.lines.all():
+                ProformaLine.objects.create(
+                    proforma=proforma,
+                    product=line.product,
+                    description=line.description,
+                    quantity=line.quantity,
+                    unit_price=line.unit_price,
+                    created_by=request.user,
+                    updated_by=request.user,
+                )
+
+            proforma.recalculate_totals()
+
+            log_event(
+                quotation,
+                "converted",
+                metadata={
+                    "to": "proforma",
+                    "proforma_id": proforma.id,
+                    "proforma_number": proforma.proforma_number,
+                },
+                user=request.user,
+            )
+
+        return Response(
+            {
+                "detail": "Proforma created successfully from quotation.",
+                "proforma_id": proforma.id,
+                "proforma_number": proforma.proforma_number,
+                "existing": False,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated], url_path="create-invoice")
+    def create_invoice(self, request, pk=None):
+        quotation = self.get_object()
+
+        existing = quotation.invoices.order_by("created_at").first()
+        if existing:
+            return Response(
+                {
+                    "detail": "Invoice already exists for this quotation.",
+                    "invoice_id": existing.id,
+                    "invoice_number": existing.invoice_number,
+                    "existing": True,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        if not quotation.company_id:
+            return Response(
+                {"detail": "Quotation must belong to a company."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        invoice_number = _next_document_number(
+            company=quotation.company,
+            field_name="invoice_number",
+            prefix=quotation.company.invoice_prefix or "INV",
+        )
+
+        with transaction.atomic():
+            invoice = Invoice.objects.create(
+                quotation=quotation,
+                customer=quotation.customer,
+                company=quotation.company,
+                currency=quotation.currency,
+                selected_template=None,
+                invoice_number=invoice_number,
+                status=Invoice.Status.DRAFT,
+                issue_date=quotation.issue_date,
+                valid_until=quotation.valid_until,
+                tax_mode=quotation.tax_mode,
+                tax_label=quotation.tax_label,
+                tax_rate=quotation.tax_rate,
+                created_by=request.user,
+                updated_by=request.user,
+            )
+
+            for line in quotation.lines.all():
+                InvoiceLine.objects.create(
+                    invoice=invoice,
+                    product=line.product,
+                    description=line.description,
+                    quantity=line.quantity,
+                    unit_price=line.unit_price,
+                    created_by=request.user,
+                    updated_by=request.user,
+                )
+
+            invoice.recalculate_totals()
+
+            log_event(
+                quotation,
+                "converted",
+                metadata={
+                    "to": "invoice",
+                    "invoice_id": invoice.id,
+                    "invoice_number": invoice.invoice_number,
+                },
+                user=request.user,
+            )
+
+        return Response(
+            {
+                "detail": "Invoice created successfully from quotation.",
+                "invoice_id": invoice.id,
+                "invoice_number": invoice.invoice_number,
+                "existing": False,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class QuotationLineViewSet(BaseModelViewSet):
+    queryset = QuotationLine.objects.select_related(
+        "quotation", "product", "created_by", "updated_by"
+    ).all().order_by("-created_at")
+    serializer_class = QuotationLineSerializer
+
+    def perform_create(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        obj = serializer.save(created_by=user, updated_by=user)
+        obj.quotation.recalculate_totals()
+        log_event(obj.quotation, "updated", metadata={"action": "line_created"}, user=user)
+
+    def perform_update(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        obj = serializer.save(updated_by=user)
+        obj.quotation.recalculate_totals()
+        log_event(obj.quotation, "updated", metadata={"action": "line_updated"}, user=user)
+
+    def perform_destroy(self, instance):
+        quotation = instance.quotation
+        user = self.request.user if self.request.user.is_authenticated else None
+        instance.delete()
+        quotation.recalculate_totals()
+        log_event(quotation, "updated", metadata={"action": "line_deleted"}, user=user)
+
+
+class ProformaViewSet(DocumentLifecycleMixin, BaseModelViewSet):
+    document_type = "proforma"
+    queryset = Proforma.objects.select_related(
+        "quotation", "customer", "company", "document", "selected_template", "created_by", "updated_by"
+    ).prefetch_related("lines").all().order_by("-created_at")
+    serializer_class = ProformaSerializer
+
+
+class ProformaLineViewSet(BaseModelViewSet):
+    queryset = ProformaLine.objects.select_related(
+        "proforma", "product", "created_by", "updated_by"
+    ).all().order_by("-created_at")
+    serializer_class = ProformaLineSerializer
+
+    def perform_create(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        obj = serializer.save(created_by=user, updated_by=user)
+        obj.proforma.recalculate_totals()
+
+    def perform_update(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        obj = serializer.save(updated_by=user)
+        obj.proforma.recalculate_totals()
+
+    def perform_destroy(self, instance):
+        proforma = instance.proforma
+        instance.delete()
+        proforma.recalculate_totals()
+
+
+class InvoiceViewSet(DocumentLifecycleMixin, BaseModelViewSet):
+    document_type = "invoice"
+    queryset = Invoice.objects.select_related(
+        "proforma", "quotation", "customer", "company", "document", "selected_template", "created_by", "updated_by"
+    ).prefetch_related("lines").all().order_by("-created_at")
+    serializer_class = InvoiceSerializer
+
+
+class InvoiceLineViewSet(BaseModelViewSet):
+    queryset = InvoiceLine.objects.select_related(
+        "invoice", "product", "created_by", "updated_by"
+    ).all().order_by("-created_at")
+    serializer_class = InvoiceLineSerializer
+
+    def perform_create(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        obj = serializer.save(created_by=user, updated_by=user)
+        obj.invoice.recalculate_totals()
+
+    def perform_update(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        obj = serializer.save(updated_by=user)
+        obj.invoice.recalculate_totals()
+
+    def perform_destroy(self, instance):
+        invoice = instance.invoice
+        instance.delete()
+        invoice.recalculate_totals()
+
+
+class ReceiptViewSet(DocumentLifecycleMixin, BaseModelViewSet):
+    document_type = "receipt"
+    queryset = Receipt.objects.select_related(
+        "invoice", "company", "document", "selected_template", "created_by", "updated_by"
+    ).all().order_by("-created_at")
+    serializer_class = ReceiptSerializer
+
+
+class DeliveryNoteViewSet(DocumentLifecycleMixin, BaseModelViewSet):
+    document_type = "delivery_note"
+    queryset = DeliveryNote.objects.select_related(
+        "invoice", "company", "document", "selected_template", "created_by", "updated_by"
+    ).prefetch_related("lines").all().order_by("-created_at")
+    serializer_class = DeliveryNoteSerializer
+
+
+class DeliveryNoteLineViewSet(BaseModelViewSet):
+    queryset = DeliveryNoteLine.objects.select_related(
+        "delivery_note", "product", "created_by", "updated_by"
+    ).all().order_by("-created_at")
+    serializer_class = DeliveryNoteLineSerializer
+
 
 class CompanyViewSet(BaseModelViewSet):
-    queryset = Company.objects.all().order_by("-created_at")
     serializer_class = CompanySerializer
+    queryset = Company.objects.none()
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_superuser:
+            return Company.objects.all().order_by("-created_at")
+
+        return Company.objects.filter(
+            memberships__user=user,
+            memberships__is_active=True,
+        ).distinct().order_by("-created_at")
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            company = serializer.save(
+                created_by=self.request.user,
+                updated_by=self.request.user,
+            )
+
+            CompanyMembership.objects.get_or_create(
+                company=company,
+                user=self.request.user,
+                defaults={
+                    "role": CompanyMembership.Role.OWNER,
+                    "is_active": True,
+                    "display_name": self.request.user.get_full_name() or self.request.user.username,
+                    "work_email": self.request.user.email or "",
+                    "created_by": self.request.user,
+                    "updated_by": self.request.user,
+                },
+            )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
 
     def _user_can_manage_company_members(self, user, company):
         if not user or not user.is_authenticated:
@@ -268,8 +884,15 @@ class CompanyViewSet(BaseModelViewSet):
             status=status.HTTP_201_CREATED if membership_created else status.HTTP_200_OK,
         )
 
-    @action(detail=True, methods=["patch"], url_path=r"members/(?P<membership_id>[^/.]+)", permission_classes=[IsAuthenticated])
+    @action(
+        detail=True,
+        methods=["put", "patch"],
+        url_path=r"members/(?P<membership_id>[^/.]+)",
+        permission_classes=[IsAuthenticated],
+    )
     def update_member(self, request, pk=None, membership_id=None):
+        partial = request.method.lower() == "patch"
+
         company = self.get_object()
 
         if not self._user_can_manage_company_members(request.user, company):
@@ -281,18 +904,53 @@ class CompanyViewSet(BaseModelViewSet):
         try:
             membership = company.memberships.select_related("user").get(pk=membership_id)
         except CompanyMembership.DoesNotExist:
-            return Response({"detail": "Membership not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Membership not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         serializer = CompanyMembershipSerializer(
             membership,
             data=request.data,
-            partial=True,
+            partial=partial,
             context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save(updated_by=request.user)
+        membership = serializer.save(updated_by=request.user)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            CompanyMembershipSerializer(membership, context={"request": request}).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=["delete"], url_path=r"members/(?P<membership_id>[^/.]+)", permission_classes=[IsAuthenticated])
+    def remove_member(self, request, pk=None, membership_id=None):
+        company = self.get_object()
+
+        if not self._user_can_manage_company_members(request.user, company):
+            return Response(
+                {"detail": "You do not have permission to manage company members."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            membership = company.memberships.get(pk=membership_id)
+        except CompanyMembership.DoesNotExist:
+            return Response({"detail": "Membership not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if membership.role == CompanyMembership.Role.OWNER:
+            owner_count = company.memberships.filter(
+                role=CompanyMembership.Role.OWNER,
+                is_active=True,
+            ).count()
+            if owner_count <= 1:
+                return Response(
+                    {"detail": "You cannot remove the last active owner."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        membership.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post"], url_path=r"members/(?P<membership_id>[^/.]+)/deactivate", permission_classes=[IsAuthenticated])
     def deactivate_member(self, request, pk=None, membership_id=None):
@@ -309,153 +967,54 @@ class CompanyViewSet(BaseModelViewSet):
         except CompanyMembership.DoesNotExist:
             return Response({"detail": "Membership not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        if membership.role == CompanyMembership.Role.OWNER:
+            owner_count = company.memberships.filter(
+                role=CompanyMembership.Role.OWNER,
+                is_active=True,
+            ).count()
+            if owner_count <= 1:
+                return Response(
+                    {"detail": "You cannot deactivate the last active owner."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         membership.is_active = False
         membership.updated_by = request.user
         membership.save(update_fields=["is_active", "updated_by", "updated_at"])
 
         return Response({"detail": "Member deactivated successfully."}, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated], url_path="dashboard")
+    def dashboard(self, request, pk=None):
+        company = self.get_object()
+        payload = _build_company_dashboard_context(company)
 
-class DocumentViewSet(BaseModelViewSet):
-    queryset = Document.objects.select_related("template").all().order_by("-created_at")
-    serializer_class = DocumentSerializer
+        data = {
+            "company": payload["company"],
+            "metrics": payload["workspace_metrics"],
+            "usage": payload["usage"],
+            "subscription": payload["subscription"],
+            "attention": payload["attention"],
+            "activity": payload["activity"],
+            "recent_quotations": payload["recent_quotations"],
+        }
 
+        serializer = WorkspaceDashboardSerializer(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-class TemplateViewSet(BaseModelViewSet):
-    queryset =  Template.objects.select_related("company").all().order_by("-created_at")
-    serializer_class = TemplateSerializer
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated], url_path="sales-dashboard")
+    def sales_dashboard(self, request, pk=None):
+        company = self.get_object()
+        payload = _build_company_dashboard_context(company)
 
-    @action(detail=True, methods=["post"])
-    def inspect(self, request, pk=None):
-        template = self.get_object()
-        result = inspect_template_file(template)
-        return Response(result)
-        try:
-            result = inspect_template_file(template)
-            return Response(result)
-        except Exception as exc:
-            
-            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        data = {
+            "company": payload["company"],
+            "metrics": payload["sales_metrics"],
+            "status_breakdown": payload["status_breakdown"],
+            "money": payload["money"],
+            "recent_quotations": payload["recent_quotations"],
+            "attention": payload["attention"],
+        }
 
-
-class CustomerViewSet(BaseModelViewSet):
-    queryset = Customer.objects.select_related("company").all().order_by("-created_at")
-    serializer_class = CustomerSerializer
-
-
-class ProductViewSet(BaseModelViewSet):
-    queryset = Product.objects.select_related("company").all().order_by("-created_at")
-    serializer_class = ProductSerializer
-
-
-class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
-    document_type = "quotation"
-    queryset = Quotation.objects.select_related(
-        "customer", "company", "document", "selected_template", "created_by", "updated_by"
-    ).prefetch_related("lines").all().order_by("-created_at")
-    serializer_class = QuotationSerializer
-
-
-class QuotationLineViewSet(BaseModelViewSet):
-    queryset = QuotationLine.objects.select_related(
-        "quotation", "product", "created_by", "updated_by"
-    ).all().order_by("-created_at")
-    serializer_class = QuotationLineSerializer
-
-    def perform_create(self, serializer):
-        user = self.request.user if self.request.user.is_authenticated else None
-        obj = serializer.save(created_by=user, updated_by=user)
-        obj.quotation.recalculate_totals()
-
-    def perform_update(self, serializer):
-        user = self.request.user if self.request.user.is_authenticated else None
-        obj = serializer.save(updated_by=user)
-        obj.quotation.recalculate_totals()
-
-    def perform_destroy(self, instance):
-        quotation = instance.quotation
-        instance.delete()
-        quotation.recalculate_totals()
-
-
-class ProformaViewSet(DocumentLifecycleMixin, BaseModelViewSet):
-    document_type = "proforma"
-    queryset = Proforma.objects.select_related(
-        "quotation", "customer", "company", "document", "selected_template", "created_by", "updated_by"
-    ).prefetch_related("lines").all().order_by("-created_at")
-    serializer_class = ProformaSerializer
-
-
-class ProformaLineViewSet(BaseModelViewSet):
-    queryset = ProformaLine.objects.select_related(
-        "proforma", "product", "created_by", "updated_by"
-    ).all().order_by("-created_at")
-    serializer_class = ProformaLineSerializer
-
-    def perform_create(self, serializer):
-        user = self.request.user if self.request.user.is_authenticated else None
-        obj = serializer.save(created_by=user, updated_by=user)
-        obj.proforma.recalculate_totals()
-
-    def perform_update(self, serializer):
-        user = self.request.user if self.request.user.is_authenticated else None
-        obj = serializer.save(updated_by=user)
-        obj.proforma.recalculate_totals()
-
-    def perform_destroy(self, instance):
-        proforma = instance.proforma
-        instance.delete()
-        proforma.recalculate_totals()
-
-
-class InvoiceViewSet(DocumentLifecycleMixin, BaseModelViewSet):
-    document_type = "invoice"
-    queryset = Invoice.objects.select_related(
-        "proforma", "company", "document", "selected_template", "created_by", "updated_by"
-    ).prefetch_related("lines").all().order_by("-created_at")
-    serializer_class = InvoiceSerializer
-
-
-class InvoiceLineViewSet(BaseModelViewSet):
-    queryset = InvoiceLine.objects.select_related(
-        "invoice", "product", "created_by", "updated_by"
-    ).all().order_by("-created_at")
-    serializer_class = InvoiceLineSerializer
-
-    def perform_create(self, serializer):
-        user = self.request.user if self.request.user.is_authenticated else None
-        obj = serializer.save(created_by=user, updated_by=user)
-        obj.invoice.recalculate_totals()
-
-    def perform_update(self, serializer):
-        user = self.request.user if self.request.user.is_authenticated else None
-        obj = serializer.save(updated_by=user)
-        obj.invoice.recalculate_totals()
-
-    def perform_destroy(self, instance):
-        invoice = instance.invoice
-        instance.delete()
-        invoice.recalculate_totals()
-
-
-class ReceiptViewSet(DocumentLifecycleMixin, BaseModelViewSet):
-    document_type = "receipt"
-    queryset = Receipt.objects.select_related(
-        "invoice", "company", "document", "selected_template", "created_by", "updated_by"
-    ).all().order_by("-created_at")
-    serializer_class = ReceiptSerializer
-
-
-class DeliveryNoteViewSet(DocumentLifecycleMixin, BaseModelViewSet):
-    document_type = "delivery_note"
-    queryset = DeliveryNote.objects.select_related(
-        "invoice", "company", "document", "selected_template", "created_by", "updated_by"
-    ).prefetch_related("lines").all().order_by("-created_at")
-    serializer_class = DeliveryNoteSerializer
-
-
-class DeliveryNoteLineViewSet(BaseModelViewSet):
-    queryset = DeliveryNoteLine.objects.select_related(
-        "delivery_note", "product", "created_by", "updated_by"
-    ).all().order_by("-created_at")
-    serializer_class = DeliveryNoteLineSerializer
+        serializer = SalesDashboardSerializer(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)

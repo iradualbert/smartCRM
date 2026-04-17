@@ -19,6 +19,7 @@ from .models import (
     Template,
 )
 from .services.document_generation import generate_document_for_instance
+from .models_email import EmailSendingConfig
 
 
 class QuotationLineInline(admin.TabularInline):
@@ -270,3 +271,83 @@ class DeliveryNoteAdmin(PDFAdminMixin, admin.ModelAdmin):
     autocomplete_fields = ("company", "invoice", "document", "selected_template")
     readonly_fields = ("created_at", "updated_at", "created_by", "updated_by", "pdf_generated_at", "pdf_link")
     inlines = [DeliveryNoteLineInline]
+    
+    
+
+
+
+
+@admin.register(EmailSendingConfig)
+class EmailSendingConfigAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "name",
+        "from_email",
+        "owner_type",
+        "company",
+        "user",
+        "security_type",
+        "is_active",
+        "is_default",
+        "last_test_status",
+        "last_tested_at",
+        "created_at",
+    )
+    search_fields = (
+        "name",
+        "from_email",
+        "smtp_username",
+        "company__name",
+        "user__username",
+        "user__email",
+    )
+    list_filter = (
+        "owner_type",
+        "security_type",
+        "is_active",
+        "is_default",
+        "company",
+    )
+    autocomplete_fields = ("company", "user", "created_by", "updated_by")
+    readonly_fields = (
+        "smtp_password_preview",
+        "last_tested_at",
+        "last_test_status",
+        "last_test_error",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "updated_by",
+    )
+    fieldsets = (
+        ("Ownership", {
+            "fields": ("owner_type", "company", "user")
+        }),
+        ("Sender", {
+            "fields": ("name", "from_name", "from_email")
+        }),
+        ("SMTP", {
+            "fields": (
+                "smtp_host",
+                "smtp_port",
+                "smtp_username",
+                "smtp_password_encrypted",
+                "smtp_password_preview",
+                "security_type",
+            )
+        }),
+        ("Status", {
+            "fields": ("is_active", "is_default")
+        }),
+        ("Testing", {
+            "fields": ("last_tested_at", "last_test_status", "last_test_error")
+        }),
+        ("Audit", {
+            "fields": ("created_at", "updated_at", "created_by", "updated_by")
+        }),
+    )
+
+    def smtp_password_preview(self, obj):
+        return "••••••••" if obj.smtp_password_encrypted else "Not set"
+
+    smtp_password_preview.short_description = "Stored password"

@@ -1,9 +1,9 @@
-from decimal import Decimal
-
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
+
+from decimal import Decimal, ROUND_HALF_UP
 
 
 SUPPORTED_CURRENCY_CHOICES = [
@@ -247,6 +247,22 @@ class DocumentAbstractModel(TimeStampedModel):
     )
     pdf_generated_at = models.DateTimeField(null=True, blank=True)
     pdf_needs_regeneration = models.BooleanField(default=False)
+    
+    issue_date = models.DateField(null=True, blank=True)
+    valid_until = models.DateField(null=True, blank=True)
+
+    class TaxMode(models.TextChoices):
+        EXCLUSIVE = "exclusive", "Tax added on top"
+        INCLUSIVE = "inclusive", "Tax included in prices"
+
+    tax_mode = models.CharField(
+        max_length=20,
+        choices=TaxMode.choices,
+        default=TaxMode.EXCLUSIVE,
+    )
+    tax_label = models.CharField(max_length=50, default="VAT")
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    tax_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     class Meta:
         abstract = True
@@ -296,6 +312,7 @@ class Product(TimeStampedModel):
         return self.name
 
 
+
 class Quotation(DocumentAbstractModel):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
@@ -325,11 +342,44 @@ class Quotation(DocumentAbstractModel):
 
     def recalculate_totals(self):
         lines = self.lines.all()
-        subtotal = sum((line.line_total for line in lines), Decimal("0.00"))
+        lines_total = sum((line.line_total for line in lines), Decimal("0.00"))
+        rate_fraction = (self.tax_rate or Decimal("0.00")) / Decimal("100.00")
+
+        if self.tax_mode == self.TaxMode.INCLUSIVE:
+            gross_total = lines_total
+            if rate_fraction > 0:
+                subtotal = (gross_total / (Decimal("1.00") + rate_fraction)).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
+            else:
+                subtotal = gross_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+            tax_total = (gross_total - subtotal).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+            total = gross_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        else:
+            subtotal = lines_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            tax_total = (subtotal * rate_fraction).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+            total = (subtotal + tax_total).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+
         self.subtotal = subtotal
-        self.total = subtotal
+        self.tax_total = tax_total
+        self.total = total
         self.pdf_needs_regeneration = bool(self.document_id)
-        self.save(update_fields=["subtotal", "total", "pdf_needs_regeneration", "updated_at"])
+        self.save(
+            update_fields=[
+                "subtotal",
+                "tax_total",
+                "total",
+                "pdf_needs_regeneration",
+                "updated_at",
+            ]
+        )
 
 
 class Proforma(DocumentAbstractModel):
@@ -387,7 +437,27 @@ class Invoice(DocumentAbstractModel):
         OVERDUE = "overdue", "Overdue"
         CANCELLED = "cancelled", "Cancelled"
 
-    proforma = models.ForeignKey(Proforma, on_delete=models.CASCADE, related_name="invoices")
+    proforma = models.ForeignKey(
+        Proforma,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="invoices",
+    )
+    quotation = models.ForeignKey(
+        Quotation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="invoices",
+    )
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="invoices",
+    )
     selected_template = models.ForeignKey(
         Template,
         on_delete=models.SET_NULL,
@@ -402,17 +472,52 @@ class Invoice(DocumentAbstractModel):
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def __str__(self):
-        customer = self.proforma.customer.name if self.proforma and self.proforma.customer else "Unknown Customer"
-        return f"Invoice {self.invoice_number} for {customer}"
+        customer_name = (
+            self.customer.name
+            if self.customer
+            else (
+                self.proforma.customer.name
+                if self.proforma and self.proforma.customer
+                else (
+                    self.quotation.customer.name
+                    if self.quotation and self.quotation.customer
+                    else "Unknown Customer"
+                )
+            )
+        )
+        return f"Invoice {self.invoice_number} for {customer_name}"
 
     def recalculate_totals(self):
         lines = self.lines.all()
-        subtotal = sum((line.line_total for line in lines), Decimal("0.00"))
-        self.subtotal = subtotal
-        self.total = subtotal
-        self.pdf_needs_regeneration = bool(self.document_id)
-        self.save(update_fields=["subtotal", "total", "pdf_needs_regeneration", "updated_at"])
+        lines_total = sum((line.line_total for line in lines), Decimal("0.00"))
+        rate_fraction = (self.tax_rate or Decimal("0.00")) / Decimal("100.00")
 
+        if self.tax_mode == self.TaxMode.INCLUSIVE:
+            gross_total = lines_total
+            if rate_fraction > 0:
+                subtotal = gross_total / (Decimal("1.00") + rate_fraction)
+            else:
+                subtotal = gross_total
+            tax_total = gross_total - subtotal
+            total = gross_total
+        else:
+            subtotal = lines_total
+            tax_total = subtotal * rate_fraction
+            total = subtotal + tax_total
+
+        self.subtotal = subtotal
+        self.tax_total = tax_total
+        self.total = total
+        self.pdf_needs_regeneration = bool(self.document_id)
+        self.save(
+            update_fields=[
+                "subtotal",
+                "tax_total",
+                "total",
+                "pdf_needs_regeneration",
+                "updated_at",
+            ]
+        )
 
 class Receipt(DocumentAbstractModel):
     class Status(models.TextChoices):

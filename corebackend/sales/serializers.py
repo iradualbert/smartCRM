@@ -106,11 +106,40 @@ class CompanyMembershipSerializer(UserStampMixin, serializers.ModelSerializer):
 
 class CompanySerializer(UserStampMixin, CurrencyListValidationMixin, serializers.ModelSerializer):
     currency_symbol = serializers.ReadOnlyField()
+    member_count = serializers.SerializerMethodField()
+    current_membership = serializers.SerializerMethodField()
 
     class Meta:
         model = Company
         fields = "__all__"
-        read_only_fields = ("created_at", "updated_at", "created_by", "updated_by", "currency_symbol")
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+            "currency_symbol",
+            "member_count",
+            "current_membership",
+        )
+
+    def get_member_count(self, obj):
+        return obj.memberships.filter(is_active=True).count()
+
+    def get_current_membership(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+
+        if not user or not user.is_authenticated:
+            return None
+
+        membership = obj.memberships.filter(user=user).select_related("user").first()
+        if not membership:
+            return None
+
+        return CompanyMembershipSerializer(
+            membership,
+            context=self.context,
+        ).data
 
     def validate(self, attrs):
         supported = attrs.get("supported_currencies", getattr(self.instance, "supported_currencies", []))
@@ -179,19 +208,47 @@ class ProductSerializer(UserStampMixin, serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return super().update(instance, self._set_user_fields(validated_data))
-
-
+    
 class QuotationLineSerializer(UserStampMixin, serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_sku = serializers.CharField(source="product.sku", read_only=True)
+
     class Meta:
         model = QuotationLine
-        fields = "__all__"
-        read_only_fields = ("line_total", "created_at", "updated_at", "created_by", "updated_by")
+        fields = (
+            "id",
+            "quotation",
+            "product",
+            "product_name",
+            "product_sku",
+            "description",
+            "quantity",
+            "unit_price",
+            "line_total",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+        )
+        read_only_fields = (
+            "line_total",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+            "product_name",
+            "product_sku",
+        )
 
     def create(self, validated_data):
         return super().create(self._set_user_fields(validated_data))
 
     def update(self, instance, validated_data):
         return super().update(instance, self._set_user_fields(validated_data))
+
+
+
+    
 
 
 class ProformaLineSerializer(UserStampMixin, serializers.ModelSerializer):
@@ -233,14 +290,19 @@ class DeliveryNoteLineSerializer(UserStampMixin, serializers.ModelSerializer):
         return super().update(instance, self._set_user_fields(validated_data))
 
 
+
 class QuotationSerializer(UserStampMixin, serializers.ModelSerializer):
     lines = QuotationLineSerializer(many=True, read_only=True)
+    quote_number = serializers.CharField(required=False, allow_blank=True)
+    invoice = serializers.SerializerMethodField()
+    proforma = serializers.SerializerMethodField()
 
     class Meta:
         model = Quotation
         fields = "__all__"
         read_only_fields = (
             "subtotal",
+            "tax_total",
             "total",
             "pdf_generated_at",
             "pdf_needs_regeneration",
@@ -255,6 +317,14 @@ class QuotationSerializer(UserStampMixin, serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return super().update(instance, self._set_user_fields(validated_data))
+    
+    def get_invoice(self, obj):
+        invoice = obj.invoices.first()
+        return invoice.id if invoice else None
+
+    def get_proforma(self, obj):
+        proforma = obj.proformas.first()
+        return proforma.id if proforma else None
 
 
 class ProformaSerializer(UserStampMixin, serializers.ModelSerializer):
@@ -289,6 +359,7 @@ class InvoiceSerializer(UserStampMixin, serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = (
             "subtotal",
+            "tax_total",
             "total",
             "pdf_generated_at",
             "pdf_needs_regeneration",
@@ -345,3 +416,75 @@ class DeliveryNoteSerializer(UserStampMixin, serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return super().update(instance, self._set_user_fields(validated_data))
+    
+    
+
+
+from .models_email import EmailSendingConfig
+from .services.email_crypto import encrypt_secret
+
+
+class EmailSendingConfigSerializer(serializers.ModelSerializer):
+    smtp_password = serializers.CharField(write_only=True, required=False, allow_blank=False)
+    masked_password = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = EmailSendingConfig
+        fields = (
+            "id",
+            "company",
+            "user",
+            "owner_type",
+            "name",
+            "from_name",
+            "from_email",
+            "smtp_host",
+            "smtp_port",
+            "smtp_username",
+            "smtp_password",
+            "masked_password",
+            "security_type",
+            "is_active",
+            "is_default",
+            "last_tested_at",
+            "last_test_status",
+            "last_test_error",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = (
+            "last_tested_at",
+            "last_test_status",
+            "last_test_error",
+            "created_at",
+            "updated_at",
+        )
+
+    def get_masked_password(self, obj):
+        return "••••••••" if obj.smtp_password_encrypted else ""
+
+    def create(self, validated_data):
+        raw_password = validated_data.pop("smtp_password", None)
+        if raw_password:
+            validated_data["smtp_password_encrypted"] = encrypt_secret(raw_password)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        raw_password = validated_data.pop("smtp_password", None)
+        if raw_password:
+            validated_data["smtp_password_encrypted"] = encrypt_secret(raw_password)
+        return super().update(instance, validated_data)
+
+    def validate(self, attrs):
+        owner_type = attrs.get("owner_type", getattr(self.instance, "owner_type", None))
+        company = attrs.get("company", getattr(self.instance, "company", None))
+        user = attrs.get("user", getattr(self.instance, "user", None))
+
+        if owner_type == EmailSendingConfig.OwnerType.COMPANY and not company:
+            raise serializers.ValidationError({"company": "Company is required."})
+        if owner_type == EmailSendingConfig.OwnerType.USER and not user:
+            raise serializers.ValidationError({"user": "User is required."})
+        if company and user:
+            raise serializers.ValidationError("Config cannot belong to both company and user.")
+
+        return attrs
