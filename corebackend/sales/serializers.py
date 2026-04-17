@@ -294,8 +294,16 @@ class DeliveryNoteLineSerializer(UserStampMixin, serializers.ModelSerializer):
 class QuotationSerializer(UserStampMixin, serializers.ModelSerializer):
     lines = QuotationLineSerializer(many=True, read_only=True)
     quote_number = serializers.CharField(required=False, allow_blank=True)
-    invoice = serializers.SerializerMethodField()
-    proforma = serializers.SerializerMethodField()
+
+    customer_name = serializers.CharField(source="customer.name", read_only=True)
+    customer_email = serializers.EmailField(source="customer.email", read_only=True)
+    customer_phone = serializers.CharField(source="customer.phone_number", read_only=True)
+    customer_address = serializers.CharField(source="customer.address", read_only=True)
+
+    invoice_id = serializers.SerializerMethodField()
+    invoice_number = serializers.SerializerMethodField()
+    proforma_id = serializers.SerializerMethodField()
+    proforma_number = serializers.SerializerMethodField()
 
     class Meta:
         model = Quotation
@@ -312,19 +320,27 @@ class QuotationSerializer(UserStampMixin, serializers.ModelSerializer):
             "updated_by",
         )
 
+    def get_invoice_id(self, obj):
+        invoice = obj.invoices.order_by("created_at").first()
+        return invoice.id if invoice else None
+
+    def get_invoice_number(self, obj):
+        invoice = obj.invoices.order_by("created_at").first()
+        return invoice.invoice_number if invoice else None
+
+    def get_proforma_id(self, obj):
+        proforma = obj.proformas.order_by("created_at").first()
+        return proforma.id if proforma else None
+
+    def get_proforma_number(self, obj):
+        proforma = obj.proformas.order_by("created_at").first()
+        return proforma.proforma_number if proforma else None
+
     def create(self, validated_data):
         return super().create(self._set_user_fields(validated_data))
 
     def update(self, instance, validated_data):
         return super().update(instance, self._set_user_fields(validated_data))
-    
-    def get_invoice(self, obj):
-        invoice = obj.invoices.first()
-        return invoice.id if invoice else None
-
-    def get_proforma(self, obj):
-        proforma = obj.proformas.first()
-        return proforma.id if proforma else None
 
 
 class ProformaSerializer(UserStampMixin, serializers.ModelSerializer):

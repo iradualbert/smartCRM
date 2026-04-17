@@ -228,19 +228,15 @@ def _next_document_number(company, field_name: str, prefix: str):
     }
     model_cls = model_map[field_name]
 
-    latest = (
-        model_cls.objects.filter(company=company, **{f"{field_name}__startswith": f"{prefix}-"})
-        .order_by(f"-{field_name}")
-        .values_list(field_name, flat=True)
-        .first()
-    )
+    values = model_cls.objects.filter(
+        company=company,
+        **{f"{field_name}__startswith": f"{prefix}-"}
+    ).values_list(field_name, flat=True)
 
-    if not latest:
-        return f"{prefix}-00001"
+    max_number = 0
+    for value in values:
+        match = re.search(rf"^{re.escape(prefix)}-(\d+)$", value or "")
+        if match:
+            max_number = max(max_number, int(match.group(1)))
 
-    match = re.search(r"(\d+)$", latest)
-    if not match:
-        return f"{prefix}-00001"
-
-    next_number = int(match.group(1)) + 1
-    return f"{prefix}-{str(next_number).zfill(5)}"
+    return f"{prefix}-{str(max_number + 1).zfill(5)}"

@@ -98,7 +98,7 @@ class DocumentLifecycleMixin:
         safe = "-".join(slugify(part) for part in parts if part)
         return f"{safe or identifier}.pdf"
 
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
     def pdf(self, request, pk=None):
         instance = self.get_object()
         try:
@@ -109,11 +109,15 @@ class DocumentLifecycleMixin:
         if not document.file or not file_exists(document.file):
             raise Http404("PDF file not found.")
 
-        return FileResponse(
+        response = FileResponse(
             open(document.file.path, "rb"),
             content_type="application/pdf",
-            filename=self._build_download_filename(instance),
+            filename=self._build_download_filename(instance)
+            
         )
+        
+        response["Content-Disposition"] = f'attachment; filename="{self._build_download_filename(instance)}"'
+        return response
 
     @action(detail=True, methods=["post"])
     def generate_pdf(self, request, pk=None):
@@ -561,7 +565,9 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
             field_name="invoice_number",
             prefix=quotation.company.invoice_prefix or "INV",
         )
-
+        # print(f"Next invoice number for company {quotation.company_id} is {invoice_number}")
+        
+        # return Response({"detail": f"Debug: Invoice number generation works. Next number is {invoice_number}"}, status=status.HTTP_200_OK)
         with transaction.atomic():
             invoice = Invoice.objects.create(
                 quotation=quotation,

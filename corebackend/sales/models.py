@@ -466,10 +466,14 @@ class Invoice(DocumentAbstractModel):
         related_name="invoice_instances",
         limit_choices_to={"document_type": "invoice", "is_active": True},
     )
-    invoice_number = models.CharField(max_length=255, unique=True)
+    invoice_number = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # unique together 
+    class Meta:
+        unique_together = ("company", "invoice_number")
 
     def __str__(self):
         customer_name = (
