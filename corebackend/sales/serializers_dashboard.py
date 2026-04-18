@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from billing.serializers import SubscriptionSerializer
 
 class DashboardSummarySerializer(serializers.Serializer):
     draft_quotations = serializers.IntegerField()
@@ -70,10 +71,11 @@ class WorkspaceDashboardSerializer(serializers.Serializer):
     company = serializers.DictField()
     metrics = DashboardMetricCardSerializer(many=True)
     usage = serializers.DictField()
-    subscription = serializers.DictField()
     attention = DashboardAttentionItemSerializer(many=True)
     activity = DashboardActivityItemSerializer(many=True)
     recent_quotations = DashboardRecentQuotationSerializer(many=True)
+    subscription = DashboardSubscriptionSerializer()
+    
 
 
 class SalesDashboardSerializer(serializers.Serializer):
@@ -83,3 +85,4 @@ class SalesDashboardSerializer(serializers.Serializer):
     money = serializers.DictField()
     recent_quotations = DashboardRecentQuotationSerializer(many=True)
     attention = DashboardAttentionItemSerializer(many=True)
+    

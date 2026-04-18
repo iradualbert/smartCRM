@@ -28,6 +28,7 @@ class PlanSerializer(serializers.ModelSerializer):
             "allow_catalog_management",
             "allow_branding_removal",
             "display_order",
+            "is_contact_only",
         )
         read_only_fields = fields
 

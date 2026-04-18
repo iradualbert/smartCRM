@@ -15,6 +15,8 @@ import {
 import { getApiErrorMessage } from "./errors"
 
 function formatPrice(plan: BillingPlan, currency: "TRY" | "USD") {
+  if (plan.is_contact_only) return "Custom pricing"
+
   if (currency === "USD") {
     return `$${plan.price_usd}/month`
   }
@@ -123,6 +125,25 @@ export default function BillingPage() {
     } finally {
       setBusyPlanCode(null)
     }
+  }
+
+  const handleContactSales = (plan: BillingPlan) => {
+    const subject = encodeURIComponent(`Enterprise Plan Inquiry - ${plan.name}`)
+    const body = encodeURIComponent(
+      `Hello Modura Team,
+
+I am interested in the ${plan.name} plan.
+
+Organization ID: ${currentOrganizationId}
+
+Please contact me with more details.
+
+Thanks.`
+    )
+
+    const link = document.createElement("a")
+    link.href = `mailto:sales@moduragroup.com?subject=${subject}&body=${body}`
+    link.click()
   }
 
   if (!currentOrganizationId) {
@@ -237,6 +258,7 @@ export default function BillingPage() {
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {plans.map((plan) => {
           const isCurrent = currentPlanCode === plan.code
+          const isContact = plan.is_contact_only
 
           return (
             <div
@@ -274,10 +296,18 @@ export default function BillingPage() {
                 <Button
                   className="w-full rounded-2xl"
                   variant={isCurrent ? "outline" : "default"}
-                  disabled={isCurrent || busyPlanCode === plan.code}
-                  onClick={() => handleChoosePlan(plan)}
+                  disabled={isCurrent || (!isContact && busyPlanCode === plan.code)}
+                  onClick={() => {
+                    if (isContact) {
+                      handleContactSales(plan)
+                    } else {
+                      handleChoosePlan(plan)
+                    }
+                  }}
                 >
-                  {busyPlanCode === plan.code
+                  {isContact
+                    ? "Contact Sales"
+                    : busyPlanCode === plan.code
                     ? "Redirecting..."
                     : isCurrent
                     ? "Current plan"

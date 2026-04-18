@@ -74,14 +74,14 @@ class CreateCheckoutView(APIView):
     def post(self, request):
         
         # for testing without iyzico integration
-        return Response(
-            {
-                "payment_url": "https://sandbox-api.iyzipay.com/checkout-form/checkout-form-sample-page",
-                "token": "test-token",
-                "subscription_id": "test-subscription-id",
-            },
-            status=status.HTTP_200_OK,
-        )
+        # return Response(
+        #     {
+        #         "payment_url": "https://sandbox-api.iyzipay.com/checkout-form/checkout-form-sample-page",
+        #         "token": "test-token",
+        #         "subscription_id": "test-subscription-id",
+        #     },
+        #     status=status.HTTP_200_OK,
+        # )
         
         company_id = request.data.get("company")
         plan_code = request.data.get("plan_code")
@@ -102,6 +102,12 @@ class CreateCheckoutView(APIView):
             return Response({"detail": "You do not have permission to manage billing."}, status=status.HTTP_403_FORBIDDEN)
 
         plan = get_object_or_404(Plan, code=plan_code, is_active=True)
+        
+        if plan.is_contact_only:
+            return Response(
+                {"detail": "This plan requires contacting sales."},
+                status=400,
+            )
 
         subscription = create_pending_subscription(
             company=company,

@@ -27,7 +27,8 @@ export type BillingPlan = {
   allow_ai_quote_extraction: boolean
   allow_catalog_management: boolean
   allow_branding_removal: boolean
-  display_order: number
+  display_order: number,
+  is_contact_only: boolean
 }
 
 export type BillingSubscription = {

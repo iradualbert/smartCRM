@@ -22,6 +22,7 @@ class PlanDefinition:
     allow_catalog_management: bool
     allow_branding_removal: bool
     display_order: int
+    is_contact_only: bool = False
 
 
 PLAN_DEFINITIONS = [
@@ -47,7 +48,7 @@ PLAN_DEFINITIONS = [
     ),
     PlanDefinition(
         code="starter",
-        name="Starter",
+        name="Business",
         price_try=Decimal("200.00"),
         price_usd=Decimal("6.00"),
         is_default=False,
@@ -85,4 +86,25 @@ PLAN_DEFINITIONS = [
         allow_branding_removal=True,
         display_order=30,
     ),
+    PlanDefinition(
+    code="enterprise",
+    name="Enterprise",
+    price_try=Decimal("0.00"),
+    price_usd=Decimal("0.00"),
+    is_default=False,
+    is_public=True,
+    max_organizations=5,
+    max_users=20,
+    max_documents_per_month=None,
+    max_emails_per_month=None,
+    max_storage_mb=None,
+    allow_custom_templates=True,
+    allow_pdf_generation=True,
+    allow_email_sending=True,
+    allow_ai_quote_extraction=True,
+    allow_catalog_management=True,
+    allow_branding_removal=True,
+    display_order=40,
+    is_contact_only=True
+)
 ]

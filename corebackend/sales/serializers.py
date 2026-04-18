@@ -1,6 +1,4 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
-
 from .models import (
     Company,
     CompanyMembership,
@@ -19,6 +17,7 @@ from .models import (
     Template,
     SUPPORTED_CURRENCY_CHOICES,
 )
+from billing.models import Subscription
 
 
 class UserStampMixin:
@@ -104,10 +103,13 @@ class CompanyMembershipSerializer(UserStampMixin, serializers.ModelSerializer):
         return super().update(instance, self._set_user_fields(validated_data))
 
 
+        
+
 class CompanySerializer(UserStampMixin, CurrencyListValidationMixin, serializers.ModelSerializer):
     currency_symbol = serializers.ReadOnlyField()
     member_count = serializers.SerializerMethodField()
     current_membership = serializers.SerializerMethodField()
+    plan_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Company
@@ -119,9 +121,14 @@ class CompanySerializer(UserStampMixin, CurrencyListValidationMixin, serializers
             "updated_by",
             "currency_symbol",
             "member_count",
-            "current_membership",
+            "current_membership"
+           
         )
-
+    
+    def get_plan_name(self, obj):
+        active_subscription = obj.subscriptions.filter(status=Subscription.Status.ACTIVE).order_by("-current_period_end").first()
+        return active_subscription.plan.name if active_subscription else "Free Plan"
+        
     def get_member_count(self, obj):
         return obj.memberships.filter(is_active=True).count()
 

@@ -24,6 +24,7 @@ import {
   Mail as MailCog,
 } from "lucide-react"
 import CreateDocumentModal from "./CreateDocumentModal"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 type NavItem = {
   label: string
@@ -95,6 +96,7 @@ const sections: NavSection[] = [
 export default function SideBar() {
   const [collapsed, setCollapsed] = React.useState(false)
   const [createOpen, setCreateOpen] = React.useState(false)
+  const { currentOrganization } = useOrganizations()
 
   return (
     <>
@@ -175,10 +177,10 @@ export default function SideBar() {
             {!collapsed ? (
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium text-slate-900">
-                  Active organization
+                  {currentOrganization?.name || "Organization"}
                 </div>
                 <div className="truncate text-xs text-slate-500">
-                  Workspace context
+                  {currentOrganization?.plan_name || "Free Plan"}
                 </div>
               </div>
             ) : null}

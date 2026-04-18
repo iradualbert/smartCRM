@@ -53,7 +53,6 @@ class Company(TimeStampedModel):
     name = models.CharField(max_length=255)
     legal_name = models.CharField(max_length=255, blank=True, null=True)
     tax_number = models.CharField(max_length=100, blank=True, null=True)
-
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=50, blank=True, null=True)
     website = models.URLField(blank=True, null=True)

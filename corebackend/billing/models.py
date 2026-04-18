@@ -37,6 +37,7 @@ class Plan(models.Model):
     allow_branding_removal = models.BooleanField(default=False)
 
     display_order = models.PositiveIntegerField(default=0)
+    is_contact_only = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["display_order", "price_try", "id"]

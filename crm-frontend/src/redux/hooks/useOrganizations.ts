@@ -9,6 +9,7 @@ type Organization = {
   name?: string
   title?: string
   slug?: string
+  plan_name?: string
 }
 
 const getOrgId = (org?: Organization | null) =>
