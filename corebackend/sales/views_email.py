@@ -21,6 +21,7 @@ class EmailSendingConfigViewSet(viewsets.ModelViewSet):
         queryset = EmailSendingConfig.objects.filter(
             models.Q(user=user)
             | models.Q(company__memberships__user=user, company__memberships__is_active=True)
+            | models.Q(company__created_by=user)
         ).distinct()
 
         company_id = self.request.query_params.get("company")

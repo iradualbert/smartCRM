@@ -1,48 +1,53 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Plan(models.Model):
     BILLING_INTERVAL_CHOICES = [
         ("monthly", "Monthly"),
-        ("yearly", "Yearly"),
     ]
 
-    name = models.CharField(max_length=100)
     code = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
 
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    price_try = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    price_usd = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     billing_interval = models.CharField(
         max_length=20,
         choices=BILLING_INTERVAL_CHOICES,
         default="monthly",
     )
 
+    is_active = models.BooleanField(default=True)
+    is_default = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
+
+    max_organizations = models.PositiveIntegerField(default=1)
+    max_users = models.PositiveIntegerField(default=1)
     max_documents_per_month = models.PositiveIntegerField(null=True, blank=True)
+    max_emails_per_month = models.PositiveIntegerField(null=True, blank=True)
     max_storage_mb = models.PositiveIntegerField(null=True, blank=True)
 
     allow_custom_templates = models.BooleanField(default=False)
     allow_pdf_generation = models.BooleanField(default=True)
-    remove_branding = models.BooleanField(default=False)
+    allow_email_sending = models.BooleanField(default=False)
+    allow_ai_quote_extraction = models.BooleanField(default=False)
+    allow_catalog_management = models.BooleanField(default=False)
+    allow_branding_removal = models.BooleanField(default=False)
 
-    is_active = models.BooleanField(default=True)
-    is_default = models.BooleanField(default=False)
+    display_order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ["price", "id"]
+        ordering = ["display_order", "price_try", "id"]
 
     def __str__(self):
-        return f"{self.name} ({self.billing_interval})"
-    
-from django.db import models
+        return f"{self.name} ({self.code})"
 
 
 class Subscription(models.Model):
-    class PlanChoices(models.TextChoices):
-        FREE = "free", "Free"
-        MONTHLY = "monthly", "Monthly"
-        YEARLY = "yearly", "Yearly"
-
     class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
         ACTIVE = "active", "Active"
         CANCELLED = "cancelled", "Cancelled"
         EXPIRED = "expired", "Expired"
@@ -53,9 +58,20 @@ class Subscription(models.Model):
         on_delete=models.CASCADE,
         related_name="subscriptions",
     )
+    plan = models.ForeignKey(
+        Plan,
+        on_delete=models.PROTECT,
+        related_name="subscriptions",
+    )
 
-    plan = models.CharField(max_length=20, choices=PlanChoices.choices)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
+    billing_currency = models.CharField(max_length=10, default="TRY")
+    billing_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     started_at = models.DateTimeField()
     current_period_start = models.DateTimeField()
@@ -66,16 +82,22 @@ class Subscription(models.Model):
 
     auto_renew = models.BooleanField(default=True)
 
-    external_provider = models.CharField(max_length=50, blank=True, default="")
+    external_provider = models.CharField(max_length=50, blank=True, default="iyzico")
     external_subscription_id = models.CharField(max_length=255, blank=True, default="")
+    external_customer_id = models.CharField(max_length=255, blank=True, default="")
+    external_checkout_token = models.CharField(max_length=255, blank=True, default="")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
-        
-        
+
+    def is_active_now(self):
+        now = timezone.now()
+        return self.status == self.Status.ACTIVE and self.current_period_end >= now
+
+
 class SubscriptionEvent(models.Model):
     EVENT_TYPES = [
         ("created", "Created"),
@@ -86,9 +108,14 @@ class SubscriptionEvent(models.Model):
         ("expired", "Expired"),
         ("payment_succeeded", "Payment Succeeded"),
         ("payment_failed", "Payment Failed"),
+        ("checkout_created", "Checkout Created"),
     ]
 
-    company = models.ForeignKey("sales.Company", on_delete=models.CASCADE, related_name="subscription_events")
+    company = models.ForeignKey(
+        "sales.Company",
+        on_delete=models.CASCADE,
+        related_name="subscription_events",
+    )
     subscription = models.ForeignKey(
         Subscription,
         on_delete=models.CASCADE,
@@ -98,15 +125,19 @@ class SubscriptionEvent(models.Model):
     )
 
     event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
-    plan = models.CharField(max_length=20, blank=True, default="")
+    plan_code = models.CharField(max_length=50, blank=True, default="")
     note = models.TextField(blank=True, default="")
     metadata = models.JSONField(default=dict, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
 
 class BillingUsage(models.Model):
-    company = models.ForeignKey("sales.Company", on_delete=models.CASCADE, related_name="billing_usages")
+    company = models.ForeignKey(
+        "sales.Company",
+        on_delete=models.CASCADE,
+        related_name="billing_usages",
+    )
 
     year = models.PositiveIntegerField()
     month = models.PositiveIntegerField()

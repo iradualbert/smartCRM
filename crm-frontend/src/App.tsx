@@ -61,6 +61,8 @@ import CustomerDetailPage from "./pages/crm/customers/CustomerDetailPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import SalesDashboardPage from "./pages/sales/sales-dashboard/SalesDashboardPages";
 
+import EmailSendingConfigPage from "./pages/organizations/email-config/EmailSendingConfigPage";
+
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
 
@@ -157,6 +159,8 @@ function App() {
 
               <Route path="/customers" element={<CustomerListPage />} />
               <Route path="/customers/:id" element={<CustomerDetailPage />} />
+
+              <Route path="/settings/email" element={<EmailSendingConfigPage />} />
 
 
 
