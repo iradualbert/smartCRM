@@ -62,6 +62,9 @@ import DashboardPage from "./pages/dashboard/DashboardPage";
 import SalesDashboardPage from "./pages/sales/sales-dashboard/SalesDashboardPages";
 
 import EmailSendingConfigPage from "./pages/organizations/email-config/EmailSendingConfigPage";
+import BillingCallbackPage from "./pages/billing/BillingCallbackPage";
+import BillingPage from "./pages/billing/BillingPage";
+import OrganizationDetailPage from "./pages/organizations/OrganizationDetailPage";
 
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
@@ -160,7 +163,10 @@ function App() {
               <Route path="/customers" element={<CustomerListPage />} />
               <Route path="/customers/:id" element={<CustomerDetailPage />} />
 
+              <Route path="/settings" element={<OrganizationDetailPage />} />
               <Route path="/settings/email" element={<EmailSendingConfigPage />} />
+              <Route path="/settings/billing" element={<BillingPage />} />
+              <Route path="/settings/billing/callback" element={<BillingCallbackPage />} />
 
 
 

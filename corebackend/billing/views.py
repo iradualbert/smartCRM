@@ -7,7 +7,7 @@ from sales.models import Company
 
 from .models import Plan, Subscription
 from .serializers import BillingOverviewSerializer, BillingUsageSerializer, PlanSerializer
-from .services import (
+from .services.utils import (
     create_pending_subscription,
     finalize_successful_payment,
     get_current_usage,
@@ -15,7 +15,7 @@ from .services import (
     mark_payment_failed,
     user_can_manage_billing,
 )
-from .services_iyzico import create_checkout_form, retrieve_checkout_form
+from .services.iyzico import create_checkout_form, retrieve_checkout_form
 
 
 class PublicPlanListView(APIView):
@@ -72,6 +72,17 @@ class CreateCheckoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        
+        # for testing without iyzico integration
+        return Response(
+            {
+                "payment_url": "https://sandbox-api.iyzipay.com/checkout-form/checkout-form-sample-page",
+                "token": "test-token",
+                "subscription_id": "test-subscription-id",
+            },
+            status=status.HTTP_200_OK,
+        )
+        
         company_id = request.data.get("company")
         plan_code = request.data.get("plan_code")
         currency = (request.data.get("currency") or "TRY").upper()

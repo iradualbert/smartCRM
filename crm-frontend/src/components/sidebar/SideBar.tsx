@@ -15,14 +15,13 @@ import {
   Building2,
   CreditCard,
   Settings2,
-  PlugZap,
   ChevronLeft,
   ChevronRight,
   Plus,
   PanelLeft,
   BookOpen,
   ClipboardList,
-  Users2,
+  Mail as MailCog,
 } from "lucide-react"
 import CreateDocumentModal from "./CreateDocumentModal"
 
@@ -86,9 +85,8 @@ const sections: NavSection[] = [
     title: "Organization",
     items: [
       { label: "Organizations", to: "/settings/organizations", icon: Building2 },
-      { label: "Members", to: "/settings/members", icon: Users2 },
       { label: "Billing", to: "/settings/billing", icon: CreditCard },
-      { label: "Integrations", to: "/settings/integration", icon: PlugZap },
+      { label: "Email Configuration", to: "/settings/email", icon: MailCog },
       { label: "Settings", to: "/settings", icon: Settings2 },
     ],
   },
@@ -127,6 +125,7 @@ export default function SideBar() {
             type="button"
             onClick={() => setCollapsed((v) => !v)}
             className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -143,6 +142,7 @@ export default function SideBar() {
             className={`flex w-full items-center gap-3 rounded-2xl bg-slate-900 px-3 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 ${
               collapsed ? "justify-center" : ""
             }`}
+            aria-label="Create"
           >
             <Plus className="h-4 w-4 shrink-0" />
             {!collapsed ? <span>Create</span> : null}
@@ -255,7 +255,7 @@ function SideBarLink({
       </Link>
 
       {collapsed ? (
-        <div className="pointer-events-none absolute left-full top-1/2 z-[120] ml-3 -translate-y-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 opacity-0 shadow-lg transition group-hover:opacity-100">
+        <div className="pointer-events-none absolute left-full top-1/2 z-[120] ml-3 -translate-y-1/2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 opacity-0 shadow-lg transition group-hover:opacity-100">
           {label}
         </div>
       ) : null}

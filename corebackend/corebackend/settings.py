@@ -249,3 +249,15 @@ if not DEBUG:
                 },
             }
         }
+    
+
+# return {
+#         "api_key": settings.IYZICO_API_KEY,
+#         "secret_key": settings.IYZICO_SECRET_KEY,
+#         "base_url": settings.IYZICO_BASE_URL,
+#     }
+
+IYZICO_API_KEY = os.environ.get("IYZICO_API_KEY")
+IYZICO_SECRET_KEY = os.environ.get("IYZICO_SECRET_KEY") 
+IYZICO_BASE_URL = os.environ.get("IYZICO_BASE_URL", "https://sandbox-api.iyzipay.com")
+APP_BASE_URL = os.environ.get("APP_BASE_URL", "http://localhost:5173")

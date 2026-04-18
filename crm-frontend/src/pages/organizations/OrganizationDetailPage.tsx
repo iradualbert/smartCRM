@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { getCompany, type Company, type CompanyMembershipRole } from "./api"
 import OrganizationMembersPanel from "./OrganizationMembersPanel"
+import { useOrganizations } from "@/redux/hooks/useOrganizations";
 
 function StatusBadge({ isActive }: { isActive: boolean }) {
   return (
@@ -95,10 +96,11 @@ const OrganizationDetailPage = () => {
   const [organization, setOrganization] = React.useState<Company | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const { currentOrganizationId } = useOrganizations()
 
   React.useEffect(() => {
     const run = async () => {
-      if (!id) {
+      if (!id && !currentOrganizationId) {
         setError("Missing organization id.")
         setLoading(false)
         return
@@ -107,7 +109,7 @@ const OrganizationDetailPage = () => {
       try {
         setLoading(true)
         setError(null)
-        const data = await getCompany(id)
+        const data = await getCompany(id || currentOrganizationId!)
         setOrganization(data)
       } catch (err) {
         console.error(err)
@@ -118,7 +120,7 @@ const OrganizationDetailPage = () => {
     }
 
     run()
-  }, [id])
+  }, [id, currentOrganizationId])
 
   React.useEffect(() => {
     const next = searchParams.get("tab") === "members" ? "members" : "overview"
