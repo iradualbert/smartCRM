@@ -86,7 +86,7 @@ const Navbar = ({ isAppRoute = true }: NavbarProps) => {
                 </Link>
 
                 <Link
-                  to="/analytics"
+                  to="/sales-dashboard"
                   className={cn(
                     "rounded-lg px-3 py-2 text-sm font-medium transition",
                     location.pathname.startsWith("/analytics")

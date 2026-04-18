@@ -7,6 +7,7 @@ import BookingCalendar from "./pages/booking/BookingPage";
 import ContactsManagerPage from "./pages/contacts/ContactsPage";
 import MailTemplatesPage from "./pages/mails/MailTemplatesPage";
 import NewMailPage from "./pages/mails/NewMailPage";
+// import EmailsListPage from "./pages/mails/EmailsListPage";
 import { AuthRoute, MainRoute, PrivateRoute } from "./routes";
 import { Provider } from "react-redux";
 import LoginPage from "./pages/auth/LoginPage";
@@ -65,6 +66,7 @@ import EmailSendingConfigPage from "./pages/organizations/email-config/EmailSend
 import BillingCallbackPage from "./pages/billing/BillingCallbackPage";
 import BillingPage from "./pages/billing/BillingPage";
 import OrganizationDetailPage from "./pages/organizations/OrganizationDetailPage";
+import EmailsListPage from "./pages/emails/EmailsListPage";
 
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
@@ -101,7 +103,7 @@ function App() {
               <Route path="/sales-dashboard" element={<SalesDashboardPage />} />
            
               <Route path="/mail-dashboard" element={<Dashboard />} />
-              <Route path="/emails" element={<MailDashoardPage />} />
+              {/* <Route path="/emails" element={<MailDashoardPage />} /> */}
               <Route path="/emails/templates" element={<MailTemplatesPage />} />
               <Route path="/emails/new" element={<NewMailPage />} />
 
@@ -162,6 +164,9 @@ function App() {
 
               <Route path="/customers" element={<CustomerListPage />} />
               <Route path="/customers/:id" element={<CustomerDetailPage />} />
+
+              
+              <Route path="/emails" element={<EmailsListPage />} />
 
               <Route path="/settings" element={<OrganizationDetailPage />} />
               <Route path="/settings/email" element={<EmailSendingConfigPage />} />

@@ -1,5 +1,8 @@
 from django.contrib import admin, messages
 from django.utils.html import format_html
+from django.utils.text import Truncator
+
+from .services.email_smtp import send_logged_email
 
 from .models import (
     Company,
@@ -19,7 +22,7 @@ from .models import (
     Template,
 )
 from .services.document_generation import generate_document_for_instance
-from .models_email import EmailSendingConfig
+from .models_email import EmailSendingConfig, DocumentEmail
 
 
 class QuotationLineInline(admin.TabularInline):
@@ -276,6 +279,135 @@ class DeliveryNoteAdmin(PDFAdminMixin, admin.ModelAdmin):
 
 
 
+@admin.register(DocumentEmail)
+class DocumentEmailAdmin(admin.ModelAdmin):
+    
+    list_display = (
+        "id",
+        # "customer",
+        "company",
+        "source_model",
+        "source_identifier",
+        "short_subject",
+        "recipient_preview",
+        "status_badge",
+        "sent_at",
+        "failed_at",
+        "retry_count",
+    )
+
+    list_filter = (
+        "status",
+        "source_model",
+        "company",
+        "sending_config",
+        "include_attachment",
+        "created_at",
+        "sent_at",
+    )
+
+    search_fields = (
+        "subject",
+        "to_emails",
+        "source_identifier",
+        "failure_reason",
+    )
+
+    readonly_fields = (
+        "id",
+        # "company",
+    "sending_config",
+        "source_model",
+        "source_identifier",
+        "from_email",
+        "from_name",
+        "to_emails",
+        "cc_emails",
+        "bcc_emails",
+        "subject",
+        "body_html",
+        "body_text",
+        "status",
+        "failure_reason",
+        "retry_count",
+        "sent_at",
+        "failed_at",
+        "created_at",
+        "updated_at",
+    )
+
+    ordering = ("-created_at",)
+
+    actions = ["retry_failed_emails"]
+
+    # -------------------
+    # Display helpers
+    # -------------------
+
+    def short_subject(self, obj):
+        return Truncator(obj.subject).chars(50)
+
+    short_subject.short_description = "Subject"
+
+    def recipient_preview(self, obj):
+        if obj.to_emails:
+            return ", ".join(obj.to_emails[:2])
+        return "—"
+
+    recipient_preview.short_description = "To"
+
+    def status_badge(self, obj):
+        colors = {
+            "pending": "#f59e0b",   # amber
+            "sent": "#10b981",      # green
+            "failed": "#ef4444",    # red
+            "cancelled": "#6b7280", # gray
+        }
+
+        color = colors.get(obj.status, "#6b7280")
+
+        return format_html(
+            '<span style="padding:2px 8px;border-radius:12px;background:{}20;color:{};font-weight:500;">{}</span>',
+            color,
+            color,
+            obj.status,
+        )
+
+    status_badge.short_description = "Status"
+
+    # -------------------
+    # Actions
+    # -------------------
+
+    def retry_failed_emails(self, request, queryset):
+        success = 0
+        failed = 0
+
+        for email in queryset.filter(status="failed"):
+            try:
+                send_logged_email(
+                    email_log=email,
+                    config=email.sending_config,
+                )
+                success += 1
+            except Exception as e:
+                failed += 1
+
+        if success:
+            self.message_user(
+                request,
+                f"{success} email(s) retried successfully.",
+                level=messages.SUCCESS,
+            )
+
+        if failed:
+            self.message_user(
+                request,
+                f"{failed} email(s) failed again.",
+                level=messages.ERROR,
+            )
+
+    retry_failed_emails.short_description = "Retry failed emails"
 
 @admin.register(EmailSendingConfig)
 class EmailSendingConfigAdmin(admin.ModelAdmin):

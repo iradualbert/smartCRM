@@ -93,6 +93,14 @@ class Subscription(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        # only one active subscription per company
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company"],
+                condition=models.Q(status="active"),
+                name="unique_active_subscription_per_company",
+            )
+        ]
 
     def is_active_now(self):
         now = timezone.now()

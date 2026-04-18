@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views_email import EmailSendingConfigViewSet
+from .views_email import DocumentEmailViewSet, EmailSendingConfigViewSet
 
 from .views import (
     CompanyViewSet,
@@ -36,6 +36,7 @@ router.register(r"receipts", ReceiptViewSet)
 router.register(r"delivery-notes", DeliveryNoteViewSet)
 router.register(r"delivery-note-lines", DeliveryNoteLineViewSet)
 router.register(r"email-sending-configs", EmailSendingConfigViewSet)
+router.register(r"emails", DocumentEmailViewSet, basename="document-email")
 
 urlpatterns = [
     path("", include(router.urls)),

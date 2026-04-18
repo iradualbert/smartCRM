@@ -28,7 +28,7 @@ class PlanDefinition:
 PLAN_DEFINITIONS = [
     PlanDefinition(
         code="free",
-        name="Free",
+        name="Free Plan",
         price_try=Decimal("0.00"),
         price_usd=Decimal("0.00"),
         is_default=True,
@@ -48,7 +48,7 @@ PLAN_DEFINITIONS = [
     ),
     PlanDefinition(
         code="starter",
-        name="Business",
+        name="Business Plan",
         price_try=Decimal("200.00"),
         price_usd=Decimal("6.00"),
         is_default=False,
@@ -67,8 +67,8 @@ PLAN_DEFINITIONS = [
         display_order=20,
     ),
     PlanDefinition(
-        code="business",
-        name="Business",
+        code="business_plus",
+        name="Business Plus",
         price_try=Decimal("800.00"),
         price_usd=Decimal("25.00"),
         is_default=False,

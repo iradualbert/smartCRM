@@ -14,14 +14,28 @@ import {
 } from "./api"
 import { getApiErrorMessage } from "./errors"
 
-function formatPrice(plan: BillingPlan, currency: "TRY" | "USD") {
+type Currency = "TRY" | "USD"
+
+const BILLING_CURRENCY_STORAGE_KEY = "billing_preferred_currency"
+
+function detectCurrencyFromNavigator(): Currency {
+  const locale = (navigator.language || "").toLowerCase()
+  return locale.startsWith("tr") ? "TRY" : "USD"
+}
+
+function getStoredCurrency(): Currency | null {
+  const value = window.localStorage.getItem(BILLING_CURRENCY_STORAGE_KEY)
+  if (value === "TRY" || value === "USD") return value
+  return null
+}
+
+function persistCurrency(currency: Currency) {
+  window.localStorage.setItem(BILLING_CURRENCY_STORAGE_KEY, currency)
+}
+
+function formatPrice(plan: BillingPlan, currency: Currency) {
   if (plan.is_contact_only) return "Custom pricing"
-
-  if (currency === "USD") {
-    return `$${plan.price_usd}/month`
-  }
-
-  return `₺${plan.price_try}/month`
+  return currency === "USD" ? `$${plan.price_usd}/month` : `₺${plan.price_try}/month`
 }
 
 function featureRows(plan: BillingPlan) {
@@ -73,8 +87,20 @@ export default function BillingPage() {
   const [overview, setOverview] = React.useState<BillingOverview | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [busyPlanCode, setBusyPlanCode] = React.useState<string | null>(null)
-  const [currency, setCurrency] = React.useState<"TRY" | "USD">("TRY")
+  const [currency, setCurrency] = React.useState<Currency>("USD")
   const [error, setError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    const stored = getStoredCurrency()
+    if (stored) {
+      setCurrency(stored)
+      return
+    }
+
+    const detected = detectCurrencyFromNavigator()
+    setCurrency(detected)
+    persistCurrency(detected)
+  }, [])
 
   const load = React.useCallback(async () => {
     if (!currentOrganizationId) return
@@ -90,6 +116,21 @@ export default function BillingPage() {
 
       setPlans(plansData)
       setOverview(overviewData)
+
+      const planCurrency = overviewData?.subscription?.billing_currency
+      if (planCurrency === "TRY" || planCurrency === "USD") {
+        setCurrency(planCurrency)
+        persistCurrency(planCurrency)
+      } else {
+        const stored = getStoredCurrency()
+        if (stored) {
+          setCurrency(stored)
+        } else {
+          const detected = detectCurrencyFromNavigator()
+          setCurrency(detected)
+          persistCurrency(detected)
+        }
+      }
     } catch (err) {
       setError(getApiErrorMessage(err))
     } finally {
@@ -100,6 +141,11 @@ export default function BillingPage() {
   React.useEffect(() => {
     load().catch(console.error)
   }, [load])
+
+  const handleCurrencyChange = (next: Currency) => {
+    setCurrency(next)
+    persistCurrency(next)
+  }
 
   const handleChoosePlan = async (plan: BillingPlan) => {
     if (!currentOrganizationId) return
@@ -135,6 +181,7 @@ export default function BillingPage() {
 I am interested in the ${plan.name} plan.
 
 Organization ID: ${currentOrganizationId}
+Preferred currency: ${currency}
 
 Please contact me with more details.
 
@@ -197,14 +244,14 @@ Thanks.`
             <Button
               variant={currency === "TRY" ? "default" : "outline"}
               className="rounded-2xl"
-              onClick={() => setCurrency("TRY")}
+              onClick={() => handleCurrencyChange("TRY")}
             >
               ₺ TRY
             </Button>
             <Button
               variant={currency === "USD" ? "default" : "outline"}
               className="rounded-2xl"
-              onClick={() => setCurrency("USD")}
+              onClick={() => handleCurrencyChange("USD")}
             >
               $ USD
             </Button>
