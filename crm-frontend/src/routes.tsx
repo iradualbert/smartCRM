@@ -5,6 +5,7 @@ import { useQuery } from "./lib/hooks";
 import Navbar from "@/components/navbar/Navbar";
 import { Toaster } from "@/components/ui/toaster";
 import LoadingPage from "./components/LoadingPage";
+import LandingPage from "./pages/landing-sales/LandingPage";
 
 
 export const MainRoute = () => {
@@ -14,6 +15,14 @@ export const MainRoute = () => {
            <Outlet />
         </>
     )
+}
+
+export const RootRoute = () => {
+    const { isAuthenticated, isLoading } = useSelector((state: any) => state.user);
+
+    if (isLoading) return <LoadingPage />
+    if (isAuthenticated) return <Navigate to="/dashboard" replace />
+    return <LandingPage />
 }
 
 

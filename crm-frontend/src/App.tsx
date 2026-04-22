@@ -8,7 +8,7 @@ import ContactsManagerPage from "./pages/contacts/ContactsPage";
 import MailTemplatesPage from "./pages/mails/MailTemplatesPage";
 import NewMailPage from "./pages/mails/NewMailPage";
 // import EmailsListPage from "./pages/mails/EmailsListPage";
-import { AuthRoute, MainRoute, PrivateRoute } from "./routes";
+import { AuthRoute, MainRoute, PrivateRoute, RootRoute } from "./routes";
 import { Provider } from "react-redux";
 import LoginPage from "./pages/auth/LoginPage";
 import Dashboard from "./pages/DashboardPage";
@@ -86,6 +86,7 @@ function App() {
       <div className="flex flex-col">
         <Router>
           <Routes>
+            <Route path="/" element={<RootRoute />} />
             <Route path="" element={<MainRoute />}>
               <Route path="/landing" element={<LandingPage />} />
               <Route path="/contact-us" element={<ContactUsPage />} />
