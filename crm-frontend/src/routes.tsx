@@ -22,7 +22,12 @@ export const RootRoute = () => {
 
     if (isLoading) return <LoadingPage />
     if (isAuthenticated) return <Navigate to="/dashboard" replace />
-    return <LandingPage />
+    return (
+        <>
+            <Navbar isAppRoute={false} />
+            <LandingPage />
+        </>
+    )
 }
 
 
@@ -64,7 +69,7 @@ export const PrivateRoute = () => {
 
     if (isAuthenticated) {
         return (
-            <div className="mt-10 py-10 pl-24 pr-10" style={{ minHeight: "90vh" }}>
+            <div className="pt-16 pb-10 pr-10 transition-[padding-left] duration-300" style={{ minHeight: "100vh", paddingLeft: "var(--sidebar-w, 280px)" }}>
                 <Navbar />
                 <SideBar />
                 <Outlet />

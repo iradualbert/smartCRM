@@ -5,7 +5,6 @@ import {
   BarChart3,
   CheckCircle2,
   ChevronRight,
-  FileText,
   Globe,
   Shield,
   Sparkles,
@@ -218,37 +217,7 @@ export default function LandingPage() {
         <div className="mx-auto h-[420px] max-w-7xl bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_34%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.14),transparent_30%),radial-gradient(circle_at_center,rgba(16,185,129,0.10),transparent_28%)]" />
       </div>
 
-      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold tracking-tight">Favelast</div>
-              <div className="text-xs text-muted-foreground">Business workflow platform</div>
-            </div>
-          </Link>
-
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="#features" className="transition hover:text-foreground">Features</a>
-            <a href="#workflow" className="transition hover:text-foreground">Workflow</a>
-            <a href="#insights" className="transition hover:text-foreground">Insights</a>
-            <a href="#pricing" className="transition hover:text-foreground">Plans</a>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" className="hidden sm:inline-flex">
-              <Link to="/sales">Open App</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/companies/new">Get Started</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main>
+      <main className="pt-16">
         <section className="mx-auto max-w-7xl px-4 pb-20 pt-14 md:px-6 md:pb-28 md:pt-20">
           <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
             <div>

@@ -10,6 +10,7 @@ import NewMailPage from "./pages/mails/NewMailPage";
 // import EmailsListPage from "./pages/mails/EmailsListPage";
 import { AuthRoute, AuthenticatedRoute, MainRoute, PrivateRoute, RootRoute } from "./routes";
 import { Provider } from "react-redux";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import LoginPage from "./pages/auth/LoginPage";
 import Dashboard from "./pages/DashboardPage";
 import MailDashoardPage from "./pages/mails/MailDashboardPage";
@@ -84,6 +85,7 @@ function App() {
 
   return (
     <Provider store={store}>
+      <TooltipProvider delayDuration={200}>
       <div className="flex flex-col">
         <Router>
           <Routes>
@@ -191,6 +193,7 @@ function App() {
           <Footer />
         </Router>
       </div>
+      </TooltipProvider>
     </Provider>
 
   )
