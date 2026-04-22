@@ -8,7 +8,7 @@ import ContactsManagerPage from "./pages/contacts/ContactsPage";
 import MailTemplatesPage from "./pages/mails/MailTemplatesPage";
 import NewMailPage from "./pages/mails/NewMailPage";
 // import EmailsListPage from "./pages/mails/EmailsListPage";
-import { AuthRoute, MainRoute, PrivateRoute, RootRoute } from "./routes";
+import { AuthRoute, AuthenticatedRoute, MainRoute, PrivateRoute, RootRoute } from "./routes";
 import { Provider } from "react-redux";
 import LoginPage from "./pages/auth/LoginPage";
 import Dashboard from "./pages/DashboardPage";
@@ -18,6 +18,7 @@ import LandingPage from "./pages/landing-sales/LandingPage";
 import SignupPage from "./pages/auth/SignupPage";
 import SubscribePage from "./pages/external_pages/SubscribePage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
+import SelectOrganizationPage from "./pages/auth/SelectOrganizationPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import EmailIntegrationPage from "./pages/profile/EmailIntegrationPage";
@@ -182,6 +183,9 @@ function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/accounts/forgot-password" element={<ForgotPassword />} />
               <Route path="/accounts/password-reset/:uid/:token" element={<PasswordResetPage />} />
+            </Route>
+            <Route path="" element={<AuthenticatedRoute />}>
+              <Route path="/select-organization" element={<SelectOrganizationPage />} />
             </Route>
           </Routes>
           <Footer />

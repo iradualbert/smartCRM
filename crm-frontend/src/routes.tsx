@@ -26,6 +26,20 @@ export const RootRoute = () => {
 }
 
 
+export const AuthenticatedRoute = () => {
+    const { user: { isAuthenticated, isLoading } } = useSelector((state: any) => state);
+    const next = window.location.pathname + window.location.search;
+
+    if (isLoading) return <LoadingPage />
+    if (!isAuthenticated) return <Navigate to={`/login?next=${next}`} />;
+    return (
+        <div style={{ minHeight: "100vh" }}>
+            <Outlet />
+            <Toaster />
+        </div>
+    )
+}
+
 export const AuthRoute = () => {
     const { isAuthenticated, isLoading } = useSelector((state: any) => state.user);
     const next = useQuery().get('next');

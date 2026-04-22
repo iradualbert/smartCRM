@@ -134,28 +134,78 @@ function MiniCard({
 function PlanCard({
   name,
   price,
+  priceTry,
   accent,
+  highlighted,
+  cta,
+  ctaHref,
   features,
 }: {
   name: string
   price: string
+  priceTry: string
   accent: string
+  highlighted: boolean
+  cta: string
+  ctaHref: string
   features: string[]
 }) {
+  const isExternal = ctaHref.startsWith("mailto:")
+
   return (
-    <div className={cn("rounded-3xl border p-6 shadow-sm", accent)}>
+    <div className={cn("relative rounded-3xl border p-6 shadow-sm flex flex-col", accent, highlighted && "ring-2 ring-blue-500")}>
+      {highlighted && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow">
+            <Sparkles className="h-3 w-3" />
+            Most popular
+          </span>
+        </div>
+      )}
+
       <div className="mb-4">
         <h3 className="text-xl font-semibold">{name}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{price}</p>
+        <p className="mt-1 text-2xl font-bold tracking-tight">{price}</p>
+        {priceTry !== price && (
+          <p className="mt-0.5 text-xs text-muted-foreground">{priceTry}</p>
+        )}
       </div>
 
-      <div className="space-y-3">
+      <div className="flex-1 space-y-3">
         {features.map((feature) => (
           <div key={feature} className="flex items-start gap-3 text-sm">
             <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
             <span>{feature}</span>
           </div>
         ))}
+      </div>
+
+      <div className="mt-6">
+        {isExternal ? (
+          <a
+            href={ctaHref}
+            className={cn(
+              "flex w-full items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-medium transition",
+              highlighted
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "border border-input bg-background hover:bg-accent"
+            )}
+          >
+            {cta}
+          </a>
+        ) : (
+          <Link
+            to={ctaHref}
+            className={cn(
+              "flex w-full items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-medium transition",
+              highlighted
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "border border-input bg-background hover:bg-accent"
+            )}
+          >
+            {cta}
+          </Link>
+        )}
       </div>
     </div>
   )
@@ -490,11 +540,11 @@ export default function LandingPage() {
           <div className="mx-auto max-w-7xl px-4 md:px-6">
             <SectionHeader
               badge="Plans"
-              title="A pricing structure that grows with the business"
-              description="Your product summary outlines a path from free access into Starter, Growth, and Pro plans with sending, sharing, dashboards, automation, and integrations."
+              title="Simple, transparent pricing"
+              description="Start free and upgrade when you're ready. No hidden fees, no surprises."
             />
 
-            <div className="mt-12 grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {plans.map((plan) => (
                 <PlanCard key={plan.name} {...plan} />
               ))}

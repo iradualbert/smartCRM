@@ -46,9 +46,10 @@ export const loginUser =
 			const { user, token } = data;
 			saveToken(token);
 			dispatch(setUser(user));
-			if(next) navigate(next) 
-			else navigate("/dashboard");
-			
+			await dispatch(getMembershipOrganizations());
+			if(next) navigate(next)
+			else navigate("/select-organization");
+
 		} catch (err: any) {
 			if (err.response) {
 				return err.response.data;
@@ -76,7 +77,8 @@ export const verify_code = (userData: any, navigate:any) => async(dispatch: any)
 		const { data } = await axios.post(api.VERIFY_CODE, userData, config);
 		saveToken(data.token);
 		dispatch(setUser(data.user));
-		navigate("/settings/integration");
+		await dispatch(getMembershipOrganizations());
+		navigate("/select-organization");
 	} catch(err: any){
 		if(err.response) return err.response.data;
 	}

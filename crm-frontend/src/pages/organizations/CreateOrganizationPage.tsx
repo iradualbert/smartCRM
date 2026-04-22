@@ -1,10 +1,19 @@
 import { Building2, Sparkles } from "lucide-react"
+import { useDispatch } from "react-redux"
+import { useNavigate } from "react-router-dom"
 import CompanyForm from "./OrganizationForm"
 import { createCompany, type CompanyFormValues } from "./api"
+import { getMembershipOrganizations } from "@/redux/actions/userActions"
 
 const CreateCompanyPage = () => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+
   const handleSubmit = async (values: CompanyFormValues) => {
-    await createCompany(values)
+    const company = await createCompany(values)
+    localStorage.setItem("currentOrganizationId", company.id.toString())
+    await (dispatch as any)(getMembershipOrganizations())
+    navigate("/dashboard")
   }
 
   return (
