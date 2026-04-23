@@ -2,27 +2,27 @@ import * as React from "react"
 import { Controller, useFieldArray, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import SearchSelect from "../shared-components/SearchSelect"
 import DocumentLineItemsEditor from "@/shared/DocumentLineItemsEditor"
 import {
   listDeliveryNoteTemplates,
   listInvoices,
   listProducts,
   type DeliveryNote,
+  type DeliveryNoteStatus,
   type Invoice,
-  type Product,
   type Template,
 } from "./api"
 
 export const deliveryNoteFormSchema = z.object({
   companyId: z.coerce.number().min(1, "Company is required"),
   invoice: z.coerce.number().min(1, "Invoice is required"),
-  delivery_note_number: z.string().min(1, "Delivery note number is required"),
+  delivery_note_number: z.string().optional(),
   delivery_date: z.string().min(1, "Delivery date is required"),
   currency: z.string().optional(),
   selected_template: z.coerce.number().nullable().optional(),
@@ -42,15 +42,6 @@ export const deliveryNoteFormSchema = z.object({
 
 export type DeliveryNoteFormValues = z.infer<typeof deliveryNoteFormSchema>
 
-function makeDeliveryNoteNumber() {
-  const date = new Date()
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  const random = Math.floor(Math.random() * 900 + 100)
-  return `DN-${y}${m}${d}-${random}`
-}
-
 type DeliveryNoteFormProps = {
   mode: "create" | "edit"
   initialValues?: Partial<DeliveryNoteFormValues>
@@ -68,19 +59,23 @@ export default function DeliveryNoteForm({
   onCancel,
   submitLabel,
 }: DeliveryNoteFormProps) {
-  const [products, setProducts] = React.useState<Product[]>([])
-  const [invoices, setInvoices] = React.useState<Invoice[]>([])
   const [templates, setTemplates] = React.useState<Template[]>([])
   const [removedLineIds, setRemovedLineIds] = React.useState<number[]>([])
   const [submitError, setSubmitError] = React.useState<string | null>(null)
-  const [activeTab, setActiveTab] = React.useState("details")
+  const [invoiceSearchOpen, setInvoiceSearchOpen] = React.useState(false)
+  const [invoiceSearch, setInvoiceSearch] = React.useState("")
+  const [invoiceResults, setInvoiceResults] = React.useState<Invoice[]>([])
+  const [invoiceLoading, setInvoiceLoading] = React.useState(false)
+  const [invoiceLoadingMore, setInvoiceLoadingMore] = React.useState(false)
+  const [invoiceHasMore, setInvoiceHasMore] = React.useState(false)
+  const [invoiceOffset, setInvoiceOffset] = React.useState(0)
 
   const form = useForm<DeliveryNoteFormValues>({
     resolver: zodResolver(deliveryNoteFormSchema),
     defaultValues: {
       companyId: initialValues?.companyId ?? 1,
       invoice: initialValues?.invoice ?? 0,
-      delivery_note_number: initialValues?.delivery_note_number ?? makeDeliveryNoteNumber(),
+      delivery_note_number: initialValues?.delivery_note_number ?? "",
       delivery_date: initialValues?.delivery_date ?? new Date().toISOString().slice(0, 10),
       currency: initialValues?.currency ?? "USD",
       selected_template: initialValues?.selected_template ?? null,
@@ -96,27 +91,76 @@ export default function DeliveryNoteForm({
   const { fields, append, remove } = useFieldArray({ control, name: "lines" })
   const lines = form.watch("lines")
   const selectedStatus = form.watch("status")
+  const selectedInvoiceId = form.watch("invoice")
+  const watchedCompanyId = form.watch("companyId")
 
   React.useEffect(() => {
+    if (!watchedCompanyId || !Number.isFinite(Number(watchedCompanyId)) || Number(watchedCompanyId) <= 0) {
+      setTemplates([])
+      return
+    }
+
     const run = async () => {
-      const [productsRes, invoicesRes, templatesRes] = await Promise.all([
-        listProducts(),
-        listInvoices(),
-        listDeliveryNoteTemplates(),
-      ])
-      setProducts(productsRes.results)
-      setInvoices(invoicesRes.results)
+      const templatesRes = await listDeliveryNoteTemplates({ company: watchedCompanyId })
       setTemplates(templatesRes.results)
     }
-    run()
-  }, [])
+    void run()
+  }, [watchedCompanyId])
+
+  const loadInvoices = React.useCallback(
+    async (search: string, offset: number, appendResults: boolean) => {
+      if (!watchedCompanyId || !Number.isFinite(Number(watchedCompanyId)) || Number(watchedCompanyId) <= 0) {
+        setInvoiceResults([])
+        setInvoiceHasMore(false)
+        return
+      }
+
+      try {
+        if (appendResults) setInvoiceLoadingMore(true)
+        else setInvoiceLoading(true)
+
+        const data = await listInvoices({
+          company: watchedCompanyId,
+          search,
+          offset,
+          limit: 8,
+        })
+
+        setInvoiceResults((prev) =>
+          appendResults
+            ? [...prev, ...data.results.filter((item) => !prev.some((x) => x.id === item.id))]
+            : data.results
+        )
+        setInvoiceOffset(offset + data.results.length)
+        setInvoiceHasMore(Boolean(data.next))
+      } catch (error) {
+        console.error(error)
+      } finally {
+        if (appendResults) setInvoiceLoadingMore(false)
+        else setInvoiceLoading(false)
+      }
+    },
+    [form, watchedCompanyId]
+  )
+
+  React.useEffect(() => {
+    if (!watchedCompanyId || !Number.isFinite(Number(watchedCompanyId)) || Number(watchedCompanyId) <= 0) {
+      setInvoiceResults([])
+      setInvoiceHasMore(false)
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      void loadInvoices(invoiceSearch, 0, false)
+    }, 250)
+    return () => window.clearTimeout(timeout)
+  }, [invoiceSearch, loadInvoices, watchedCompanyId])
+
+  const selectedInvoice = invoiceResults.find((item) => item.id === selectedInvoiceId) ?? null
 
   const subtotal = lines.reduce((sum, line) => {
     return sum + Number(line.quantity || 0) * Number(line.unit_price || 0)
   }, 0)
-
-  const appendLine = () =>
-    append({ product: null, description: "", quantity: "1", unit_price: "0.00" })
 
   const removeLine = (index: number) => {
     const line = form.getValues(`lines.${index}`)
@@ -134,191 +178,194 @@ export default function DeliveryNoteForm({
   }
 
   return (
-    <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <div className="space-y-6">
-        {submitError ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {submitError}
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+      {submitError ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {submitError}
+        </div>
+      ) : null}
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Delivery note setup</h2>
+            <p className="text-sm text-slate-500">
+              Keep dispatch and delivery documents aligned with the quotation-style workflow.
+            </p>
           </div>
-        ) : null}
+          <Badge className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 capitalize text-slate-700">
+            {selectedStatus}
+          </Badge>
+        </div>
 
-        <Card className="rounded-3xl border-slate-200 shadow-sm">
-          <CardHeader className="border-b bg-slate-50/70">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Delivery note workspace</CardTitle>
-                <CardDescription>Create and update dispatch and delivery documents.</CardDescription>
-              </div>
-              <Badge className="rounded-full border bg-slate-100 text-slate-700">
-                {selectedStatus}
-              </Badge>
-            </div>
-          </CardHeader>
-
-          <CardContent className="pt-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="mb-6 h-auto flex-wrap rounded-2xl bg-slate-100 p-1">
-                <TabsTrigger value="details" className="rounded-xl">Details</TabsTrigger>
-                <TabsTrigger value="lines" className="rounded-xl">Line items</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            {activeTab === "details" && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <Controller
-                  name="delivery_note_number"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Delivery Note Number</FieldLabel>
-                      <div className="flex gap-2">
-                        <Input {...field} className="rounded-xl" />
-                        <Button type="button" variant="outline" className="rounded-xl" onClick={() => form.setValue("delivery_note_number", makeDeliveryNoteNumber())}>
-                          Generate
-                        </Button>
-                      </div>
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="status"
-                  control={control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>Status</FieldLabel>
-                      <select
-                        className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3"
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                      >
-                        <option value="draft">draft</option>
-                        <option value="dispatched">dispatched</option>
-                        <option value="delivered">delivered</option>
-                        <option value="cancelled">cancelled</option>
-                      </select>
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="invoice"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Invoice</FieldLabel>
-                      <select
-                        className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3"
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      >
-                        <option value="">Select invoice</option>
-                        {invoices.map((invoice) => (
-                          <option key={invoice.id} value={invoice.id}>
-                            {invoice.invoice_number}
-                          </option>
-                        ))}
-                      </select>
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="delivery_date"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel>Delivery Date</FieldLabel>
-                      <Input {...field} type="date" className="rounded-xl" />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="currency"
-                  control={control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>Currency</FieldLabel>
-                      <Input {...field} className="rounded-xl" />
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="selected_template"
-                  control={control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>Template</FieldLabel>
-                      <select
-                        className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3"
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                      >
-                        <option value="">No template selected</option>
-                        {templates.map((template) => (
-                          <option key={template.id} value={template.id}>
-                            {template.name}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                  )}
-                />
-
-              </div>
-            )}
-
-            {activeTab === "lines" && (
-              <DocumentLineItemsEditor
-                form={form}
-                control={control}
-                fields={fields}
-                products={products}
-                appendLine={appendLine}
-                removeLine={removeLine}
-                title="Delivery note lines"
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-6">
-        <Card className="rounded-3xl border-slate-200 shadow-sm">
-          <CardHeader><CardTitle>Delivery note summary</CardTitle></CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">Line items</span>
-              <span>{lines.length}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">Subtotal</span>
-              <span className="text-lg font-semibold">{subtotal.toFixed(2)}</span>
-            </div>
-            {initialDeliveryNote ? (
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Created</span>
-                <span>{new Date(initialDeliveryNote.created_at).toLocaleString()}</span>
-              </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Field>
+            <FieldLabel>Invoice</FieldLabel>
+            <SearchSelect<Invoice>
+              valueLabel={
+                selectedInvoice?.invoice_number ??
+                (selectedInvoiceId ? `Selected invoice #${selectedInvoiceId}` : null)
+              }
+              placeholder="Search invoice..."
+              searchPlaceholder="Search invoices..."
+              items={invoiceResults}
+              open={invoiceSearchOpen}
+              loading={invoiceLoading}
+              loadingMore={invoiceLoadingMore}
+              hasMore={invoiceHasMore}
+              onOpenChange={setInvoiceSearchOpen}
+              onSearch={setInvoiceSearch}
+              onLoadMore={() => void loadInvoices(invoiceSearch, invoiceOffset, true)}
+              onSelect={(invoice) => {
+                form.setValue("invoice", invoice.id)
+                setInvoiceResults((prev) =>
+                  prev.some((item) => item.id === invoice.id) ? prev : [invoice, ...prev]
+                )
+              }}
+              getKey={(item) => item.id}
+              getLabel={(item) => item.invoice_number}
+              getDescription={(item) => item.customer_name || item.total}
+            />
+            {form.formState.errors.invoice ? (
+              <FieldError errors={[form.formState.errors.invoice]} />
             ) : null}
-          </CardContent>
-        </Card>
+          </Field>
 
-        <div className="flex flex-col gap-3">
-          <Button type="submit" className="h-11 rounded-2xl">
-            {submitLabel ?? (mode === "create" ? "Create Delivery Note" : "Save Changes")}
-          </Button>
-          {onCancel ? (
-            <Button type="button" variant="outline" className="h-11 rounded-2xl" onClick={onCancel}>
-              Cancel
-            </Button>
+          <Controller
+            name="delivery_note_number"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Delivery note number</FieldLabel>
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  className="rounded-2xl"
+                  placeholder="Auto-generated if left blank"
+                />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Status</FieldLabel>
+                <select
+                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                >
+                  <option value="draft">draft</option>
+                  <option value="dispatched">dispatched</option>
+                  <option value="delivered">delivered</option>
+                  <option value="cancelled">cancelled</option>
+                </select>
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="delivery_date"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Delivery date</FieldLabel>
+                <Input {...field} type="date" className="rounded-2xl" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="currency"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Currency</FieldLabel>
+                <Input {...field} className="rounded-2xl" placeholder="USD" />
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="selected_template"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Template</FieldLabel>
+                <select
+                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm"
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">Default delivery note template</option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+          />
+        </div>
+      </section>
+
+      <DocumentLineItemsEditor
+        form={form}
+        control={control}
+        fields={fields}
+        appendLine={() =>
+          append({ product: null, description: "", quantity: "1", unit_price: "0.00" })
+        }
+        removeLine={removeLine}
+        title="Delivery note line items"
+        description="Search products from your paginated catalog or build manual lines."
+        searchProducts={({ search, offset, limit }) =>
+          listProducts({
+            company: form.getValues("companyId"),
+            search,
+            offset,
+            limit,
+          })
+        }
+      />
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-slate-900">Totals</h2>
+          {initialDeliveryNote ? (
+            <div className="text-sm text-slate-500">
+              Updated {new Date(initialDeliveryNote.updated_at).toLocaleString()}
+            </div>
           ) : null}
         </div>
+
+        <div className="ml-auto max-w-md space-y-3 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-slate-500">Line items</span>
+            <span className="font-medium text-slate-900">{lines.length}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-slate-500">Subtotal</span>
+            <span className="text-xl font-semibold text-slate-900">{subtotal.toFixed(2)}</span>
+          </div>
+        </div>
+      </section>
+
+      <div className="flex justify-end gap-3">
+        {onCancel ? (
+          <Button type="button" variant="outline" className="rounded-2xl" onClick={onCancel}>
+            Cancel
+          </Button>
+        ) : null}
+        <Button type="submit" className="rounded-2xl">
+          {submitLabel ?? (mode === "create" ? "Create delivery note" : "Save changes")}
+        </Button>
       </div>
     </form>
   )

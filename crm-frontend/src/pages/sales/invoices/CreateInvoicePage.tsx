@@ -16,10 +16,11 @@ const CreateInvoicePage = () => {
   const location = useLocation()
   const { currentOrganizationId } = useOrganizations()
   const state = (location.state as CreateInvoiceLocationState | null) ?? null
+  const companyId = currentOrganizationId ? Number(currentOrganizationId) : 0
 
   const initialValues = React.useMemo<Partial<InvoiceFormValues>>(
     () => ({
-      companyId: state?.defaults?.companyId ?? Number(currentOrganizationId) ?? 0,
+      companyId: state?.defaults?.companyId ?? companyId,
       proforma: state?.defaults?.proforma ?? 0,
       invoice_number: state?.defaults?.invoice_number,
       currency: state?.defaults?.currency ?? "USD",
@@ -35,8 +36,12 @@ const CreateInvoicePage = () => {
         },
       ],
     }),
-    [state]
+    [state, companyId]
   )
+
+  if (!currentOrganizationId) {
+    return <div className="p-6 text-sm text-slate-500">Loading organization...</div>
+  }
 
   const handleSubmit = async (values: InvoiceFormValues) => {
     const invoice = await createInvoiceWithLines({

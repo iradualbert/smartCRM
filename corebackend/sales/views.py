@@ -492,9 +492,31 @@ class DocumentViewSet(OrganizationScopeMixin, BaseModelViewSet):
         return queryset.distinct().order_by("-created_at")
 
 
-class TemplateViewSet(BaseModelViewSet):
+class TemplateViewSet(OrganizationScopeMixin, BaseModelViewSet):
+    company_lookup = "company"
     queryset = Template.objects.select_related("company").all().order_by("-created_at")
     serializer_class = TemplateSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = self._scope_queryset(queryset)
+        queryset = self._scope_by_company_param(queryset)
+        return queryset.distinct()
+
+    def perform_create(self, serializer):
+        company = serializer.validated_data.get("company")
+        if company:
+            self._assert_company_access(company.id)
+        serializer.save(
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+    def perform_update(self, serializer):
+        company = serializer.validated_data.get("company", getattr(serializer.instance, "company", None))
+        if company:
+            self._assert_company_access(company.id)
+        serializer.save(updated_by=self.request.user)
 
     @action(detail=True, methods=["post"])
     def inspect(self, request, pk=None):

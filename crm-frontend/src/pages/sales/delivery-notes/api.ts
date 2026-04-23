@@ -37,6 +37,7 @@ export type Invoice = {
   total: string
   created_at: string
   updated_at: string
+  customer_name?: string | null
 }
 
 export type DeliveryNoteStatus =
@@ -92,7 +93,12 @@ export type DeliveryNoteLinePayload = {
   unit_price: string
 }
 
-export async function listProducts(params?: { search?: string }) {
+export async function listProducts(params?: {
+  company?: string | number
+  limit?: number
+  offset?: number
+  search?: string
+}) {
   const response = await axios.get<PaginatedResponse<Product>>("/products/", { params })
   return response.data
 }
@@ -102,8 +108,10 @@ export async function listInvoices(params?: { company?: string | number; limit?:
   return response.data
 }
 
-export async function listDeliveryNoteTemplates() {
-  const response = await axios.get<PaginatedResponse<Template>>("/templates/")
+export async function listDeliveryNoteTemplates(params?: { company?: string | number }) {
+  const response = await axios.get<PaginatedResponse<Template>>("/templates/", {
+    params,
+  })
   return {
     ...response.data,
     results: response.data.results.filter(

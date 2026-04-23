@@ -25,6 +25,7 @@ export type Invoice = {
   total: string
   created_at: string
   updated_at: string
+  customer_name?: string | null
 }
 
 export type ReceiptStatus =
@@ -62,8 +63,8 @@ export async function listInvoices(params?: { company?: string | number; limit?:
   return response.data
 }
 
-export async function listReceiptTemplates() {
-  const response = await axios.get<PaginatedResponse<Template>>("/templates/")
+export async function listReceiptTemplates(params?: { company?: string | number }) {
+  const response = await axios.get<PaginatedResponse<Template>>("/templates/", { params })
   return {
     ...response.data,
     results: response.data.results.filter(

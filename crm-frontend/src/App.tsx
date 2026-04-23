@@ -51,6 +51,8 @@ import CreateDeliveryNotePage from "./pages/sales/delivery-notes/CreateDeliveryN
 import DeliveryNoteDetailPage from "./pages/sales/delivery-notes/DeliveryNoteDetailPage";
 import UpdateDeliveryNotePage from "./pages/sales/delivery-notes/UpdateDeliveryNotePage";
 import DeliveryNoteListPage from "./pages/sales/delivery-notes/DeliveryNotePageList";
+import ReceiptEmailPage from "./pages/sales/receipts/ReceiptEmailPage";
+import DeliveryNoteEmailPage from "./pages/sales/delivery-notes/DeliveryNoteEmailPage";
 import ProformaListPage from "./pages/sales/proforma/ProformaListPage";
 import UpdateTemplatePage from "./pages/sales/templates/UpdateTemplatePage";
 import TemplateDetailPage from "./pages/sales/templates/TemplateDetailPage";
@@ -157,11 +159,13 @@ function App() {
               <Route path="/receipts/new" element={<CreateReceiptPage />} />
               <Route path="/receipts/:id" element={<ReceiptDetailPage />} />
               <Route path="/receipts/:id/edit" element={<UpdateReceiptPage />} />
+              <Route path="/receipts/:id/email" element={<ReceiptEmailPage />} />
 
               <Route path="/delivery-notes" element={<DeliveryNoteListPage />} />
               <Route path="/delivery-notes/new" element={<CreateDeliveryNotePage />} />
               <Route path="/delivery-notes/:id" element={<DeliveryNoteDetailPage />} />
               <Route path="/delivery-notes/:id/edit" element={<UpdateDeliveryNotePage />} />
+              <Route path="/delivery-notes/:id/email" element={<DeliveryNoteEmailPage />} />
 
               <Route path="/templates" element={<TemplateListPage />} />
               <Route path="/templates/new" element={<CreateTemplatePage />} />

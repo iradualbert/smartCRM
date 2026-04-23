@@ -1,5 +1,7 @@
 import * as React from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { ArrowLeft, PencilLine } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import DeliveryNoteForm, { type DeliveryNoteFormValues } from "./DeliveryNoteForm"
 import {
   getDeliveryNote,
@@ -12,6 +14,7 @@ export default function UpdateDeliveryNotePage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [deliveryNote, setDeliveryNote] = React.useState<DeliveryNote | null>(null)
+  const companyId = deliveryNote?.company ?? 0
 
   React.useEffect(() => {
     const run = async () => {
@@ -50,14 +53,43 @@ export default function UpdateDeliveryNotePage() {
 
   return (
     <div className="mx-auto max-w-7xl p-6 md:p-8">
-      <h1 className="mb-2 text-3xl font-semibold tracking-tight">Update Delivery Note</h1>
-      <p className="mb-6 text-sm text-slate-600">Edit delivery note fields and lines.</p>
+      <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
+            Update delivery note
+          </div>
+
+          <div className="mt-4 flex items-start gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+              <PencilLine className="h-6 w-6" />
+            </div>
+
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+                Edit delivery note
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-slate-600">
+                Update invoice linkage, delivery date, and line items without leaving the standard document flow.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Button
+          variant="outline"
+          className="rounded-2xl"
+          onClick={() => navigate(`/delivery-notes/${deliveryNote.id}`)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to delivery note
+        </Button>
+      </div>
 
       <DeliveryNoteForm
         mode="edit"
         initialDeliveryNote={deliveryNote}
         initialValues={{
-          companyId: deliveryNote.company ?? 0,
+          companyId,
           invoice: deliveryNote.invoice,
           delivery_note_number: deliveryNote.delivery_note_number,
           delivery_date: deliveryNote.delivery_date,

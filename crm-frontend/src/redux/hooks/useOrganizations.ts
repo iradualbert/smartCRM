@@ -16,7 +16,7 @@ const getOrgId = (org?: Organization | null) =>
   org?.id?.toString() || org?._id?.toString() || null
 
 export const useOrganizations = () => {
-  const { user } = useSelector((state: any) => state)
+  const user = useSelector((state: any) => state.user)
   const organizations: Organization[] = user?.organizations || []
 
   const [storedOrgId, setStoredOrgId] = useState<string | null>(null)

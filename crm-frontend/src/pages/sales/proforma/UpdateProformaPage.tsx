@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, PencilLine } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ProformaForm, { type ProformaFormValues } from "./ProformaForm"
 import {
@@ -15,6 +15,7 @@ export default function UpdateProformaPage() {
   const navigate = useNavigate()
   const [proforma, setProforma] = React.useState<Proforma | null>(null)
   const [loading, setLoading] = React.useState(true)
+  const companyId = proforma?.company ?? 0
 
   React.useEffect(() => {
     const run = async () => {
@@ -61,12 +62,24 @@ export default function UpdateProformaPage() {
     <div className="mx-auto max-w-7xl p-6 md:p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Update Proforma</h1>
-          <p className="mt-2 text-sm text-slate-600">Edit details and line items.</p>
+          <div className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
+            Update proforma
+          </div>
+          <div className="mt-4 flex items-start gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+              <PencilLine className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight">Edit proforma</h1>
+              <p className="mt-2 text-sm text-slate-600">
+                Update customer, quotation linkage, line items, and document settings without leaving the workflow.
+              </p>
+            </div>
+          </div>
         </div>
         <Button variant="outline" className="rounded-2xl" onClick={() => navigate(`/proformas/${proforma.id}`)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          Back to proforma
         </Button>
       </div>
 
@@ -74,7 +87,7 @@ export default function UpdateProformaPage() {
         mode="edit"
         initialProforma={proforma}
         initialValues={{
-          companyId: proforma.company ?? 0,
+          companyId: companyId,
           quotation: proforma.quotation ?? null,
           customer: proforma.customer ?? null,
           proforma_number: proforma.proforma_number,
