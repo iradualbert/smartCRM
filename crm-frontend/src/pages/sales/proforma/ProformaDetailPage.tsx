@@ -196,6 +196,19 @@ export default function ProformaDetailPage() {
               <span>{data.subtotal}</span>
             </div>
 
+            <div className="flex justify-between">
+              <span className="text-gray-500">
+                {data.tax_label || "Tax"} ({data.tax_rate || "0"}%)
+              </span>
+              <span>{data.tax_total || "0.00"}</span>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-600">
+              {data.tax_mode === "inclusive"
+                ? "Prices on this proforma are tax-inclusive."
+                : "Tax is added on top of listed prices."}
+            </div>
+
             <div className="flex justify-between border-t pt-3 text-base font-semibold">
               <span>Total</span>
               <span>{data.total}</span>

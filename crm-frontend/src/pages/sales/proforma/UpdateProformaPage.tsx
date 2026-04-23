@@ -42,6 +42,11 @@ export default function UpdateProformaPage() {
         currency: values.currency || "USD",
         selected_template: values.selected_template ?? null,
         status: values.status as ProformaStatus,
+        issue_date: values.issue_date ?? null,
+        valid_until: values.valid_until ?? null,
+        tax_mode: values.tax_mode,
+        tax_label: values.tax_label,
+        tax_rate: values.tax_rate,
       },
       lines: values.lines.map((line) => ({
         id: line.id,
@@ -71,9 +76,6 @@ export default function UpdateProformaPage() {
             </div>
             <div>
               <h1 className="text-3xl font-semibold tracking-tight">Edit proforma</h1>
-              <p className="mt-2 text-sm text-slate-600">
-                Update customer, quotation linkage, line items, and document settings without leaving the workflow.
-              </p>
             </div>
           </div>
         </div>
@@ -94,6 +96,11 @@ export default function UpdateProformaPage() {
           currency: proforma.currency ?? "USD",
           selected_template: proforma.selected_template ?? null,
           status: proforma.status,
+          issue_date: proforma.issue_date ?? "",
+          valid_until: proforma.valid_until ?? "",
+          tax_mode: proforma.tax_mode ?? "exclusive",
+          tax_label: proforma.tax_label ?? "VAT",
+          tax_rate: proforma.tax_rate ?? "0.00",
           lines: (proforma.lines ?? []).map((line) => ({
             id: line.id,
             product: line.product ?? null,

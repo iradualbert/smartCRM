@@ -60,7 +60,7 @@ export default function DocumentLineItemsEditor<
   appendLine,
   removeLine,
   title = "Line items",
-  description = "Choose products or enter custom lines manually.",
+  description,
   searchProducts,
 }: DocumentLineItemsEditorProps<TFormValues>) {
   const lines = form.watch("lines" as never)
@@ -138,7 +138,7 @@ export default function DocumentLineItemsEditor<
           <Package2 className="h-5 w-5 text-slate-700" />
           <div>
             <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-            <p className="text-sm text-slate-500">{description}</p>
+            {description ? <p className="text-sm text-slate-500">{description}</p> : null}
           </div>
         </div>
 

@@ -189,12 +189,7 @@ export default function DeliveryNoteForm({
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Delivery note setup</h2>
-            <p className="text-sm text-slate-500">
-              Keep dispatch and delivery documents aligned with the quotation-style workflow.
-            </p>
-          </div>
+          <h2 className="text-lg font-semibold text-slate-900">Delivery note</h2>
           <Badge className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 capitalize text-slate-700">
             {selectedStatus}
           </Badge>
@@ -333,8 +328,7 @@ export default function DeliveryNoteForm({
           append({ product: null, description: "", quantity: "1", unit_price: "0.00" })
         }
         removeLine={removeLine}
-        title="Delivery note line items"
-        description="Search products from your paginated catalog or build manual lines."
+        title="Line items"
         searchProducts={({ search, offset, limit }) =>
           listProducts({
             company: form.getValues("companyId"),

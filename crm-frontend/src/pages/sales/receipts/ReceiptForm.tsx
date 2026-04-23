@@ -160,12 +160,7 @@ export default function ReceiptForm({
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Receipt setup</h2>
-            <p className="text-sm text-slate-500">
-              Keep receipt creation aligned with the quotation-inspired document workflow.
-            </p>
-          </div>
+          <h2 className="text-lg font-semibold text-slate-900">Receipt</h2>
           <Badge className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 capitalize text-slate-700">
             {selectedStatus}
           </Badge>
@@ -296,7 +291,7 @@ export default function ReceiptForm({
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-slate-900">Summary</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Amount</h2>
           {initialReceipt ? (
             <div className="text-sm text-slate-500">
               Updated {new Date(initialReceipt.updated_at).toLocaleString()}
@@ -305,10 +300,6 @@ export default function ReceiptForm({
         </div>
 
         <div className="ml-auto max-w-md space-y-3 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-500">Mode</span>
-            <span className="font-medium text-slate-900 capitalize">{mode}</span>
-          </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-slate-500">Amount paid</span>
             <span className="text-xl font-semibold text-slate-900">

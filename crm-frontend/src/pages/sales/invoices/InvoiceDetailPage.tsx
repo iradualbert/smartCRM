@@ -42,11 +42,11 @@ export default function InvoiceDetailPage() {
     loadInvoice().finally(() => setLoading(false))
   }, [id, loadInvoice])
 
-  const handleStatusChange = async (s: InvoiceStatus) => {
+  const handleStatusChange = async (status: InvoiceStatus) => {
     if (!invoice || busyStatus) return
     try {
-      setBusyStatus(s)
-      const updated = await updateInvoice(invoice.id, { status: s })
+      setBusyStatus(status)
+      const updated = await updateInvoice(invoice.id, { status })
       setInvoice(updated)
       setActivityKey((k) => k + 1)
     } finally {
@@ -71,7 +71,6 @@ export default function InvoiceDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 rounded-2xl border bg-white p-6 shadow-sm lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
@@ -82,11 +81,15 @@ export default function InvoiceDetailPage() {
           </div>
 
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
-            {invoice.customer_name && <span className="font-medium text-gray-700">{invoice.customer_name}</span>}
+            {invoice.customer_name ? (
+              <span className="font-medium text-gray-700">{invoice.customer_name}</span>
+            ) : null}
+            <span>Issue date: {invoice.issue_date || "—"}</span>
+            <span>Due date: {invoice.valid_until || "—"}</span>
             <span>Currency: {invoice.currency || "—"}</span>
-            {invoice.pdf_generated_at && (
+            {invoice.pdf_generated_at ? (
               <span>PDF: {new Date(invoice.pdf_generated_at).toLocaleDateString()}</span>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -119,41 +122,40 @@ export default function InvoiceDetailPage() {
         </div>
       </div>
 
-      {/* Status transitions */}
       <div className="flex flex-wrap gap-2 px-1">
-        {STATUS_TRANSITIONS.map((s) => (
+        {STATUS_TRANSITIONS.map((status) => (
           <Button
-            key={s}
-            variant={invoice.status === s ? "default" : "outline"}
+            key={status}
+            variant={invoice.status === status ? "default" : "outline"}
             size="sm"
             className="rounded-xl capitalize"
-            onClick={() => handleStatusChange(s)}
-            disabled={invoice.status === s || !!busyStatus}
+            onClick={() => handleStatusChange(status)}
+            disabled={invoice.status === status || !!busyStatus}
           >
-            {busyStatus === s ? "Saving…" : `Mark ${s.replace(/_/g, " ")}`}
+            {busyStatus === status ? "Saving..." : `Mark ${status.replace(/_/g, " ")}`}
           </Button>
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          {/* Bill To */}
-          {invoice.customer_name && (
+          {invoice.customer_name ? (
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
               <h3 className="mb-3 text-xs uppercase tracking-wide text-gray-500">Bill To</h3>
               <div className="space-y-1">
                 <p className="text-base font-semibold text-gray-900">{invoice.customer_name}</p>
-                {invoice.customer_email && (
+                {invoice.customer_email ? (
                   <p className="text-sm text-gray-600">{invoice.customer_email}</p>
-                )}
-                {invoice.customer_address && (
-                  <p className="whitespace-pre-line text-sm text-gray-600">{invoice.customer_address}</p>
-                )}
+                ) : null}
+                {invoice.customer_address ? (
+                  <p className="whitespace-pre-line text-sm text-gray-600">
+                    {invoice.customer_address}
+                  </p>
+                ) : null}
               </div>
             </div>
-          )}
+          ) : null}
 
-          {/* Line Items */}
           <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs uppercase text-gray-600">
@@ -177,7 +179,6 @@ export default function InvoiceDetailPage() {
             </table>
           </div>
 
-          {/* Activity Timeline */}
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <h3 className="mb-4 text-sm font-semibold text-gray-800">Activity</h3>
             <ActivityTimeline
@@ -187,7 +188,6 @@ export default function InvoiceDetailPage() {
           </div>
         </div>
 
-        {/* Amounts */}
         <div className="h-fit rounded-2xl border bg-white p-5 shadow-sm">
           <h3 className="mb-4 text-sm font-semibold text-gray-800">Amounts</h3>
 
@@ -195,6 +195,19 @@ export default function InvoiceDetailPage() {
             <div className="flex justify-between">
               <span className="text-gray-500">Subtotal</span>
               <span>{invoice.subtotal}</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-500">
+                {invoice.tax_label || "Tax"} ({invoice.tax_rate || "0"}%)
+              </span>
+              <span>{invoice.tax_total || "0.00"}</span>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-600">
+              {invoice.tax_mode === "inclusive"
+                ? "Prices on this invoice are tax-inclusive."
+                : "Tax is added on top of listed prices."}
             </div>
 
             <div className="flex justify-between border-t pt-3 text-base font-semibold">

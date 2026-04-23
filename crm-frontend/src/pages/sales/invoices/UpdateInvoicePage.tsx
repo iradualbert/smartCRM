@@ -52,6 +52,11 @@ const UpdateInvoicePage = () => {
         currency: values.currency || "USD",
         selected_template: values.selected_template ?? null,
         status: values.status as InvoiceStatus,
+        issue_date: values.issue_date ?? null,
+        valid_until: values.valid_until ?? null,
+        tax_mode: values.tax_mode,
+        tax_label: values.tax_label,
+        tax_rate: values.tax_rate,
       },
       lines: values.lines.map((line) => ({
         id: line.id,
@@ -92,12 +97,9 @@ const UpdateInvoicePage = () => {
             <PencilLine className="mr-2 h-4 w-4" />
             Edit invoice
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
             Update Invoice
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Update status, line items, template, and totals.
-          </p>
         </div>
 
         <Button
@@ -122,6 +124,11 @@ const UpdateInvoicePage = () => {
           currency: invoice.currency ?? "USD",
           selected_template: invoice.selected_template ?? null,
           status: invoice.status,
+          issue_date: invoice.issue_date ?? "",
+          valid_until: invoice.valid_until ?? "",
+          tax_mode: invoice.tax_mode ?? "exclusive",
+          tax_label: invoice.tax_label ?? "VAT",
+          tax_rate: invoice.tax_rate ?? "0.00",
           lines: (invoice.lines ?? []).map((line) => ({
             id: line.id,
             product: line.product ?? null,

@@ -65,6 +65,12 @@ export type Proforma = {
   pdf_needs_regeneration: boolean
   proforma_number: string
   status: ProformaStatus
+  issue_date?: string | null
+  valid_until?: string | null
+  tax_mode?: "exclusive" | "inclusive"
+  tax_label?: string | null
+  tax_rate?: string | null
+  tax_total?: string | null
   subtotal: string
   total: string
   created_at: string
@@ -92,6 +98,12 @@ export type Quotation = {
   quote_number: string
   name: string
   status: string
+  issue_date?: string | null
+  valid_until?: string | null
+  tax_mode?: "exclusive" | "inclusive"
+  tax_label?: string | null
+  tax_rate?: string | null
+  tax_total?: string | null
   subtotal: string
   total: string
   created_at: string
@@ -125,6 +137,12 @@ export type Invoice = {
   pdf_needs_regeneration: boolean
   invoice_number: string
   status: InvoiceStatus
+  issue_date?: string | null
+  valid_until?: string | null
+  tax_mode?: "exclusive" | "inclusive"
+  tax_label?: string | null
+  tax_rate?: string | null
+  tax_total?: string | null
   subtotal: string
   total: string
   created_at: string
@@ -144,6 +162,11 @@ export type InvoicePayload = {
   currency?: string
   invoice_number?: string
   status?: InvoiceStatus
+  issue_date?: string | null
+  valid_until?: string | null
+  tax_mode?: "exclusive" | "inclusive"
+  tax_label?: string
+  tax_rate?: string
 }
 
 export type InvoiceLinePayload = {
@@ -283,6 +306,11 @@ export async function createInvoiceWithLines(input: {
     currency?: string
     selected_template?: number | null
     status?: InvoiceStatus
+    issue_date?: string | null
+    valid_until?: string | null
+    tax_mode?: "exclusive" | "inclusive"
+    tax_label?: string
+    tax_rate?: string
   }
   lines: Array<{
     product?: number | null
@@ -300,6 +328,11 @@ export async function createInvoiceWithLines(input: {
     currency: input.invoice.currency || undefined,
     selected_template: input.invoice.selected_template ?? null,
     status: input.invoice.status ?? "draft",
+    issue_date: input.invoice.issue_date ?? null,
+    valid_until: input.invoice.valid_until ?? null,
+    tax_mode: input.invoice.tax_mode ?? "exclusive",
+    tax_label: input.invoice.tax_label ?? "VAT",
+    tax_rate: input.invoice.tax_rate ?? "0.00",
   })
 
   for (const line of input.lines) {
@@ -325,6 +358,11 @@ export async function updateInvoiceWithLines(input: {
     currency?: string
     selected_template?: number | null
     status?: InvoiceStatus
+    issue_date?: string | null
+    valid_until?: string | null
+    tax_mode?: "exclusive" | "inclusive"
+    tax_label?: string
+    tax_rate?: string
   }
   lines: Array<{
     id?: number
@@ -343,6 +381,11 @@ export async function updateInvoiceWithLines(input: {
     currency: input.invoice.currency || undefined,
     selected_template: input.invoice.selected_template ?? null,
     status: input.invoice.status ?? "draft",
+    issue_date: input.invoice.issue_date ?? null,
+    valid_until: input.invoice.valid_until ?? null,
+    tax_mode: input.invoice.tax_mode ?? "exclusive",
+    tax_label: input.invoice.tax_label ?? "VAT",
+    tax_rate: input.invoice.tax_rate ?? "0.00",
   })
 
   for (const lineId of input.removedLineIds) {

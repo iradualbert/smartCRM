@@ -2,9 +2,10 @@ import * as React from "react"
 import { Controller, useFieldArray, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import SearchSelect from "../shared-components/SearchSelect"
 import DocumentLineItemsEditor from "@/shared/DocumentLineItemsEditor"
@@ -33,6 +34,11 @@ export const invoiceFormSchema = z.object({
   currency: z.string().optional(),
   selected_template: z.coerce.number().nullable().optional(),
   status: z.enum(["draft", "sent", "paid", "overdue"]),
+  issue_date: z.string().optional(),
+  valid_until: z.string().optional(),
+  tax_mode: z.enum(["exclusive", "inclusive"]),
+  tax_label: z.string().min(1, "Tax label is required"),
+  tax_rate: z.string().min(1, "Tax rate is required"),
   lines: z
     .array(
       z.object({
@@ -61,6 +67,10 @@ function statusTone(status: InvoiceStatus) {
   }
 }
 
+function money(value: number) {
+  return Number.isFinite(value) ? value.toFixed(2) : "0.00"
+}
+
 type InvoiceFormProps = {
   mode: "create" | "edit"
   initialValues?: Partial<InvoiceFormValues>
@@ -84,7 +94,6 @@ export default function InvoiceForm({
   const [submitError, setSubmitError] = React.useState<string | null>(null)
   const [removedLineIds, setRemovedLineIds] = React.useState<number[]>([])
 
-  // Proforma search
   const [proformaSearchOpen, setProformaSearchOpen] = React.useState(false)
   const [proformaSearch, setProformaSearch] = React.useState("")
   const [proformaResults, setProformaResults] = React.useState<Proforma[]>([])
@@ -93,7 +102,6 @@ export default function InvoiceForm({
   const [proformaHasMore, setProformaHasMore] = React.useState(false)
   const [proformaOffset, setProformaOffset] = React.useState(0)
 
-  // Quotation search
   const [quotationSearchOpen, setQuotationSearchOpen] = React.useState(false)
   const [quotationSearch, setQuotationSearch] = React.useState("")
   const [quotationResults, setQuotationResults] = React.useState<Quotation[]>([])
@@ -102,7 +110,6 @@ export default function InvoiceForm({
   const [quotationHasMore, setQuotationHasMore] = React.useState(false)
   const [quotationOffset, setQuotationOffset] = React.useState(0)
 
-  // Customer search
   const [customerSearchOpen, setCustomerSearchOpen] = React.useState(false)
   const [customerSearch, setCustomerSearch] = React.useState("")
   const [customerResults, setCustomerResults] = React.useState<Customer[]>([])
@@ -125,9 +132,15 @@ export default function InvoiceForm({
       currency: initialValues?.currency ?? "USD",
       selected_template: initialValues?.selected_template ?? null,
       status: initialValues?.status ?? "draft",
-      lines: initialValues?.lines ?? [
-        { product: null, description: "", quantity: "1", unit_price: "0.00" },
-      ],
+      issue_date: initialValues?.issue_date ?? "",
+      valid_until: initialValues?.valid_until ?? "",
+      tax_mode: initialValues?.tax_mode ?? "exclusive",
+      tax_label: initialValues?.tax_label ?? "VAT",
+      tax_rate: initialValues?.tax_rate ?? "0.00",
+      lines:
+        initialValues?.lines ?? [
+          { product: null, description: "", quantity: "1", unit_price: "0.00" },
+        ],
     },
   })
 
@@ -140,6 +153,8 @@ export default function InvoiceForm({
   const selectedQuotationId = form.watch("quotation")
   const selectedCustomerId = form.watch("customer")
   const lines = form.watch("lines")
+  const taxMode = form.watch("tax_mode")
+  const taxRateValue = Number(form.watch("tax_rate") || 0)
 
   React.useEffect(() => {
     if (!companyId || !Number.isFinite(Number(companyId)) || Number(companyId) <= 0) {
@@ -157,7 +172,6 @@ export default function InvoiceForm({
     void run()
   }, [companyId])
 
-  // Proforma loader
   const loadProformas = React.useCallback(
     async (search: string, offset: number, appendResults: boolean) => {
       if (!companyId || !Number.isFinite(Number(companyId)) || Number(companyId) <= 0) {
@@ -186,17 +200,6 @@ export default function InvoiceForm({
     [companyId]
   )
 
-  React.useEffect(() => {
-    if (!companyId || !Number.isFinite(Number(companyId)) || Number(companyId) <= 0) {
-      setProformaResults([])
-      setProformaHasMore(false)
-      return
-    }
-    const timeout = window.setTimeout(() => void loadProformas(proformaSearch, 0, false), 250)
-    return () => window.clearTimeout(timeout)
-  }, [companyId, loadProformas, proformaSearch])
-
-  // Quotation loader
   const loadQuotations = React.useCallback(
     async (search: string, offset: number, appendResults: boolean) => {
       if (!companyId || !Number.isFinite(Number(companyId)) || Number(companyId) <= 0) {
@@ -225,17 +228,6 @@ export default function InvoiceForm({
     [companyId]
   )
 
-  React.useEffect(() => {
-    if (!companyId || !Number.isFinite(Number(companyId)) || Number(companyId) <= 0) {
-      setQuotationResults([])
-      setQuotationHasMore(false)
-      return
-    }
-    const timeout = window.setTimeout(() => void loadQuotations(quotationSearch, 0, false), 250)
-    return () => window.clearTimeout(timeout)
-  }, [companyId, loadQuotations, quotationSearch])
-
-  // Customer loader
   const loadCustomers = React.useCallback(
     async (search: string, offset: number, appendResults: boolean) => {
       if (!companyId || !Number.isFinite(Number(companyId)) || Number(companyId) <= 0) {
@@ -266,13 +258,33 @@ export default function InvoiceForm({
 
   React.useEffect(() => {
     if (!companyId || !Number.isFinite(Number(companyId)) || Number(companyId) <= 0) {
+      setProformaResults([])
+      setProformaHasMore(false)
+      return
+    }
+    const timeout = window.setTimeout(() => void loadProformas(proformaSearch, 0, false), 250)
+    return () => window.clearTimeout(timeout)
+  }, [companyId, loadProformas, proformaSearch])
+
+  React.useEffect(() => {
+    if (!companyId || !Number.isFinite(Number(companyId)) || Number(companyId) <= 0) {
+      setQuotationResults([])
+      setQuotationHasMore(false)
+      return
+    }
+    const timeout = window.setTimeout(() => void loadQuotations(quotationSearch, 0, false), 250)
+    return () => window.clearTimeout(timeout)
+  }, [companyId, loadQuotations, quotationSearch])
+
+  React.useEffect(() => {
+    if (!companyId || !Number.isFinite(Number(companyId)) || Number(companyId) <= 0) {
       setCustomerResults([])
       setCustomerHasMore(false)
       return
     }
     const timeout = window.setTimeout(() => void loadCustomers(customerSearch, 0, false), 250)
     return () => window.clearTimeout(timeout)
-  }, [companyId, loadCustomers, customerSearch])
+  }, [companyId, customerSearch, loadCustomers])
 
   const selectedProforma = proformaResults.find((item) => item.id === selectedProformaId) ?? null
   const selectedQuotation = quotationResults.find((item) => item.id === selectedQuotationId) ?? null
@@ -284,11 +296,15 @@ export default function InvoiceForm({
     )
     try {
       const full = await getProforma(proforma.id)
-      if (full.customer) {
-        form.setValue("customer", full.customer)
-        setSelectedCustomerName(full.customer_name ?? null)
-      }
-      if (full.currency) form.setValue("currency", full.currency)
+      form.setValue("quotation", full.quotation ?? null)
+      form.setValue("customer", full.customer ?? null)
+      setSelectedCustomerName(full.customer_name ?? null)
+      form.setValue("currency", full.currency ?? form.getValues("currency"))
+      form.setValue("issue_date", full.issue_date ?? "")
+      form.setValue("valid_until", full.valid_until ?? "")
+      form.setValue("tax_mode", full.tax_mode ?? "exclusive")
+      form.setValue("tax_label", full.tax_label ?? "VAT")
+      form.setValue("tax_rate", full.tax_rate ?? "0.00")
       if (full.lines && full.lines.length > 0) {
         replace(
           full.lines.map((line) => ({
@@ -312,11 +328,14 @@ export default function InvoiceForm({
     )
     try {
       const full = await getQuotation(quotation.id)
-      if (full.customer) {
-        form.setValue("customer", full.customer)
-        setSelectedCustomerName(full.customer_name ?? null)
-      }
-      if (full.currency) form.setValue("currency", full.currency)
+      form.setValue("customer", full.customer ?? null)
+      setSelectedCustomerName(full.customer_name ?? null)
+      form.setValue("currency", full.currency ?? form.getValues("currency"))
+      form.setValue("issue_date", full.issue_date ?? "")
+      form.setValue("valid_until", full.valid_until ?? "")
+      form.setValue("tax_mode", full.tax_mode ?? "exclusive")
+      form.setValue("tax_label", full.tax_label ?? "VAT")
+      form.setValue("tax_rate", full.tax_rate ?? "0.00")
       if (full.lines && full.lines.length > 0) {
         replace(
           full.lines.map((line) => ({
@@ -333,10 +352,22 @@ export default function InvoiceForm({
     }
   }
 
-  const subtotal = lines.reduce(
+  const linesTotal = lines.reduce(
     (sum, line) => sum + Number(line.quantity || 0) * Number(line.unit_price || 0),
     0
   )
+  const taxRateFraction = taxRateValue / 100
+  const totals = React.useMemo(() => {
+    if (taxMode === "inclusive") {
+      const subtotal = taxRateFraction > 0 ? linesTotal / (1 + taxRateFraction) : linesTotal
+      const taxTotal = linesTotal - subtotal
+      return { subtotal, taxTotal, grandTotal: linesTotal }
+    }
+
+    const subtotal = linesTotal
+    const taxTotal = subtotal * taxRateFraction
+    return { subtotal, taxTotal, grandTotal: subtotal + taxTotal }
+  }, [linesTotal, taxMode, taxRateFraction])
 
   const handleRemoveLine = (index: number) => {
     const line = form.getValues(`lines.${index}`)
@@ -364,27 +395,21 @@ export default function InvoiceForm({
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Invoice setup</h2>
-            <p className="text-sm text-slate-500">
-              Link a proforma or quotation to auto-fill customer and line items, or create manually.
-            </p>
-          </div>
+          <h2 className="text-lg font-semibold text-slate-900">Invoice</h2>
           <Badge className={`rounded-full px-3 py-1 capitalize ${statusTone(selectedStatus)}`}>
             {selectedStatus.replace(/_/g, " ")}
           </Badge>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {/* Proforma */}
           <Field>
-            <FieldLabel>Proforma (optional)</FieldLabel>
+            <FieldLabel>Proforma</FieldLabel>
             <SearchSelect<Proforma>
               valueLabel={
                 selectedProforma?.proforma_number ??
                 (selectedProformaId ? `Proforma #${selectedProformaId}` : null)
               }
-              placeholder="Link a proforma..."
+              placeholder="Search proforma..."
               searchPlaceholder="Search proformas..."
               items={proformaResults}
               open={proformaSearchOpen}
@@ -399,18 +424,16 @@ export default function InvoiceForm({
               getLabel={(item) => item.proforma_number || `Proforma #${item.id}`}
               getDescription={(item) => item.customer_name || item.total}
             />
-            <FieldDescription>Selecting auto-fills customer and line items.</FieldDescription>
           </Field>
 
-          {/* Quotation */}
           <Field>
-            <FieldLabel>Quotation (optional)</FieldLabel>
+            <FieldLabel>Quotation</FieldLabel>
             <SearchSelect<Quotation>
               valueLabel={
                 selectedQuotation?.quote_number ??
                 (selectedQuotationId ? `Quotation #${selectedQuotationId}` : null)
               }
-              placeholder="Link a quotation..."
+              placeholder="Search quotation..."
               searchPlaceholder="Search quotations..."
               items={quotationResults}
               open={quotationSearchOpen}
@@ -425,12 +448,10 @@ export default function InvoiceForm({
               getLabel={(item) => item.quote_number || item.name}
               getDescription={(item) => item.customer_name || item.total}
             />
-            <FieldDescription>Selecting auto-fills customer and line items.</FieldDescription>
           </Field>
 
-          {/* Customer */}
           <Field>
-            <FieldLabel>Customer (optional)</FieldLabel>
+            <FieldLabel>Customer</FieldLabel>
             <SearchSelect<Customer>
               valueLabel={
                 selectedCustomerName ??
@@ -457,29 +478,56 @@ export default function InvoiceForm({
               getLabel={(item) => item.name}
               getDescription={(item) => item.email ?? item.phone_number ?? ""}
             />
-            <FieldDescription>Auto-filled from proforma or quotation. Editable.</FieldDescription>
           </Field>
 
-          {/* Invoice number */}
           <Controller
             name="invoice_number"
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel>Invoice number</FieldLabel>
-                <Input
-                  {...field}
-                  value={field.value ?? ""}
-                  className="rounded-2xl"
-                  placeholder="Auto-generated if left blank"
-                />
-                <FieldDescription>Leave empty to use the organization numbering sequence.</FieldDescription>
+                <Input {...field} value={field.value ?? ""} className="rounded-2xl" />
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
               </Field>
             )}
           />
 
-          {/* Status */}
+          <Controller
+            name="issue_date"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Issue date</FieldLabel>
+                <Input {...field} type="date" className="rounded-2xl" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="valid_until"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Due date</FieldLabel>
+                <Input {...field} type="date" className="rounded-2xl" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="currency"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Currency</FieldLabel>
+                <Input {...field} className="rounded-2xl" placeholder="USD" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+
           <Controller
             name="status"
             control={control}
@@ -500,20 +548,6 @@ export default function InvoiceForm({
             )}
           />
 
-          {/* Currency */}
-          <Controller
-            name="currency"
-            control={control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Currency</FieldLabel>
-                <Input {...field} className="rounded-2xl" placeholder="USD" />
-                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-              </Field>
-            )}
-          />
-
-          {/* Template */}
           <Controller
             name="selected_template"
             control={control}
@@ -538,6 +572,54 @@ export default function InvoiceForm({
         </div>
       </section>
 
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-5 text-lg font-semibold text-slate-900">Tax</h2>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Controller
+            name="tax_mode"
+            control={control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Tax mode</FieldLabel>
+                <select
+                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                >
+                  <option value="exclusive">exclusive</option>
+                  <option value="inclusive">inclusive</option>
+                </select>
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="tax_label"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Tax label</FieldLabel>
+                <Input {...field} className="rounded-2xl" placeholder="VAT" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="tax_rate"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Tax rate (%)</FieldLabel>
+                <Input {...field} className="rounded-2xl" placeholder="0.00" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+        </div>
+      </section>
+
       <DocumentLineItemsEditor
         form={form}
         control={control}
@@ -546,8 +628,7 @@ export default function InvoiceForm({
           append({ product: null, description: "", quantity: "1", unit_price: "0.00" })
         }
         removeLine={handleRemoveLine}
-        title="Invoice line items"
-        description="Search products from your catalog, or build lines manually. Selecting a proforma or quotation above auto-fills these."
+        title="Line items"
         searchProducts={({ search, offset, limit }) =>
           listProducts({ company: companyId, search, offset, limit })
         }
@@ -565,12 +646,22 @@ export default function InvoiceForm({
 
         <div className="ml-auto max-w-md space-y-3 rounded-3xl border border-slate-200 bg-slate-50 p-5">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-500">Line items</span>
-            <span className="font-medium text-slate-900">{lines.length}</span>
+            <span className="text-slate-500">Subtotal</span>
+            <span className="font-medium text-slate-900">{money(totals.subtotal)}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-500">Subtotal</span>
-            <span className="text-xl font-semibold text-slate-900">{subtotal.toFixed(2)}</span>
+            <span className="text-slate-500">
+              {form.watch("tax_label")} ({form.watch("tax_rate")}%)
+            </span>
+            <span className="font-medium text-slate-900">{money(totals.taxTotal)}</span>
+          </div>
+          <div className="border-t border-slate-200 pt-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-base font-semibold text-slate-900">Total</span>
+              <span className="text-xl font-semibold text-slate-900">
+                {money(totals.grandTotal)}
+              </span>
+            </div>
           </div>
         </div>
       </section>
