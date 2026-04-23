@@ -111,12 +111,12 @@ export async function listProducts(params?: { search?: string }) {
   return response.data
 }
 
-export async function listCustomers(params?: { search?: string }) {
+export async function listCustomers(params?: { company?: string | number; limit?: number; offset?: number; search?: string }) {
   const response = await axios.get<PaginatedResponse<Customer>>("/customers/", { params })
   return response.data
 }
 
-export async function listQuotations(params?: { search?: string }) {
+export async function listQuotations(params?: { company?: string | number; limit?: number; offset?: number; search?: string }) {
   const response = await axios.get<PaginatedResponse<Quotation>>("/quotations/", { params })
   return response.data
 }
@@ -131,7 +131,7 @@ export async function listProformaTemplates() {
   }
 }
 
-export async function listProformas(params?: { search?: string }) {
+export async function listProformas(params?: { company?: string | number; limit?: number; offset?: number; search?: string; status?: string }) {
   const response = await axios.get<PaginatedResponse<Proforma>>("/proformas/", { params })
   return response.data
 }

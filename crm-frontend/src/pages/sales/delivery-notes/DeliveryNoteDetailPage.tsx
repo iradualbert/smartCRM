@@ -1,9 +1,11 @@
 import * as React from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 import { Download, PencilLine, RefreshCcw } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
+import ActivityTimeline from "@/components/ActivityTimeline"
 import {
   deliveryNotePdfUrl,
   generateDeliveryNotePdf,
@@ -16,8 +18,9 @@ import {
 
 export default function DeliveryNoteDetailPage() {
   const { id } = useParams()
-  const navigate = useNavigate()
+  const { currentOrganizationId } = useOrganizations()
   const [deliveryNote, setDeliveryNote] = React.useState<DeliveryNote | null>(null)
+  const [activityKey, setActivityKey] = React.useState(0)
 
   const load = React.useCallback(async () => {
     if (!id) return
@@ -40,6 +43,7 @@ export default function DeliveryNoteDetailPage() {
     if (mode === "generate") await generateDeliveryNotePdf(deliveryNote.id)
     else await regenerateDeliveryNotePdf(deliveryNote.id)
     await load()
+    setActivityKey((k) => k + 1)
   }
 
   if (!deliveryNote) return <div className="mx-auto max-w-7xl p-6">Loading...</div>
@@ -161,6 +165,16 @@ export default function DeliveryNoteDetailPage() {
                 <span className="text-slate-500">Generated at</span>
                 <span>{deliveryNote.pdf_generated_at ? new Date(deliveryNote.pdf_generated_at).toLocaleString() : "—"}</span>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-slate-200 shadow-sm">
+            <CardHeader><CardTitle className="text-sm">Activity</CardTitle></CardHeader>
+            <CardContent>
+              <ActivityTimeline
+                key={activityKey}
+                activityUrl={`/delivery-notes/${id}/activity/?company=${currentOrganizationId}`}
+              />
             </CardContent>
           </Card>
         </div>

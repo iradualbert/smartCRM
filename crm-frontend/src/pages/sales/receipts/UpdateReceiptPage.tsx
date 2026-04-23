@@ -1,11 +1,13 @@
 import * as React from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 import ReceiptForm, { type ReceiptFormValues } from "./ReceiptForm"
 import { getReceipt, updateReceipt, type Receipt, type ReceiptStatus } from "./api"
 
 export default function UpdateReceiptPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { currentOrganizationId } = useOrganizations()
   const [receipt, setReceipt] = React.useState<Receipt | null>(null)
 
   React.useEffect(() => {
@@ -40,9 +42,10 @@ export default function UpdateReceiptPage() {
 
       <ReceiptForm
         mode="edit"
+        companyId={receipt.company ?? Number(currentOrganizationId) ?? 0}
         initialReceipt={receipt}
         initialValues={{
-          companyId: receipt.company ?? 1,
+          companyId: receipt.company ?? Number(currentOrganizationId) ?? 0,
           invoice: receipt.invoice,
           receipt_number: receipt.receipt_number,
           amount_paid: receipt.amount_paid,

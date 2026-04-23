@@ -20,7 +20,7 @@ const marketingLinks = [
   { label: "Plans", href: "/#pricing" },
 ];
 
-const Navbar = ({ isAppRoute = true }: { isAppRoute?: boolean }) => {
+const Navbar = ({ isAppRoute: _isAppRoute = true }: { isAppRoute?: boolean }) => {
   const user = useSelector((state: any) => state.user);
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
 

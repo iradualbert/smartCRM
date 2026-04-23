@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { ArrowLeft, Receipt } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 import { createInvoiceWithLines, type InvoiceStatus } from "./api"
 import InvoiceForm, { type InvoiceFormValues } from "./InvoiceForm"
 
@@ -13,11 +14,12 @@ type CreateInvoiceLocationState = {
 const CreateInvoicePage = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { currentOrganizationId } = useOrganizations()
   const state = (location.state as CreateInvoiceLocationState | null) ?? null
 
   const initialValues = React.useMemo<Partial<InvoiceFormValues>>(
     () => ({
-      companyId: state?.defaults?.companyId ?? 1,
+      companyId: state?.defaults?.companyId ?? Number(currentOrganizationId) ?? 0,
       proforma: state?.defaults?.proforma ?? 0,
       invoice_number: state?.defaults?.invoice_number,
       currency: state?.defaults?.currency ?? "USD",

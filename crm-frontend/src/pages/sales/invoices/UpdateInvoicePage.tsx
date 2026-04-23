@@ -112,7 +112,7 @@ const UpdateInvoicePage = () => {
         mode="edit"
         initialInvoice={invoice}
         initialValues={{
-          companyId: invoice.company ?? 1,
+          companyId: invoice.company ?? 0,
           proforma: invoice.proforma,
           invoice_number: invoice.invoice_number,
           currency: invoice.currency ?? "USD",

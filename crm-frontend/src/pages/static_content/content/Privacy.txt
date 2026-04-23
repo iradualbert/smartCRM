@@ -1,76 +1,116 @@
-# Introduction
-At Beinpark LLC, accessible at [https://www.beinpark.com](/), it is one of our main priorities to protect our users privacy. This Privacy Policy document contains types of information that is collected and recorded by Beinpark and how we use it.
+# Privacy Policy
 
+**Effective Date:** 22.04.2026
 
-This privacy policy applies only to our online activities and is valid for visitors to our website with regards to the information that they shared and/or collect in ``Beinpark``. This policy is not applicable to any information collected offline or via channels other than this website.
+Modura ("we", "our", "us") respects your privacy and is committed to protecting your information.
 
-# Consent
+This Privacy Policy explains how we collect, use, and protect your data when you use our services.
 
-By using our Site, you hereby consent to our Privacy Policy and agree to our [Terms](/terms).
+---
 
-# Collection Of Personal Information
+## 1. Information We Collect
 
-## Information you provide to us.
-We collect personally identifiable information you provide when you create a Beinpark account. We collect and store this information.
+### Information You Provide
+When you create an account or use the service, we may collect:
 
-When you register for an Account, we may ask for your contact information, including items such as name, company name, address, email address, and telephone number.
+- Name
+- Email address
+- Company / organization details
+- Customer and product data you enter
+- Billing information (processed securely via third-party providers)
 
-If you purchase Beinpark subscriptions, we collect your credit card information
+---
 
+### Information Collected Automatically
 
-## Information we automatically collect
+We may collect:
 
-We collect information about you and how you use our services, and your interactions with us. This information includes:
- - The lessons you access, like, review, and save including data and time.
- - The amount of time you spend on our site.
+- Usage data (features used, interactions)
+- Device and browser information
+- Log data (IP address, timestamps)
 
+---
 
-If you contact us directly, we may receive
-additional information about you such as your name, email address, phone number, the contents of the message and/or attachments you may send us, and any other information you may choose to provide.
+## 2. How We Use Your Information
 
-# Use of Information
+We use your information to:
 
-We use the information we collect in various ways, including:
+- Provide and operate the service
+- Generate documents (quotations, invoices)
+- Send emails on your behalf
+- Improve performance and reliability
+- Communicate with you (support, updates)
 
-- Provide, operate, and maintain our site
-Improve, personalize, and expand our site
-Understand and analyze how you use our site
-Develop new products, services, features, and functionality. 
+---
 
-- Communicate with you, either directly or through one of our partners, including for customer service, to provide you with updates and other information relating to the website, and for marketing and promotional purposes
-- Send you emails.
+## 3. Data Ownership
 
+- You retain full ownership of your data
+- We do not sell your data
+- We only process your data to provide the service
 
-# Cookies and Web Beacons
+---
 
-Like any other website, Website Name uses ‘cookies'. These cookies are used to store information including visitors' preferences, and the pages on the website that the visitor accessed or visited. The information is used to optimize the users' experience by customizing our web page content based on visitors' browser type and/or other information.
+## 4. Data Sharing
 
+We do not share your data except:
 
+- With trusted service providers (hosting, email, payments)
+- When required by law
+- To protect our rights and users
 
-# GDPR Privacy Policy (Data Protection Rights)
+---
 
-We would like to make sure you are fully aware of all of your data protection rights. Every user is entitled to the following:
+## 5. Data Security
 
-The right to access – You have the right to request copies of your data. We may charge you a small fee for this service.
+We implement reasonable security measures to protect your data.
 
-The right to rectification – You have the right to request that we correct any information you believe is inaccurate. You also have the right to request that we complete the information you believe is incomplete.
+However, no system is completely secure.
 
-The right to erasure – You have the right to request that we erase your data, under certain conditions.
+---
 
-The right to restrict processing – You have the right to request that we restrict the processing of your data, under certain conditions.
+## 6. Data Retention
 
-The right to object to processing – You have the right to object to our processing of your data, under certain conditions.
+We retain your data while your account is active.
 
-The right to data portability – You have the right to request that we transfer the data that we have collected to another organization, or directly to you, under certain conditions.
+You may request deletion of your data at any time.
 
-If you make a request, we have one month to respond to you. If you would like to exercise any of these rights, please contact us.
+---
 
+## 7. Your Rights (GDPR)
 
-# Children's Information
+You have the right to:
 
-Another part of our priority is adding protection for children while using the internet. We encourage parents and guardians to observe, participate in, and/or monitor and guide their online activity.
+- Access your data  
+- Correct inaccurate data  
+- Request deletion  
+- Restrict processing  
+- Request data portability  
 
-Beinpark does not knowingly collect any Personal Identifiable Information from children under the age of 13. If you think that your child provided this kind of information on our website, we strongly encourage you to contact us immediately and we will do our best efforts to promptly remove such information from our records.
+To exercise these rights, contact:
 
-# Changes to this Statement
-Beinpark will occasionally update this Statement of Privacy to reflect company and customer feedback. Beinpark encourages you to periodically review this Statement to be informed of how Beinpark is protecting your information.
+**support@modura.app**
+
+---
+
+## 8. Children's Information
+
+Our service is not intended for users under the age of 13.
+
+We do not knowingly collect personal data from children.
+
+---
+
+## 9. Changes to This Policy
+
+We may update this policy from time to time.
+
+Continued use of the service means you accept the updated policy.
+
+---
+
+## 10. Contact
+
+For any questions:
+
+**support@modura.app**

@@ -2,6 +2,7 @@ import * as React from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 import ProformaForm, { type ProformaFormValues } from "./ProformaForm"
 import { createProformaWithLines, type ProformaStatus } from "./api"
 
@@ -12,11 +13,12 @@ type CreateProformaLocationState = {
 export default function CreateProformaPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { currentOrganizationId } = useOrganizations()
   const state = (location.state as CreateProformaLocationState | null) ?? null
 
   const initialValues = React.useMemo<Partial<ProformaFormValues>>(
     () => ({
-      companyId: state?.defaults?.companyId ?? 1,
+      companyId: state?.defaults?.companyId ?? Number(currentOrganizationId) ?? 0,
       quotation: state?.defaults?.quotation ?? null,
       customer: state?.defaults?.customer ?? null,
       proforma_number: state?.defaults?.proforma_number,

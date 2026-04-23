@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 import DeliveryNoteForm, { type DeliveryNoteFormValues } from "./DeliveryNoteForm"
 import { createDeliveryNoteWithLines, type DeliveryNoteStatus } from "./api"
 
 export default function CreateDeliveryNotePage() {
   const navigate = useNavigate()
+  const { currentOrganizationId } = useOrganizations()
 
   const handleSubmit = async (values: DeliveryNoteFormValues) => {
     const deliveryNote = await createDeliveryNoteWithLines({
@@ -26,6 +28,10 @@ export default function CreateDeliveryNotePage() {
     navigate(`/delivery-notes/${deliveryNote.id}`)
   }
 
+  if (!currentOrganizationId) {
+    return <div className="p-6 text-sm text-gray-500">Loading organization...</div>
+  }
+
   return (
     <div className="mx-auto max-w-7xl p-6 md:p-8">
       <h1 className="mb-2 text-3xl font-semibold tracking-tight">Create Delivery Note</h1>
@@ -33,6 +39,7 @@ export default function CreateDeliveryNotePage() {
 
       <DeliveryNoteForm
         mode="create"
+        initialValues={{ companyId: Number(currentOrganizationId) }}
         onSubmit={handleSubmit}
         onCancel={() => navigate("/delivery-notes")}
       />

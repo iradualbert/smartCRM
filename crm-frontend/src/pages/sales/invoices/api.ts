@@ -118,7 +118,7 @@ export async function listInvoiceTemplates() {
   }
 }
 
-export async function listProformas(params?: { search?: string }) {
+export async function listProformas(params?: { company?: string | number; limit?: number; offset?: number; search?: string; status?: string }) {
   const response = await axios.get<PaginatedResponse<Proforma>>("/proformas/", {
     params,
   })
@@ -130,7 +130,7 @@ export async function getProforma(id: number | string) {
   return response.data
 }
 
-export async function listInvoices(params?: { search?: string }) {
+export async function listInvoices(params?: { company?: string | number; limit?: number; offset?: number; search?: string; status?: string }) {
   const response = await axios.get<PaginatedResponse<Invoice>>("/invoices/", {
     params,
   })

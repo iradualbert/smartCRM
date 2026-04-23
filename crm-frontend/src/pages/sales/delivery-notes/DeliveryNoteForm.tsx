@@ -5,7 +5,7 @@ import * as z from "zod"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import DocumentLineItemsEditor from "@/shared/DocumentLineItemsEditor"
@@ -270,23 +270,6 @@ export default function DeliveryNoteForm({
                   )}
                 />
 
-                <Controller
-                  name="companyId"
-                  control={control}
-                  render={({ field }) => (
-                    <Field>
-                      <FieldLabel>Company Id</FieldLabel>
-                      <Input
-                        {...field}
-                        type="number"
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        className="rounded-xl"
-                      />
-                      <FieldDescription>Replace later with company context.</FieldDescription>
-                    </Field>
-                  )}
-                />
               </div>
             )}
 

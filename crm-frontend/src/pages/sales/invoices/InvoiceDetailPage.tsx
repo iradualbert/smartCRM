@@ -1,60 +1,36 @@
 import * as React from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
-import {
-  ArrowLeft,
-  Download,
-  Mail,
-  MoreHorizontal,
-  PencilLine,
-  Receipt,
-  RefreshCcw,
-} from "lucide-react"
+import { useNavigate, useParams } from "react-router-dom"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  generateInvoicePdf,
-  getInvoice,
-  invoicePdfUrl,
-  regenerateInvoicePdf,
-  updateInvoice,
-  type Invoice,
-  type InvoiceStatus,
-} from "./api"
-import DocumentTimeline from "@/shared/DocumentTimeLine"
+import { Button } from "@/components/ui/button"
+import PdfActionsMenu from "@/shared/PdfActionsMenu"
+import ActivityTimeline from "@/components/ActivityTimeline"
 
-function statusTone(status: InvoiceStatus) {
-  switch (status) {
-    case "paid":
-      return "bg-emerald-50 text-emerald-700 border-emerald-200"
-    case "sent":
-      return "bg-sky-50 text-sky-700 border-sky-200"
-    case "overdue":
-      return "bg-rose-50 text-rose-700 border-rose-200"
-    case "partially_paid":
-      return "bg-amber-50 text-amber-700 border-amber-200"
-    case "cancelled":
-      return "bg-zinc-100 text-zinc-700 border-zinc-200"
-    default:
-      return "bg-slate-100 text-slate-700 border-slate-200"
-  }
+import { Mail, Pencil } from "lucide-react"
+import type { Invoice, InvoiceStatus } from "./api"
+import { getInvoice, updateInvoice } from "./api"
+
+const statusColor: Record<string, string> = {
+  draft: "bg-gray-100 text-gray-700",
+  sent: "bg-blue-100 text-blue-700",
+  paid: "bg-green-100 text-green-700",
+  partially_paid: "bg-amber-100 text-amber-700",
+  overdue: "bg-red-100 text-red-700",
+  cancelled: "bg-zinc-100 text-zinc-700",
 }
 
-const InvoiceDetailPage = () => {
+const STATUS_TRANSITIONS: InvoiceStatus[] = ["draft", "sent", "partially_paid", "paid", "overdue", "cancelled"]
+
+export default function InvoiceDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { currentOrganizationId } = useOrganizations()
 
   const [invoice, setInvoice] = React.useState<Invoice | null>(null)
   const [loading, setLoading] = React.useState(true)
-  const [error, setError] = React.useState<string | null>(null)
-  const [actionLoading, setActionLoading] = React.useState<string | null>(null)
+  const [busyStatus, setBusyStatus] = React.useState<string | null>(null)
+  const [activityKey, setActivityKey] = React.useState(0)
 
   const loadInvoice = React.useCallback(async () => {
     if (!id) return
@@ -63,347 +39,156 @@ const InvoiceDetailPage = () => {
   }, [id])
 
   React.useEffect(() => {
-    const run = async () => {
-      if (!id) {
-        setError("Missing invoice id.")
-        setLoading(false)
-        return
-      }
-
-      try {
-        setLoading(true)
-        setError(null)
-        await loadInvoice()
-      } catch (err) {
-        console.error(err)
-        setError("Failed to load invoice.")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    run()
+    if (!id) return
+    setLoading(true)
+    loadInvoice().finally(() => setLoading(false))
   }, [id, loadInvoice])
 
-  const handleStatusChange = async (status: InvoiceStatus) => {
-    if (!invoice) return
+  const handleStatusChange = async (s: InvoiceStatus) => {
+    if (!invoice || busyStatus) return
     try {
-      setActionLoading(`status:${status}`)
-      const updated = await updateInvoice(invoice.id, { status })
+      setBusyStatus(s)
+      const updated = await updateInvoice(invoice.id, { status: s })
       setInvoice(updated)
-    } catch (error) {
-      console.error(error)
-      setError("Failed to update invoice status.")
+      setActivityKey((k) => k + 1)
     } finally {
-      setActionLoading(null)
+      setBusyStatus(null)
     }
   }
 
-  const handleGeneratePdf = async (mode: "generate" | "regenerate") => {
-    if (!invoice) return
-    try {
-      setActionLoading(mode)
-      if (mode === "generate") {
-        await generateInvoicePdf(invoice.id)
-      } else {
-        await regenerateInvoicePdf(invoice.id)
-      }
-      await loadInvoice()
-    } catch (error) {
-      console.error(error)
-      setError("Failed to update PDF.")
-    } finally {
-      setActionLoading(null)
-    }
+  const handleAfterPdf = async () => {
+    await loadInvoice()
+    setActivityKey((k) => k + 1)
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto max-w-7xl p-6 text-sm text-slate-500">
-        Loading invoice...
-      </div>
-    )
+    return <div className="p-6 text-sm text-gray-500">Loading invoice...</div>
   }
 
-  if (error || !invoice) {
-    return (
-      <div className="mx-auto max-w-7xl p-6">
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-          {error || "Invoice not found."}
-        </div>
-      </div>
-    )
+  if (!invoice) {
+    return <div className="p-6 text-sm text-red-500">Invoice not found.</div>
   }
+
+  const hasPdf = Boolean(invoice.pdf_generated_at || invoice.document)
 
   return (
-    <div className="mx-auto max-w-7xl p-6 md:p-8">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <Button
-            variant="ghost"
-            className="mb-3 rounded-xl px-0 text-slate-500 hover:bg-transparent"
-            onClick={() => navigate("/invoices")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to invoices
-          </Button>
-
+    <div className="mx-auto max-w-6xl space-y-6 p-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 rounded-2xl border bg-white p-6 shadow-sm lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-              {invoice.invoice_number}
-            </h1>
-            <Badge className={`rounded-full border ${statusTone(invoice.status)}`}>
-              {invoice.status.replaceAll("_", " ")}
+            <h1 className="text-2xl font-semibold tracking-tight">{invoice.invoice_number}</h1>
+            <Badge className={`px-3 py-1 text-xs capitalize ${statusColor[invoice.status] || ""}`}>
+              {invoice.status.replace(/_/g, " ")}
             </Badge>
           </div>
 
-          <p className="mt-2 text-sm text-slate-600">
-            Invoice detail workspace with PDF lifecycle actions.
-          </p>
+          <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
+            <span>Currency: {invoice.currency || "—"}</span>
+            {invoice.pdf_generated_at && (
+              <span>PDF: {new Date(invoice.pdf_generated_at).toLocaleDateString()}</span>
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline" className="rounded-2xl">
-            <Link to={`/invoices/${invoice.id}/edit`}>
-              <PencilLine className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          <Button
+            className="rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+            onClick={() => navigate(`/invoices/${id}/email`)}
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Send by Email
           </Button>
+
+          <PdfActionsMenu
+            entityLabel="PDF"
+            hasPdf={hasPdf}
+            pdfUrl={`/invoices/${id}/pdf/?company=${currentOrganizationId}`}
+            generateUrl={`/invoices/${id}/generate_pdf/?company=${currentOrganizationId}`}
+            regenerateUrl={`/invoices/${id}/regenerate_pdf/?company=${currentOrganizationId}`}
+            onAfterGenerate={handleAfterPdf}
+          />
 
           <Button
             variant="outline"
-            className="rounded-2xl"
-            onClick={() => handleGeneratePdf("generate")}
-            disabled={actionLoading !== null}
+            className="rounded-xl"
+            onClick={() => navigate(`/invoices/${id}/edit`)}
           >
-            <Receipt className="mr-2 h-4 w-4" />
-            {actionLoading === "generate" ? "Generating..." : "Generate PDF"}
-          </Button>
-
-          <Button
-            variant="outline"
-            className="rounded-2xl"
-            onClick={() => handleGeneratePdf("regenerate")}
-            disabled={actionLoading !== null}
-          >
-            <RefreshCcw className="mr-2 h-4 w-4" />
-            {actionLoading === "regenerate" ? "Refreshing..." : "Regenerate PDF"}
-          </Button>
-
-          <Button asChild className="rounded-2xl">
-            <a href={invoicePdfUrl(invoice.id)} target="_blank" rel="noreferrer">
-              <Download className="mr-2 h-4 w-4" />
-              Open PDF
-            </a>
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit Invoice
           </Button>
         </div>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        {(
-          ["draft", "sent", "partially_paid", "paid", "overdue", "cancelled"] as InvoiceStatus[]
-        ).map((status) => (
+      {/* Status transitions */}
+      <div className="flex flex-wrap gap-2 px-1">
+        {STATUS_TRANSITIONS.map((s) => (
           <Button
-            key={status}
-            variant={invoice.status === status ? "default" : "outline"}
+            key={s}
+            variant={invoice.status === s ? "default" : "outline"}
             size="sm"
-            className="rounded-xl"
-            onClick={() => handleStatusChange(status)}
-            disabled={actionLoading !== null}
+            className="rounded-xl capitalize"
+            onClick={() => handleStatusChange(s)}
+            disabled={invoice.status === s || !!busyStatus}
           >
-            {actionLoading === `status:${status}`
-              ? "Saving..."
-              : `Mark ${status.replaceAll("_", " ")}`}
+            {busyStatus === s ? "Saving…" : `Mark ${s.replace(/_/g, " ")}`}
           </Button>
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-12">
-        <div className="space-y-6 xl:col-span-8">
-          <Card className="rounded-3xl border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-slate-900">Invoice summary</CardTitle>
-              <CardDescription>
-                Core invoice information from the backend resource.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 text-sm md:grid-cols-2">
-                <div>
-                  <div className="text-slate-500">Invoice Number</div>
-                  <div className="mt-1 font-medium text-slate-900">
-                    {invoice.invoice_number}
-                  </div>
-                </div>
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="space-y-6">
+          {/* Line Items */}
+          <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-600">
+                <tr>
+                  <th className="p-4 text-left">Description</th>
+                  <th className="text-left">Qty</th>
+                  <th className="text-left">Unit Price</th>
+                  <th className="pr-4 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(invoice.lines ?? []).map((line) => (
+                  <tr key={line.id} className="border-t hover:bg-gray-50">
+                    <td className="p-4 font-medium text-gray-900">{line.description || "—"}</td>
+                    <td>{line.quantity}</td>
+                    <td>{line.unit_price}</td>
+                    <td className="pr-4 text-right font-medium">{line.line_total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-                <div>
-                  <div className="text-slate-500">Currency</div>
-                  <div className="mt-1 font-medium text-slate-900">
-                    {invoice.currency || "—"}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-slate-500">Proforma</div>
-                  <div className="mt-1 font-medium text-slate-900">{invoice.proforma}</div>
-                </div>
-
-                <div>
-                  <div className="text-slate-500">Template</div>
-                  <div className="mt-1 font-medium text-slate-900">
-                    {invoice.selected_template || "—"}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-3xl border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-slate-900">Line items</CardTitle>
-              <CardDescription>
-                Detailed invoice lines with quantities and totals.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                <table className="w-full border-collapse text-sm">
-                  <thead className="bg-slate-50">
-                    <tr className="text-left text-slate-600">
-                      <th className="px-4 py-3 font-medium">#</th>
-                      <th className="px-4 py-3 font-medium">Description</th>
-                      <th className="px-4 py-3 font-medium">Qty</th>
-                      <th className="px-4 py-3 font-medium">Unit Price</th>
-                      <th className="px-4 py-3 font-medium">Line Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(invoice.lines ?? []).map((line, index) => (
-                      <tr key={line.id} className="border-t border-slate-100">
-                        <td className="px-4 py-3 text-slate-500">{index + 1}</td>
-                        <td className="px-4 py-3 text-slate-900">
-                          {line.description || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-right text-slate-700">
-                          {line.quantity}
-                        </td>
-                        <td className="px-4 py-3 text-right text-slate-700">
-                          {line.unit_price}
-                        </td>
-                        <td className="px-4 py-3 text-right font-medium text-slate-900">
-                          {line.line_total}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Activity Timeline */}
+          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+            <h3 className="mb-4 text-sm font-semibold text-gray-800">Activity</h3>
+            <ActivityTimeline
+              key={activityKey}
+              activityUrl={`/invoices/${id}/activity/?company=${currentOrganizationId}`}
+            />
+          </div>
         </div>
 
-        <div className="space-y-6 xl:col-span-4">
-          <Card className="rounded-3xl border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-slate-900">Totals</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Subtotal</span>
-                <span className="font-medium text-slate-900">{invoice.subtotal}</span>
-              </div>
+        {/* Amounts */}
+        <div className="h-fit rounded-2xl border bg-white p-5 shadow-sm">
+          <h3 className="mb-4 text-sm font-semibold text-gray-800">Amounts</h3>
 
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Total</span>
-                <span className="text-lg font-semibold text-slate-900">{invoice.total}</span>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Subtotal</span>
+              <span>{invoice.subtotal}</span>
+            </div>
 
-          <Card className="rounded-3xl border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-slate-900">PDF status</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Needs regeneration</span>
-                <span className="font-medium text-slate-900">
-                  {invoice.pdf_needs_regeneration ? "Yes" : "No"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Generated at</span>
-                <span className="font-medium text-slate-900">
-                  {invoice.pdf_generated_at
-                    ? new Date(invoice.pdf_generated_at).toLocaleString()
-                    : "—"}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-3xl border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-slate-900">Quick actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start rounded-2xl">
-                <Mail className="mr-2 h-4 w-4" />
-                Send by email
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start rounded-2xl">
-                    <MoreHorizontal className="mr-2 h-4 w-4" />
-                    More actions
-                  </Button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem>Duplicate invoice</DropdownMenuItem>
-                  <DropdownMenuItem>Mark as sent</DropdownMenuItem>
-                  <DropdownMenuItem>Download PDF</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </CardContent>
-          </Card>
+            <div className="flex justify-between border-t pt-3 text-base font-semibold">
+              <span>Total</span>
+              <span>{invoice.total}</span>
+            </div>
+          </div>
         </div>
       </div>
-      {events.length > 0 && <DocumentTimeline events={events} />}
     </div>
   )
 }
-
-const events = [
-  {
-    id: 1,    
-    event_type: "created",
-    created_at: "2024-01-01T10:00:00Z",
-  },
-  {
-    id: 2,
-    event_type: "pdf_generated",
-    created_at: "2024-01-02T12:00:00Z",
-  },
-  {
-    id: 3,
-    event_type: "email_sent",
-    created_at: "2024-01-03T14:00:00Z",
-    metadata: {
-      email: "customer@example.com",
-    },
-  },  
-  {
-    id: 4,
-    event_type: "status_changed", 
-    created_at: "2024-01-04T16:00:00Z",
-    metadata: {
-      from: "draft",
-      to: "sent",
-    },
-  },
-]
-
-export default InvoiceDetailPage

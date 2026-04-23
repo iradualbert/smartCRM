@@ -45,6 +45,7 @@ import ProformaDetailPage from "./pages/sales/proforma/ProformaDetailPage";
 import UpdateProformaPage from "./pages/sales/proforma/UpdateProformaPage";
 import CreateReceiptPage from "./pages/sales/receipts/CreateReceiptPage";
 import ReceiptDetailPage from "./pages/sales/receipts/ReceiptDetailPage";
+import ReceiptListPage from "./pages/sales/receipts/ReceiptListPage";
 import UpdateReceiptPage from "./pages/sales/receipts/UpdateReceiptPage";
 import CreateDeliveryNotePage from "./pages/sales/delivery-notes/CreateDeliveryNotePage";
 import DeliveryNoteDetailPage from "./pages/sales/delivery-notes/DeliveryNoteDetailPage";
@@ -56,6 +57,8 @@ import TemplateDetailPage from "./pages/sales/templates/TemplateDetailPage";
 import CreateTemplatePage from "./pages/sales/templates/CreateTemplatePage";
 import TemplateListPage from "./pages/sales/templates/TemplateListPage";
 import QuotationEmailPage from "./pages/sales/quotations/QuotationEmailPage";
+import InvoiceEmailPage from "./pages/sales/invoices/InvoiceEmailPage";
+import ProformaEmailPage from "./pages/sales/proforma/ProformaEmailPage";
 import OrganizationListPage from "@/pages/organizations/OrganizationListPage";
 import ProductDetailPage from "./pages/crm/products/ProductDetailPage";
 import ProductListPage from "./pages/crm/products/ProductListPage";
@@ -135,6 +138,7 @@ function App() {
               <Route path="/proformas/new" element={<CreateProformaPage />} />
               <Route path="/proformas/:id" element={<ProformaDetailPage />} />
               <Route path="/proformas/:id/edit" element={<UpdateProformaPage />} />
+              <Route path="/proformas/:id/email" element={<ProformaEmailPage />} />
 
 
 
@@ -146,9 +150,10 @@ function App() {
               <Route path="/invoices/new" element={<CreateInvoicePage />} />
               <Route path="/invoices/:id/edit" element={<UpdateInvoicePage />} />
               <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+              <Route path="/invoices/:id/email" element={<InvoiceEmailPage />} />
 
 
-              <Route path="/receipts" element={<ReceiptDetailPage />} />
+              <Route path="/receipts" element={<ReceiptListPage />} />
               <Route path="/receipts/new" element={<CreateReceiptPage />} />
               <Route path="/receipts/:id" element={<ReceiptDetailPage />} />
               <Route path="/receipts/:id/edit" element={<UpdateReceiptPage />} />

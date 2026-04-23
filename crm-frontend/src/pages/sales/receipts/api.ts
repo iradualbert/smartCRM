@@ -57,7 +57,7 @@ export type ReceiptPayload = {
   status?: ReceiptStatus
 }
 
-export async function listInvoices(params?: { search?: string }) {
+export async function listInvoices(params?: { company?: string | number; limit?: number; offset?: number; search?: string }) {
   const response = await axios.get<PaginatedResponse<Invoice>>("/invoices/", { params })
   return response.data
 }
@@ -72,7 +72,7 @@ export async function listReceiptTemplates() {
   }
 }
 
-export async function listReceipts(params?: { search?: string }) {
+export async function listReceipts(params?: { company?: string | number; limit?: number; offset?: number; search?: string; status?: string }) {
   const response = await axios.get<PaginatedResponse<Receipt>>("/receipts/", { params })
   return response.data
 }

@@ -103,7 +103,7 @@ export default function SideBar() {
       "--sidebar-w",
       collapsed ? "84px" : "280px"
     )
-    return () => document.documentElement.style.removeProperty("--sidebar-w")
+    return () => { document.documentElement.style.removeProperty("--sidebar-w") }
   }, [collapsed])
 
   return (

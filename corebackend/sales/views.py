@@ -13,7 +13,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
-from .services.document_email_sender import send_document_email_with_config
+from .services.email_smtp import send_document_email
 from .models_email import EmailSendingConfig
 from .services.email_template import build_email_draft_for_instance
 
@@ -71,6 +71,20 @@ class BaseModelViewSet(viewsets.ModelViewSet):
 class DocumentLifecycleMixin:
     document_type = None
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        company_id = self.request.query_params.get("company")
+        if company_id:
+            queryset = queryset.filter(company_id=company_id)
+        else:
+            user = self.request.user
+            if not user.is_superuser:
+                queryset = queryset.filter(
+                    company__memberships__user=user,
+                    company__memberships__is_active=True,
+                )
+        return queryset.distinct()
+
     def _build_download_filename(self, instance):
         customer_name = ""
         if hasattr(instance, "customer") and instance.customer:
@@ -97,6 +111,36 @@ class DocumentLifecycleMixin:
         parts = [customer_name or company_name, identifier]
         safe = "-".join(slugify(part) for part in parts if part)
         return f"{safe or identifier}.pdf"
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated], url_path="activity")
+    def activity(self, request, pk=None):
+        instance = self.get_object()
+        doc = getattr(instance, "document", None)
+        if not doc:
+            return Response([], status=status.HTTP_200_OK)
+
+        events = (
+            DocumentEvent.objects.filter(document=doc)
+            .select_related("created_by")
+            .order_by("-created_at")
+        )
+
+        payload = [
+            {
+                "id": event.id,
+                "event_type": event.event_type,
+                "created_at": event.created_at,
+                "created_by": (
+                    event.created_by.get_full_name() or event.created_by.email
+                    if event.created_by
+                    else ""
+                ),
+                "metadata": event.metadata or {},
+            }
+            for event in events
+        ]
+
+        return Response(payload, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
     def pdf(self, request, pk=None):
@@ -221,15 +265,10 @@ class DocumentLifecycleMixin:
 
         if not to_value:
             return Response({"detail": "Recipient email is required."}, status=status.HTTP_400_BAD_REQUEST)
-
         if not subject:
             return Response({"detail": "Subject is required."}, status=status.HTTP_400_BAD_REQUEST)
-
         if not body_html.strip():
             return Response({"detail": "Email body is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not sending_config_id:
-            return Response({"detail": "sending_config_id is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         def normalize_email_list(value):
             if value is None:
@@ -245,71 +284,76 @@ class DocumentLifecycleMixin:
         bcc_emails = normalize_email_list(bcc_value)
 
         if not to_emails:
-            return Response(
-                {"detail": "At least one recipient email is required."},
-                status=status.HTTP_400_BAD_REQUEST,
+            return Response({"detail": "At least one recipient email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Resolve sending config: explicit > org default > app default (None)
+        sending_config = None
+        if sending_config_id:
+            try:
+                sending_config = EmailSendingConfig.objects.get(pk=sending_config_id, is_active=True)
+            except EmailSendingConfig.DoesNotExist:
+                return Response({"detail": "Selected sending configuration was not found or is inactive."}, status=status.HTTP_404_NOT_FOUND)
+
+            user_can_use = (
+                sending_config.user_id == request.user.id
+                or (
+                    sending_config.company_id
+                    and CompanyMembership.objects.filter(
+                        company_id=sending_config.company_id,
+                        user=request.user,
+                        is_active=True,
+                    ).exists()
+                )
             )
+            if not user_can_use:
+                return Response({"detail": "You do not have permission to use this sending configuration."}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            # Fall back to the org's default config (marked is_default) or first active one
+            company = getattr(instance, "company", None)
+            if company:
+                sending_config = (
+                    EmailSendingConfig.objects.filter(company=company, is_active=True, is_default=True).first()
+                    or EmailSendingConfig.objects.filter(company=company, is_active=True).first()
+                )
+            # sending_config may still be None → Django default email backend will be used
+
+        doc = getattr(instance, "document", None)
+        doc_file = doc.file if doc else None
 
         try:
-            sending_config = EmailSendingConfig.objects.get(
-                pk=sending_config_id,
-                is_active=True,
+            email_log = send_document_email(
+                instance=instance,
+                config=sending_config,
+                subject=subject,
+                body_html=body_html,
+                to=to_emails,
+                cc=cc_emails,
+                bcc=bcc_emails,
+                include_attachment=bool(include_attachment),
+                document_file=doc_file,
+                document=doc if include_attachment else None,
+                sent_by=request.user,
             )
-        except EmailSendingConfig.DoesNotExist:
-            return Response(
-                {"detail": "Selected sending configuration was not found or is inactive."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        except Exception as exc:
+            return Response({"detail": f"Failed to send email: {exc}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        user_can_use_config = False
-
-        if sending_config.user_id == request.user.id:
-            user_can_use_config = True
-        elif (
-            sending_config.company_id
-            and CompanyMembership.objects.filter(
-                company_id=sending_config.company_id,
-                user=request.user,
-                is_active=True,
-            ).exists()
-        ):
-            user_can_use_config = True
-
-        if not user_can_use_config:
-            return Response(
-                {"detail": "You do not have permission to use this sending configuration."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        sent_count = send_document_email_with_config(
-            config=sending_config,
-            subject=subject,
-            body_html=body_html,
-            to=to_emails,
-            cc=cc_emails,
-            bcc=bcc_emails,
-            include_attachment=bool(include_attachment),
-            document_file=instance.document.file if getattr(instance, "document", None) else None,
-        )
+        # Auto-update document status to "sent" if currently draft
+        if hasattr(instance, "status") and instance.status == "draft":
+            instance.status = "sent"
+            instance.save(update_fields=["status", "updated_at"])
 
         log_event(
             instance,
             "email_sent",
-            metadata={
-                "to": to_emails,
-                "cc": cc_emails,
-                "bcc": bcc_emails,
-                "include_attachment": bool(include_attachment),
-                "sent_count": sent_count,
-            },
+            metadata={"to": to_emails, "cc": cc_emails, "include_attachment": bool(include_attachment)},
             user=request.user,
         )
 
         return Response(
             {
                 "detail": "Email sent successfully.",
-                "sent_count": sent_count,
-                "used_sending_config_id": sending_config.id,
+                "used_sending_config_id": sending_config.id if sending_config else None,
+                "used_default_config": sending_config is None,
                 "include_attachment": bool(include_attachment),
             },
             status=status.HTTP_200_OK,
@@ -653,6 +697,86 @@ class ProformaViewSet(DocumentLifecycleMixin, BaseModelViewSet):
         "quotation", "customer", "company", "document", "selected_template", "created_by", "updated_by"
     ).prefetch_related("lines").all().order_by("-created_at")
     serializer_class = ProformaSerializer
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated], url_path="create-invoice")
+    def create_invoice(self, request, pk=None):
+        proforma = self.get_object()
+
+        existing = Invoice.objects.filter(proforma=proforma).order_by("created_at").first()
+        if existing:
+            return Response(
+                {
+                    "detail": "Invoice already exists for this proforma.",
+                    "invoice_id": existing.id,
+                    "invoice_number": existing.invoice_number,
+                    "existing": True,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        if not proforma.company_id:
+            return Response(
+                {"detail": "Proforma must belong to a company."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        invoice_number = _next_document_number(
+            company=proforma.company,
+            field_name="invoice_number",
+            prefix=proforma.company.invoice_prefix or "INV",
+        )
+
+        with transaction.atomic():
+            invoice = Invoice.objects.create(
+                proforma=proforma,
+                customer=proforma.customer,
+                company=proforma.company,
+                currency=proforma.currency,
+                selected_template=None,
+                invoice_number=invoice_number,
+                status=Invoice.Status.DRAFT,
+                issue_date=proforma.issue_date,
+                valid_until=proforma.valid_until,
+                tax_mode=proforma.tax_mode,
+                tax_label=proforma.tax_label,
+                tax_rate=proforma.tax_rate,
+                created_by=request.user,
+                updated_by=request.user,
+            )
+
+            for line in proforma.lines.all():
+                InvoiceLine.objects.create(
+                    invoice=invoice,
+                    product=line.product,
+                    description=line.description,
+                    quantity=line.quantity,
+                    unit_price=line.unit_price,
+                    created_by=request.user,
+                    updated_by=request.user,
+                )
+
+            invoice.recalculate_totals()
+
+            log_event(
+                proforma,
+                "converted",
+                metadata={
+                    "to": "invoice",
+                    "invoice_id": invoice.id,
+                    "invoice_number": invoice.invoice_number,
+                },
+                user=request.user,
+            )
+
+        return Response(
+            {
+                "detail": "Invoice created successfully from proforma.",
+                "invoice_id": invoice.id,
+                "invoice_number": invoice.invoice_number,
+                "existing": False,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class ProformaLineViewSet(BaseModelViewSet):

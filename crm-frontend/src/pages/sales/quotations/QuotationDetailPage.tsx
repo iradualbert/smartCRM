@@ -6,6 +6,7 @@ import { useOrganizations } from "@/redux/hooks/useOrganizations"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import PdfActionsMenu from "@/shared/PdfActionsMenu"
+import ActivityTimeline from "@/components/ActivityTimeline"
 
 import {
   ArrowRight,
@@ -88,8 +89,12 @@ export default function QuotationDetailPage() {
     return <div className="p-6 text-sm text-red-500">Quotation not found.</div>
   }
 
+  const invoiceDetail = data.invoice_detail
+  const proformaDetail = data.proforma_detail
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 rounded-2xl border bg-white p-6 shadow-sm lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
@@ -135,7 +140,7 @@ export default function QuotationDetailPage() {
             Edit Quotation
           </Button>
 
-          {!data.proforma && (
+          {!proformaDetail && (
             <Button
               variant="outline"
               className="rounded-xl"
@@ -143,11 +148,11 @@ export default function QuotationDetailPage() {
               disabled={busyAction === "proforma"}
             >
               <FileText className="mr-2 h-4 w-4" />
-              Create Proforma
+              {busyAction === "proforma" ? "Creating…" : "Create Proforma"}
             </Button>
           )}
 
-          {!data.invoice && (
+          {!invoiceDetail && (
             <Button
               variant="outline"
               className="rounded-xl"
@@ -155,7 +160,7 @@ export default function QuotationDetailPage() {
               disabled={busyAction === "invoice"}
             >
               <ArrowRight className="mr-2 h-4 w-4" />
-              Create Invoice
+              {busyAction === "invoice" ? "Creating…" : "Create Invoice"}
             </Button>
           )}
         </div>
@@ -163,6 +168,7 @@ export default function QuotationDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
+          {/* Bill To */}
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <h3 className="mb-3 text-xs uppercase tracking-wide text-gray-500">Bill To</h3>
 
@@ -185,34 +191,64 @@ export default function QuotationDetailPage() {
             </div>
           </div>
 
-          {(data.invoice || data.proforma) && (
-            <div className="rounded-2xl border bg-white p-4 shadow-sm">
-              <h3 className="mb-3 text-sm font-medium text-gray-700">Related Documents</h3>
+          {/* Related Documents */}
+          {(invoiceDetail || proformaDetail) && (
+            <div className="rounded-2xl border bg-white p-5 shadow-sm">
+              <h3 className="mb-4 text-sm font-semibold text-gray-800">Related Documents</h3>
 
-              <div className="flex flex-wrap gap-3">
-                {data.proforma ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => navigate(`/proformas/${data.proforma}`)}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    View Proforma
-                  </Button>
-                ) : null}
+              <div className="flex flex-wrap gap-4">
+                {proformaDetail && (
+                  <div className="flex flex-1 min-w-[200px] flex-col gap-2 rounded-xl border bg-gray-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        Proforma
+                      </span>
+                      <Badge className={`text-xs ${statusColor[proformaDetail.status] || "bg-gray-100 text-gray-700"}`}>
+                        {proformaDetail.status}
+                      </Badge>
+                    </div>
+                    <p className="font-semibold text-gray-900">{proformaDetail.number}</p>
+                    <p className="text-sm text-gray-600">Total: {proformaDetail.total}</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-lg"
+                      onClick={() => navigate(`/proformas/${proformaDetail.id}`)}
+                    >
+                      <FileText className="mr-1.5 h-3.5 w-3.5" />
+                      View Proforma
+                    </Button>
+                  </div>
+                )}
 
-                {data.invoice ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => navigate(`/invoices/${data.invoice}`)}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    View Invoice
-                  </Button>
-                ) : null}
+                {invoiceDetail && (
+                  <div className="flex flex-1 min-w-[200px] flex-col gap-2 rounded-xl border bg-gray-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        Invoice
+                      </span>
+                      <Badge className={`text-xs ${statusColor[invoiceDetail.status] || "bg-gray-100 text-gray-700"}`}>
+                        {invoiceDetail.status}
+                      </Badge>
+                    </div>
+                    <p className="font-semibold text-gray-900">{invoiceDetail.number}</p>
+                    <p className="text-sm text-gray-600">Total: {invoiceDetail.total}</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-lg"
+                      onClick={() => navigate(`/invoices/${invoiceDetail.id}`)}
+                    >
+                      <FileText className="mr-1.5 h-3.5 w-3.5" />
+                      View Invoice
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
+          {/* Line Items */}
           <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs uppercase text-gray-600">
@@ -249,8 +285,17 @@ export default function QuotationDetailPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Activity Timeline */}
+          <div className="rounded-2xl border bg-white p-5 shadow-sm">
+            <h3 className="mb-4 text-sm font-semibold text-gray-800">Activity</h3>
+            <ActivityTimeline
+              activityUrl={`/quotations/${id}/activity/?company=${currentOrganizationId}`}
+            />
+          </div>
         </div>
 
+        {/* Amounts */}
         <div className="h-fit rounded-2xl border bg-white p-5 shadow-sm">
           <h3 className="mb-4 text-sm font-semibold text-gray-800">Amounts</h3>
 

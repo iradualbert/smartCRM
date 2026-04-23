@@ -74,7 +74,7 @@ export default function UpdateProformaPage() {
         mode="edit"
         initialProforma={proforma}
         initialValues={{
-          companyId: proforma.company ?? 1,
+          companyId: proforma.company ?? 0,
           quotation: proforma.quotation ?? null,
           customer: proforma.customer ?? null,
           proforma_number: proforma.proforma_number,

@@ -329,26 +329,6 @@ const InvoiceForm = ({
                     )}
                   />
 
-                  <Controller
-                    name="companyId"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel>Company Id</FieldLabel>
-                        <Input
-                          {...field}
-                          type="number"
-                          value={field.value ?? ""}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                          className="rounded-xl"
-                        />
-                        <FieldDescription>
-                          Replace with active company context later.
-                        </FieldDescription>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
                 </div>
               )}
 

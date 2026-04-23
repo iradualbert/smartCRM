@@ -4,7 +4,11 @@ import ReactMarkdown from "react-markdown";
 type MarkdownProps = React.ComponentProps<typeof ReactMarkdown>;
 
 function MarkdownParagraph(props: any) {
-  return <p className="leading-7 [&:not(:first-child)]:mt-4">{props.children}</p>;
+  return (
+    <p className="leading-7 text-slate-600 [&:not(:first-child)]:mt-4">
+      {props.children}
+    </p>
+  );
 }
 
 const MarkdownHeading = (props: any) => {
@@ -12,15 +16,35 @@ const MarkdownHeading = (props: any) => {
 
   switch (level) {
     case 1:
-      return <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">{children}</h1>;
+      return (
+        <h1 className="mt-8 text-3xl font-semibold tracking-tight text-slate-900">
+          {children}
+        </h1>
+      );
     case 2:
-      return <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">{children}</h2>;
+      return (
+        <h2 className="mt-10 border-b border-slate-200 pb-2 text-xl font-semibold text-slate-900">
+          {children}
+        </h2>
+      );
     case 3:
-      return <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">{children}</h3>;
+      return (
+        <h3 className="mt-6 text-lg font-medium text-slate-800">
+          {children}
+        </h3>
+      );
     case 4:
-      return <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">{children}</h4>;
+      return (
+        <h4 className="mt-4 text-base font-medium text-slate-700">
+          {children}
+        </h4>
+      );
     default:
-      return <h5 className="text-lg font-semibold tracking-tight">{children}</h5>;
+      return (
+        <h5 className="mt-4 text-sm font-medium text-slate-600">
+          {children}
+        </h5>
+      );
   }
 };
 
@@ -28,7 +52,7 @@ const MarkdownLink = (props: any) => {
   return (
     <a
       href={props.href}
-      className="font-medium text-primary underline underline-offset-4"
+      className="font-medium text-primary hover:underline"
       target="_blank"
       rel="noreferrer"
     >
@@ -38,13 +62,17 @@ const MarkdownLink = (props: any) => {
 };
 
 const MarkdownListItem = (props: any) => {
-  return <li className="ml-6 list-disc">{props.children}</li>;
+  return (
+    <li className="ml-5 list-disc text-slate-600 marker:text-slate-400">
+      {props.children}
+    </li>
+  );
 };
 
 function MarkdownTable(props: any) {
   return (
-    <div className="my-6 w-full overflow-y-auto">
-      <table className="w-full border-collapse border border-border text-sm">
+    <div className="my-6 w-full overflow-x-auto rounded-lg border border-slate-200">
+      <table className="w-full border-collapse text-sm">
         {props.children}
       </table>
     </div>
@@ -52,11 +80,19 @@ function MarkdownTable(props: any) {
 }
 
 function MarkdownTableCell(props: any) {
-  return <td className="border border-border px-4 py-2 align-top">{props.children}</td>;
+  return (
+    <td className="border-t border-slate-200 px-4 py-2 text-slate-600">
+      {props.children}
+    </td>
+  );
 }
 
 function MarkdownTableRow(props: any) {
-  return <tr className="even:bg-muted/50">{props.children}</tr>;
+  return (
+    <tr className="even:bg-slate-50">
+      {props.children}
+    </tr>
+  );
 }
 
 function MarkdownTableBody(props: any) {
@@ -64,11 +100,19 @@ function MarkdownTableBody(props: any) {
 }
 
 function MarkdownTableHead(props: any) {
-  return <thead className="bg-muted/50">{props.children}</thead>;
+  return (
+    <thead className="bg-slate-100">
+      {props.children}
+    </thead>
+  );
 }
 
 function MarkdownHeaderCell(props: any) {
-  return <th className="border border-border px-4 py-2 text-left font-medium">{props.children}</th>;
+  return (
+    <th className="px-4 py-2 text-left text-sm font-semibold text-slate-700">
+      {props.children}
+    </th>
+  );
 }
 
 const components = {
@@ -90,10 +134,5 @@ const components = {
 };
 
 export default function Markdown(props: MarkdownProps) {
-  return (
-    <ReactMarkdown
-      components={components}
-      {...props}
-    />
-  );
+  return <ReactMarkdown components={components} {...props} />;
 }

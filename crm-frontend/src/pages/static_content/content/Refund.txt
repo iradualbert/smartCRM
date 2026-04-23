@@ -1,18 +1,53 @@
+# Refund Policy
 
-Here at Beinpark,
+**Effective Date:** 22.04.2026
 
-we strive to make sending and scheduling emails a breeze. 
+Thank you for using Modura.
 
-However, since our service caters to digital communication needs, refunds are handled a little differently.
+---
 
-To ensure a smooth experience for all our users,  refunds are unavailable once you've used your credits for sending emails. This policy helps us maintain a reliable and cost-effective service for everyone.
+## 1. Subscription Fees
 
+Modura operates on a subscription-based model.
 
+All subscription fees are billed in advance.
 
-We prioritize transparency and want you to make an informed decision.  
+---
 
-If you have any questions before purchasing credits, please don't hesitate to reach out to our friendly support team at support@beinpark.com !
+## 2. Refunds
 
-Your understanding is appreciated. 
+Payments are generally **non-refundable**.
 
-We're here to help you streamline your communication – let's get started!
+However, refunds may be issued in limited cases such as:
+
+- Duplicate charges  
+- Billing errors  
+- Service unavailability caused by us  
+
+All refund requests are reviewed on a case-by-case basis.
+
+---
+
+## 3. Cancellation
+
+You may cancel your subscription at any time.
+
+- Your subscription remains active until the end of the billing period  
+- No future charges will occur after cancellation  
+
+---
+
+## 4. Free Trial (If Applicable)
+
+If a free trial is offered:
+
+- You will not be charged until the trial ends  
+- You may cancel at any time before billing begins  
+
+---
+
+## 5. Contact
+
+For billing or refund inquiries:
+
+**support@modura.app**

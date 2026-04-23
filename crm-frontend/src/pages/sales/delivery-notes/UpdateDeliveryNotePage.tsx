@@ -57,7 +57,7 @@ export default function UpdateDeliveryNotePage() {
         mode="edit"
         initialDeliveryNote={deliveryNote}
         initialValues={{
-          companyId: deliveryNote.company ?? 1,
+          companyId: deliveryNote.company ?? 0,
           invoice: deliveryNote.invoice,
           delivery_note_number: deliveryNote.delivery_note_number,
           delivery_date: deliveryNote.delivery_date,

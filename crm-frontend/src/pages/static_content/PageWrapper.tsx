@@ -17,16 +17,27 @@ const PageWrapper = ({ md, pageTitle }: PageWrapperProps) => {
   }, [md]);
 
   return (
-    <div className="mt-10 flex w-full flex-col items-center py-10">
-      <PageTitle title={pageTitle} />
+    <div className="min-h-screen bg-slate-50 py-16">
+      <div className="mx-auto w-full max-w-3xl px-6">
+        
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <PageTitle title={pageTitle} />
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+            {pageTitle}
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Last updated: {new Date().toLocaleDateString()}
+          </p>
+        </div>
 
-      <h1 className="mb-10 border-b-4 pb-2 text-3xl font-bold tracking-tight md:text-4xl">
-        {pageTitle}
-      </h1>
+        {/* Content */}
+        <main className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm md:p-10">
+          <Markdown>{content}</Markdown>
+        </main>
 
-      <main className="w-full max-w-[1000px] px-4">
-        <Markdown>{content}</Markdown>
-      </main>
+        
+      </div>
     </div>
   );
 };

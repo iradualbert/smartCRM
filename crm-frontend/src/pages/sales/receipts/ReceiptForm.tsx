@@ -5,7 +5,7 @@ import * as z from "zod"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { listInvoices, listReceiptTemplates, type Invoice, type Receipt, type ReceiptStatus, type Template } from "./api"
 
@@ -32,6 +32,7 @@ function makeReceiptNumber() {
 
 type ReceiptFormProps = {
   mode: "create" | "edit"
+  companyId: number
   initialValues?: Partial<ReceiptFormValues>
   initialReceipt?: Receipt | null
   onSubmit: (values: ReceiptFormValues) => Promise<void>
@@ -41,6 +42,7 @@ type ReceiptFormProps = {
 
 export default function ReceiptForm({
   mode,
+  companyId,
   initialValues,
   initialReceipt,
   onSubmit,
@@ -54,7 +56,7 @@ export default function ReceiptForm({
   const form = useForm<ReceiptFormValues>({
     resolver: zodResolver(receiptFormSchema),
     defaultValues: {
-      companyId: initialValues?.companyId ?? 1,
+      companyId: initialValues?.companyId ?? companyId,
       invoice: initialValues?.invoice ?? 0,
       receipt_number: initialValues?.receipt_number ?? makeReceiptNumber(),
       amount_paid: initialValues?.amount_paid ?? "",
@@ -65,16 +67,17 @@ export default function ReceiptForm({
   })
 
   React.useEffect(() => {
+    if (!companyId) return
     const run = async () => {
       const [invoicesRes, templatesRes] = await Promise.all([
-        listInvoices(),
+        listInvoices({ company: companyId }),
         listReceiptTemplates(),
       ])
       setInvoices(invoicesRes.results)
       setTemplates(templatesRes.results)
     }
     run()
-  }, [])
+  }, [companyId])
 
   const handleSubmit = async (values: ReceiptFormValues) => {
     setSubmitError(null)
@@ -212,23 +215,6 @@ export default function ReceiptForm({
               )}
             />
 
-            <Controller
-              name="companyId"
-              control={form.control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>Company Id</FieldLabel>
-                  <Input
-                    {...field}
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    className="rounded-xl"
-                  />
-                  <FieldDescription>Replace later with company context.</FieldDescription>
-                </Field>
-              )}
-            />
           </CardContent>
         </Card>
       </div>

@@ -12,12 +12,14 @@ PLACEHOLDER_PATTERN = re.compile(r"\[\[([A-Za-z0-9_]+)\]\]")
 
 
 def load_default_email_template(document_type: str) -> str:
-    path = Path(settings.BASE_DIR) / "sales" / "default" / f"{document_type}_email_template.html"
-    if not path.exists():
-        raise FileNotFoundError(
-            f"Default email template not found for document_type='{document_type}' at '{path}'."
-        )
-    return path.read_text(encoding="utf-8")
+    base = Path(settings.BASE_DIR) / "sales" / "default"
+    for ext in (".html", ".md"):
+        path = base / f"{document_type}_email_template{ext}"
+        if path.exists():
+            return path.read_text(encoding="utf-8")
+    raise FileNotFoundError(
+        f"Default email template not found for document_type='{document_type}'."
+    )
 
 
 def parse_email_template(content: str) -> dict[str, str]:
@@ -69,7 +71,10 @@ def _get_company_and_customer(instance, document_type: str):
 
     elif document_type == "invoice":
         proforma = getattr(instance, "proforma", None)
-        customer = getattr(proforma, "customer", None) if proforma else None
+        customer = (
+            getattr(instance, "customer", None)
+            or (getattr(proforma, "customer", None) if proforma else None)
+        )
         company = getattr(instance, "company", None) or getattr(proforma, "company", None)
 
     elif document_type == "receipt":

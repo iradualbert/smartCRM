@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@/components/ui/field"
@@ -323,23 +322,6 @@ export default function ProformaForm({
                     )}
                   />
 
-                  <Controller
-                    name="companyId"
-                    control={control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>Company Id</FieldLabel>
-                        <Input
-                          {...field}
-                          type="number"
-                          value={field.value ?? ""}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                          className="rounded-xl"
-                        />
-                        <FieldDescription>Replace later with active company context.</FieldDescription>
-                      </Field>
-                    )}
-                  />
                 </div>
               )}
 

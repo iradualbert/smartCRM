@@ -307,10 +307,8 @@ class QuotationSerializer(UserStampMixin, serializers.ModelSerializer):
     customer_phone = serializers.CharField(source="customer.phone_number", read_only=True)
     customer_address = serializers.CharField(source="customer.address", read_only=True)
 
-    invoice_id = serializers.SerializerMethodField()
-    invoice_number = serializers.SerializerMethodField()
-    proforma_id = serializers.SerializerMethodField()
-    proforma_number = serializers.SerializerMethodField()
+    invoice_detail = serializers.SerializerMethodField()
+    proforma_detail = serializers.SerializerMethodField()
 
     class Meta:
         model = Quotation
@@ -327,21 +325,27 @@ class QuotationSerializer(UserStampMixin, serializers.ModelSerializer):
             "updated_by",
         )
 
-    def get_invoice_id(self, obj):
+    def get_invoice_detail(self, obj):
         invoice = obj.invoices.order_by("created_at").first()
-        return invoice.id if invoice else None
+        if not invoice:
+            return None
+        return {
+            "id": invoice.id,
+            "number": invoice.invoice_number,
+            "status": invoice.status,
+            "total": str(invoice.total),
+        }
 
-    def get_invoice_number(self, obj):
-        invoice = obj.invoices.order_by("created_at").first()
-        return invoice.invoice_number if invoice else None
-
-    def get_proforma_id(self, obj):
+    def get_proforma_detail(self, obj):
         proforma = obj.proformas.order_by("created_at").first()
-        return proforma.id if proforma else None
-
-    def get_proforma_number(self, obj):
-        proforma = obj.proformas.order_by("created_at").first()
-        return proforma.proforma_number if proforma else None
+        if not proforma:
+            return None
+        return {
+            "id": proforma.id,
+            "number": proforma.proforma_number,
+            "status": proforma.status,
+            "total": str(proforma.total),
+        }
 
     def create(self, validated_data):
         return super().create(self._set_user_fields(validated_data))
@@ -352,6 +356,10 @@ class QuotationSerializer(UserStampMixin, serializers.ModelSerializer):
 
 class ProformaSerializer(UserStampMixin, serializers.ModelSerializer):
     lines = ProformaLineSerializer(many=True, read_only=True)
+
+    customer_name = serializers.CharField(source="customer.name", read_only=True)
+    customer_email = serializers.EmailField(source="customer.email", read_only=True)
+    customer_address = serializers.CharField(source="customer.address", read_only=True)
 
     class Meta:
         model = Proforma
@@ -376,6 +384,10 @@ class ProformaSerializer(UserStampMixin, serializers.ModelSerializer):
 
 class InvoiceSerializer(UserStampMixin, serializers.ModelSerializer):
     lines = InvoiceLineSerializer(many=True, read_only=True)
+
+    customer_name = serializers.CharField(source="customer.name", read_only=True)
+    customer_email = serializers.EmailField(source="customer.email", read_only=True)
+    customer_address = serializers.CharField(source="customer.address", read_only=True)
 
     class Meta:
         model = Invoice
