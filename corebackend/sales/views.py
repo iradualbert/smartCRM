@@ -1,12 +1,7 @@
-from datetime import timezone
-from decimal import Decimal
-import os
-
 from django.contrib.auth.models import User
 from django.http import FileResponse, Http404
 from django.db import transaction
 from django.db import models
-from django.utils.text import slugify
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -14,6 +9,12 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from billing.services.utils import (
+    can_create_document,
+    can_send_email,
+    increment_documents_created,
+    increment_emails_sent,
+)
 from .services.email_smtp import send_document_email
 from .models_email import EmailSendingConfig
 from .services.email_template import build_email_draft_for_instance
@@ -54,6 +55,7 @@ from .serializers import (
     TemplateSerializer,
 )
 from .services.document_generation import (
+    build_document_filename,
     file_exists,
     generate_document_for_instance,
     get_existing_document_or_raise,
@@ -137,6 +139,8 @@ class OrganizationScopedLineItemMixin(OrganizationScopeMixin):
 
 class DocumentLifecycleMixin(OrganizationScopeMixin):
     document_type = None
+    document_number_field = None
+    document_prefix_attr = None
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -145,15 +149,44 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
         return queryset.distinct()
 
     def perform_create(self, serializer):
+        company = serializer.validated_data.get("company")
+        if company:
+            self._assert_company_access(company.id)
+            allowed, message = can_create_document(company)
+            if not allowed:
+                raise ValidationError(message)
+
+        if company and self.document_number_field and self.document_prefix_attr:
+            serializer.validated_data[self.document_number_field] = _next_document_number(
+                company=company,
+                field_name=self.document_number_field,
+                prefix=getattr(company, self.document_prefix_attr) or "",
+                provided_value=serializer.validated_data.get(self.document_number_field),
+            )
+
         instance = serializer.save(
             created_by=self.request.user,
             updated_by=self.request.user,
         )
+        if company:
+            increment_documents_created(company)
         log_event(instance, "created", user=self.request.user)
 
     def perform_update(self, serializer):
         instance = serializer.instance
         old_status = getattr(instance, "status", None)
+        company = serializer.validated_data.get("company") or getattr(instance, "company", None)
+
+        if company:
+            self._assert_company_access(company.id)
+
+        if company and self.document_number_field and self.document_number_field in serializer.validated_data:
+            serializer.validated_data[self.document_number_field] = _next_document_number(
+                company=company,
+                field_name=self.document_number_field,
+                prefix=getattr(company, self.document_prefix_attr) or "",
+                provided_value=serializer.validated_data.get(self.document_number_field),
+            )
 
         updated = serializer.save(updated_by=self.request.user)
 
@@ -173,31 +206,7 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
             )
 
     def _build_download_filename(self, instance):
-        customer_name = ""
-        if hasattr(instance, "customer") and instance.customer:
-            customer_name = instance.customer.name
-        elif hasattr(instance, "proforma") and instance.proforma and instance.proforma.customer:
-            customer_name = instance.proforma.customer.name
-        elif (
-            hasattr(instance, "invoice")
-            and instance.invoice
-            and instance.invoice.customer
-        ):
-            customer_name = instance.invoice.customer.name
-
-        company_name = instance.company.name if getattr(instance, "company", None) else ""
-        identifier = (
-            getattr(instance, "quote_number", None)
-            or getattr(instance, "proforma_number", None)
-            or getattr(instance, "invoice_number", None)
-            or getattr(instance, "receipt_number", None)
-            or getattr(instance, "delivery_note_number", None)
-            or f"{self.document_type}-{instance.pk}"
-        )
-
-        parts = [customer_name or company_name, identifier]
-        safe = "-".join(slugify(part) for part in parts if part)
-        return f"{safe or identifier}.pdf"
+        return build_document_filename(instance, document_type=self.document_type)
 
     @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated], url_path="activity")
     def activity(self, request, pk=None):
@@ -399,6 +408,12 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
         doc = getattr(instance, "document", None)
         doc_file = doc.file if doc else None
 
+        company = getattr(instance, "company", None)
+        if company:
+            allowed, message = can_send_email(company)
+            if not allowed:
+                return Response({"detail": message}, status=status.HTTP_403_FORBIDDEN)
+
         try:
             email_log = send_document_email(
                 instance=instance,
@@ -427,6 +442,8 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
             metadata={"to": to_emails, "cc": cc_emails, "include_attachment": bool(include_attachment)},
             user=request.user,
         )
+        if company:
+            increment_emails_sent(company)
 
         return Response(
             {
@@ -489,6 +506,8 @@ class TemplateViewSet(BaseModelViewSet):
 class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     company_lookup = "company"
     document_type = "quotation"
+    document_number_field = "quote_number"
+    document_prefix_attr = "quotation_prefix"
     queryset = Quotation.objects.select_related(
         "customer", "company", "document", "selected_template", "created_by", "updated_by"
     ).prefetch_related("lines", "proformas", "invoices").all().order_by("-created_at")
@@ -518,21 +537,24 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
 
     def perform_create(self, serializer):
         company = serializer.validated_data["company"]
-        quote_number = serializer.validated_data.get("quote_number")
+        self._assert_company_access(company.id)
+        allowed, message = can_create_document(company)
+        if not allowed:
+            raise ValidationError(message)
 
-        if not quote_number:
-            quote_number = _next_document_number(
-                company=company,
-                field_name="quote_number",
-                prefix=company.quotation_prefix or "QUO",
-            )
+        quote_number = _next_document_number(
+            company=company,
+            field_name="quote_number",
+            prefix=company.quotation_prefix or "QUO",
+            provided_value=serializer.validated_data.get("quote_number"),
+        )
 
         instance = serializer.save(
             quote_number=quote_number,
             created_by=self.request.user,
             updated_by=self.request.user,
         )
-        
+        increment_documents_created(company)
 
         log_event(
             instance,
@@ -544,6 +566,16 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     def perform_update(self, serializer):
         instance = serializer.instance
         old_status = instance.status
+        company = serializer.validated_data.get("company") or instance.company
+        self._assert_company_access(company.id)
+
+        if "quote_number" in serializer.validated_data:
+            serializer.validated_data["quote_number"] = _next_document_number(
+                company=company,
+                field_name="quote_number",
+                prefix=company.quotation_prefix or "QUO",
+                provided_value=serializer.validated_data.get("quote_number"),
+            )
 
         updated = serializer.save(updated_by=self.request.user)
 
@@ -610,6 +642,9 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
                 {"detail": "Quotation must belong to a company."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        allowed, message = can_create_document(quotation.company)
+        if not allowed:
+            return Response({"detail": message}, status=status.HTTP_403_FORBIDDEN)
 
         proforma_number = _next_document_number(
             company=quotation.company,
@@ -647,6 +682,7 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
                 )
 
             proforma.recalculate_totals()
+            increment_documents_created(quotation.company)
             log_event(
                 proforma,
                 "created",
@@ -696,6 +732,9 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
                 {"detail": "Quotation must belong to a company."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        allowed, message = can_create_document(quotation.company)
+        if not allowed:
+            return Response({"detail": message}, status=status.HTTP_403_FORBIDDEN)
 
         invoice_number = _next_document_number(
             company=quotation.company,
@@ -735,6 +774,7 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
                 )
 
             invoice.recalculate_totals()
+            increment_documents_created(quotation.company)
             log_event(
                 invoice,
                 "created",
@@ -802,6 +842,8 @@ class QuotationLineViewSet(OrganizationScopedLineItemMixin, BaseModelViewSet):
 
 class ProformaViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     document_type = "proforma"
+    document_number_field = "proforma_number"
+    document_prefix_attr = "proforma_prefix"
     queryset = Proforma.objects.select_related(
         "quotation", "customer", "company", "document", "selected_template", "created_by", "updated_by"
     ).prefetch_related("lines").all().order_by("-created_at")
@@ -828,6 +870,9 @@ class ProformaViewSet(DocumentLifecycleMixin, BaseModelViewSet):
                 {"detail": "Proforma must belong to a company."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        allowed, message = can_create_document(proforma.company)
+        if not allowed:
+            return Response({"detail": message}, status=status.HTTP_403_FORBIDDEN)
 
         invoice_number = _next_document_number(
             company=proforma.company,
@@ -865,6 +910,7 @@ class ProformaViewSet(DocumentLifecycleMixin, BaseModelViewSet):
                 )
 
             invoice.recalculate_totals()
+            increment_documents_created(proforma.company)
             log_event(
                 invoice,
                 "created",
@@ -928,6 +974,8 @@ class ProformaLineViewSet(OrganizationScopedLineItemMixin, BaseModelViewSet):
 
 class InvoiceViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     document_type = "invoice"
+    document_number_field = "invoice_number"
+    document_prefix_attr = "invoice_prefix"
     queryset = Invoice.objects.select_related(
         "proforma", "quotation", "customer", "company", "document", "selected_template", "created_by", "updated_by"
     ).prefetch_related("lines").all().order_by("-created_at")
@@ -968,6 +1016,8 @@ class InvoiceLineViewSet(OrganizationScopedLineItemMixin, BaseModelViewSet):
 
 class ReceiptViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     document_type = "receipt"
+    document_number_field = "receipt_number"
+    document_prefix_attr = "receipt_prefix"
     queryset = Receipt.objects.select_related(
         "invoice", "company", "document", "selected_template", "created_by", "updated_by"
     ).all().order_by("-created_at")
@@ -976,6 +1026,8 @@ class ReceiptViewSet(DocumentLifecycleMixin, BaseModelViewSet):
 
 class DeliveryNoteViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     document_type = "delivery_note"
+    document_number_field = "delivery_note_number"
+    document_prefix_attr = "delivery_note_prefix"
     queryset = DeliveryNote.objects.select_related(
         "invoice", "company", "document", "selected_template", "created_by", "updated_by"
     ).prefetch_related("lines").all().order_by("-created_at")

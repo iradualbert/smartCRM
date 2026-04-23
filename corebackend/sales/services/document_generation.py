@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 from pathlib import Path
 
@@ -6,6 +7,7 @@ from django.core.files import File
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+from billing.services.utils import adjust_storage_usage, can_generate_pdf, can_store_additional_bytes
 from ..models import CURRENCY_SYMBOL_MAP, Document, Template
 from ..template_mapper_utils import (
     build_standard_sales_document_data,
@@ -38,6 +40,72 @@ def get_company_payload(company):
         "email": company.email or "",
         "phone": company.phone or "",
     }
+
+
+DOCUMENT_FILENAME_TYPE_MAP = {
+    "quotation": "quote",
+    "proforma": "proforma",
+    "invoice": "invoice",
+    "receipt": "receipt",
+    "delivery_note": "delivery_note",
+}
+
+
+def infer_document_type(instance) -> str:
+    model_name = instance.__class__.__name__.lower()
+    mapping = {
+        "quotation": "quotation",
+        "proforma": "proforma",
+        "invoice": "invoice",
+        "receipt": "receipt",
+        "deliverynote": "delivery_note",
+    }
+    if model_name not in mapping:
+        raise ValidationError(f"Unsupported document instance type '{instance.__class__.__name__}'.")
+    return mapping[model_name]
+
+
+def get_document_identifier(instance) -> str:
+    return (
+        getattr(instance, "quote_number", None)
+        or getattr(instance, "proforma_number", None)
+        or getattr(instance, "invoice_number", None)
+        or getattr(instance, "receipt_number", None)
+        or getattr(instance, "delivery_note_number", None)
+        or str(instance.pk)
+    )
+
+
+def get_document_customer_name(instance) -> str:
+    customer = getattr(instance, "customer", None)
+    if customer and getattr(customer, "name", None):
+        return customer.name
+
+    proforma = getattr(instance, "proforma", None)
+    if proforma and getattr(proforma, "customer", None) and getattr(proforma.customer, "name", None):
+        return proforma.customer.name
+
+    invoice = getattr(instance, "invoice", None)
+    if invoice and getattr(invoice, "customer", None) and getattr(invoice.customer, "name", None):
+        return invoice.customer.name
+    if invoice and getattr(invoice, "proforma", None) and getattr(invoice.proforma, "customer", None):
+        return invoice.proforma.customer.name
+
+    return "customer"
+
+
+def sanitize_filename_part(value: str) -> str:
+    normalized = re.sub(r"[^A-Za-z0-9_-]+", "_", (value or "").strip())
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+    return normalized or "document"
+
+
+def build_document_filename(instance, document_type: str | None = None) -> str:
+    resolved_type = document_type or infer_document_type(instance)
+    filename_type = DOCUMENT_FILENAME_TYPE_MAP.get(resolved_type, resolved_type)
+    identifier = sanitize_filename_part(get_document_identifier(instance))
+    customer_name = sanitize_filename_part(get_document_customer_name(instance))
+    return f"{filename_type}_{identifier}_{customer_name}.pdf"
 
 
 def get_template_for_instance(instance, document_type: str):
@@ -291,7 +359,7 @@ def create_or_replace_document(instance, template, pdf_path, user=None, force=Fa
         )
 
     with open(pdf_path, "rb") as pdf_file:
-        filename = os.path.basename(pdf_path)
+        filename = build_document_filename(instance)
         document.file.save(filename, File(pdf_file), save=True)
 
     instance.document = document
@@ -306,6 +374,12 @@ def create_or_replace_document(instance, template, pdf_path, user=None, force=Fa
 def generate_document_for_instance(instance, document_type, user=None, force=False):
     if instance.document and file_exists(instance.document.file) and not force:
         return instance.document, False
+
+    company = getattr(instance, "company", None)
+    if company:
+        allowed, message = can_generate_pdf(company)
+        if not allowed:
+            raise ValidationError(message)
 
     template = get_template_for_instance(instance, document_type)
     if not template or not template.file:
@@ -325,6 +399,16 @@ def generate_document_for_instance(instance, document_type, user=None, force=Fal
             document_type=document_type,
         )
 
+        previous_size = 0
+        if instance.document and file_exists(instance.document.file):
+            previous_size = instance.document.file.size or 0
+
+        new_size = output_pdf_path.stat().st_size
+        if company:
+            allowed, message = can_store_additional_bytes(company, max(new_size - previous_size, 0))
+            if not allowed:
+                raise ValidationError(message)
+
         document = create_or_replace_document(
             instance=instance,
             template=template,
@@ -332,6 +416,9 @@ def generate_document_for_instance(instance, document_type, user=None, force=Fal
             user=user,
             force=force,
         )
+
+        if company:
+            adjust_storage_usage(company, new_size - previous_size)
 
     return document, True
 

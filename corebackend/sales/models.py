@@ -77,6 +77,11 @@ class Company(TimeStampedModel):
     proforma_prefix = models.CharField(max_length=20, default="PRO")
     receipt_prefix = models.CharField(max_length=20, default="REC")
     delivery_note_prefix = models.CharField(max_length=20, default="DN")
+    next_invoice_number = models.PositiveIntegerField(default=1)
+    next_quotation_number = models.PositiveIntegerField(default=1)
+    next_proforma_number = models.PositiveIntegerField(default=1)
+    next_receipt_number = models.PositiveIntegerField(default=1)
+    next_delivery_note_number = models.PositiveIntegerField(default=1)
     storage_used_bytes = models.BigIntegerField(default=0)
 
     is_active = models.BooleanField(default=True)

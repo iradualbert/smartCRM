@@ -35,7 +35,14 @@ export default function InvoiceEmailPage() {
       setSuccess(null)
       await axios.post(
         `/invoices/${id}/send-email/?company=${currentOrganizationId}`,
-        payload,
+        {
+          to: payload.to,
+          cc: payload.cc ? payload.cc.split(",").map((v) => v.trim()).filter(Boolean) : [],
+          subject: payload.subject,
+          body_html: payload.bodyHtml,
+          include_attachment: payload.includeAttachment,
+          ...(payload.sendingConfigId ? { sending_config_id: payload.sendingConfigId } : {}),
+        },
         { withCredentials: true }
       )
       setSuccess("Invoice email sent successfully.")

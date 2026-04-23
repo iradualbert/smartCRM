@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.shortcuts import redirect, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import generics, permissions
 from rest_framework.response import Response
@@ -19,11 +20,53 @@ from googleapiclient.discovery import build
 from .utils import send_confirmation_email, send_mail_verification_code, send_password_reset_email
 from .tokens import account_activation_token
 from django.contrib.sites.shortcuts import get_current_site
+from billing.services.utils import ensure_free_subscription
+from sales.models import Company, CompanyMembership
 import os 
 
 
 CLIENT_SECRETS_FILE = os.environ.get("CLIENT_SECRETS_FILE", "client_secret.json")
 # redirect_uri = "http://localhost:8000/api/accounts/auth2callback"
+
+
+def _default_company_name(user):
+    display_name = (user.first_name or "").strip() or user.email.split("@")[0]
+    suffix = "'" if display_name.endswith("s") else "'s"
+    return f"{display_name}{suffix} Organization"
+
+
+@transaction.atomic
+def _ensure_signup_onboarding(user):
+    Account.objects.get_or_create(user=user)
+
+    membership = (
+        CompanyMembership.objects.select_related("company")
+        .filter(user=user, is_active=True)
+        .order_by("created_at")
+        .first()
+    )
+    if membership:
+        ensure_free_subscription(membership.company)
+        return membership.company
+
+    company = Company.objects.create(
+        name=_default_company_name(user),
+        email=user.email or "",
+        created_by=user,
+        updated_by=user,
+    )
+    CompanyMembership.objects.create(
+        company=company,
+        user=user,
+        role=CompanyMembership.Role.OWNER,
+        is_active=True,
+        display_name=user.get_full_name() or user.username,
+        work_email=user.email or "",
+        created_by=user,
+        updated_by=user,
+    )
+    ensure_free_subscription(company)
+    return company
 
 
 def credentials_to_dict(credentials):
@@ -207,9 +250,8 @@ def activate_account(request, uidb64, token):
         user = User.objects.get(pk=uid)
         if user is not None and account_activation_token.check_token(user, token):
             user.is_active = True
-            profile = Account.objects.create(user=user)
-            profile.save()
             user.save()
+            _ensure_signup_onboarding(user)
             text = """
             <h1>Your account has been activated!</h1>
             <a href="/login">Log in now</a>
@@ -237,9 +279,8 @@ def activate_account_code(request):
     if VerificationCode.check_code(user, code):
         if not user.is_active:
             user.is_active = True
-            profile = Account.objects.create(user=user)
-            profile.save()
             user.save()
+        _ensure_signup_onboarding(user)
         _, token = AuthToken.objects.create(user)
         return JsonResponse({
             "user": data,

@@ -121,7 +121,12 @@ class CompanySerializer(UserStampMixin, CurrencyListValidationMixin, serializers
             "updated_by",
             "currency_symbol",
             "member_count",
-            "current_membership"
+            "current_membership",
+            "next_invoice_number",
+            "next_quotation_number",
+            "next_proforma_number",
+            "next_receipt_number",
+            "next_delivery_note_number",
            
         )
     
@@ -356,6 +361,7 @@ class QuotationSerializer(UserStampMixin, serializers.ModelSerializer):
 
 class ProformaSerializer(UserStampMixin, serializers.ModelSerializer):
     lines = ProformaLineSerializer(many=True, read_only=True)
+    proforma_number = serializers.CharField(required=False, allow_blank=True)
 
     customer_name = serializers.CharField(source="customer.name", read_only=True)
     customer_email = serializers.EmailField(source="customer.email", read_only=True)
@@ -384,6 +390,7 @@ class ProformaSerializer(UserStampMixin, serializers.ModelSerializer):
 
 class InvoiceSerializer(UserStampMixin, serializers.ModelSerializer):
     lines = InvoiceLineSerializer(many=True, read_only=True)
+    invoice_number = serializers.CharField(required=False, allow_blank=True)
 
     customer_name = serializers.CharField(source="customer.name", read_only=True)
     customer_email = serializers.EmailField(source="customer.email", read_only=True)
@@ -412,6 +419,7 @@ class InvoiceSerializer(UserStampMixin, serializers.ModelSerializer):
 
 
 class ReceiptSerializer(UserStampMixin, serializers.ModelSerializer):
+    receipt_number = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = Receipt
         fields = "__all__"
@@ -433,6 +441,7 @@ class ReceiptSerializer(UserStampMixin, serializers.ModelSerializer):
 
 class DeliveryNoteSerializer(UserStampMixin, serializers.ModelSerializer):
     lines = DeliveryNoteLineSerializer(many=True, read_only=True)
+    delivery_note_number = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = DeliveryNote

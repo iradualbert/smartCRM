@@ -36,7 +36,7 @@ export type EmailComposerSubmitPayload = {
   subject: string
   bodyHtml: string
   includeAttachment: boolean
-  sendingConfigId: number
+  sendingConfigId: number | null
 }
 
 type EmailComposerProps = {
@@ -148,11 +148,10 @@ export default function EmailComposer({
     !loadingSendingConfigs &&
     Boolean(to.trim()) &&
     Boolean(subject.trim()) &&
-    Boolean(strippedText) &&
-    Boolean(selectedSendingConfigId)
+    Boolean(strippedText)
 
   const handleSubmit = async () => {
-    if (!canSend || !selectedSendingConfigId) return
+    if (!canSend) return
     onSend({
       to: to.trim(),
       cc: cc.trim(),  
@@ -233,8 +232,8 @@ export default function EmailComposer({
                 {sendingConfigsError}
               </div>
             ) : sendingConfigs.length === 0 ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
-                No email sending configuration found. Please add a company or user SMTP configuration first.
+              <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
+                No SMTP sending configuration was found. This email will use the application default sender.
               </div>
             ) : (
               <>
@@ -304,7 +303,21 @@ export default function EmailComposer({
                       </div>
                     </div>
                   </div>
-                ) : null}
+                ) : (
+                  <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-xl border border-sky-200 bg-white p-2">
+                        <Mail className="h-5 w-5 text-sky-700" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-slate-900">Application default sender</div>
+                        <div className="mt-1 text-sm text-slate-600">
+                          No custom mailbox selected. The backend will use the default configured sender.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </CardContent>

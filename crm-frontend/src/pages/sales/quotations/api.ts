@@ -436,7 +436,7 @@ export async function sendQuotationEmail(
     subject: payload.subject,
     body_html: payload.bodyHtml,
     include_attachment: payload.includeAttachment,
-    sending_config_id: payload.sendingConfigId,
+    ...(payload.sendingConfigId ? { sending_config_id: payload.sendingConfigId } : {}),
   })
 
   return response.data

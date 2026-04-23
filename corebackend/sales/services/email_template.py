@@ -7,6 +7,7 @@ from typing import Any, Dict
 
 from django.conf import settings
 
+from .document_generation import build_document_filename
 
 PLACEHOLDER_PATTERN = re.compile(r"\[\[([A-Za-z0-9_]+)\]\]")
 
@@ -210,7 +211,7 @@ def build_email_draft_for_instance(instance, document_type: str, user=None) -> d
     attachment_name = None
     if getattr(instance, "document", None) and getattr(instance.document, "file", None):
         attachment_url = instance.document.file.url
-        attachment_name = instance.document.file.name.split("/")[-1]
+        attachment_name = build_document_filename(instance, document_type=document_type)
 
     return {
         "to": recipient_email,

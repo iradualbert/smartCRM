@@ -72,6 +72,37 @@ def get_effective_subscription(company: Company) -> Subscription:
     )
 
 
+@transaction.atomic
+def ensure_free_subscription(company: Company) -> Subscription:
+    active = get_active_subscription(company)
+    if active:
+        return active
+
+    free_plan = Plan.objects.get(code="free")
+    now = timezone.now()
+    subscription = Subscription.objects.create(
+        company=company,
+        plan=free_plan,
+        status=Subscription.Status.ACTIVE,
+        billing_currency="TRY",
+        billing_amount=free_plan.price_try,
+        started_at=now,
+        current_period_start=now,
+        current_period_end=now + timedelta(days=30),
+        auto_renew=False,
+        external_provider="internal",
+    )
+    SubscriptionEvent.objects.create(
+        company=company,
+        subscription=subscription,
+        event_type="created",
+        plan_code=free_plan.code,
+        note="Free plan assigned during onboarding.",
+        metadata={"source": "signup_onboarding"},
+    )
+    return subscription
+
+
 def can_create_document(company: Company) -> tuple[bool, str | None]:
     subscription = get_effective_subscription(company)
     usage = get_current_usage(company)
@@ -82,6 +113,13 @@ def can_create_document(company: Company) -> tuple[bool, str | None]:
     ):
         return False, "Monthly document limit reached for your plan."
 
+    return True, None
+
+
+def can_generate_pdf(company: Company) -> tuple[bool, str | None]:
+    subscription = get_effective_subscription(company)
+    if not subscription.plan.allow_pdf_generation:
+        return False, "PDF generation is not available on your current plan."
     return True, None
 
 
@@ -101,6 +139,23 @@ def can_send_email(company: Company) -> tuple[bool, str | None]:
     return True, None
 
 
+def can_store_additional_bytes(company: Company, additional_bytes: int) -> tuple[bool, str | None]:
+    if additional_bytes <= 0:
+        return True, None
+
+    subscription = get_effective_subscription(company)
+    storage_limit_mb = subscription.plan.max_storage_mb
+    if storage_limit_mb is None:
+        return True, None
+
+    usage = get_current_usage(company)
+    storage_limit_bytes = storage_limit_mb * 1024 * 1024
+    if usage.storage_bytes + additional_bytes > storage_limit_bytes:
+        return False, "Storage limit reached for your plan."
+
+    return True, None
+
+
 def increment_documents_created(company: Company, amount: int = 1) -> None:
     usage = get_current_usage(company)
     usage.documents_created += amount
@@ -111,6 +166,18 @@ def increment_emails_sent(company: Company, amount: int = 1) -> None:
     usage = get_current_usage(company)
     usage.emails_sent += amount
     usage.save(update_fields=["emails_sent", "updated_at"])
+
+
+def adjust_storage_usage(company: Company, delta_bytes: int) -> None:
+    if delta_bytes == 0:
+        return
+
+    usage = get_current_usage(company)
+    usage.storage_bytes = max((usage.storage_bytes or 0) + delta_bytes, 0)
+    usage.save(update_fields=["storage_bytes", "updated_at"])
+
+    company.storage_used_bytes = max((company.storage_used_bytes or 0) + delta_bytes, 0)
+    company.save(update_fields=["storage_used_bytes"])
 
 
 @transaction.atomic

@@ -11,6 +11,7 @@ from django.utils.html import strip_tags
 
 from sales.models import Document
 from sales.models_email import DocumentEmail, EmailSendingConfig
+from .document_generation import build_document_filename
 from .email_crypto import decrypt_secret
 
 
@@ -69,10 +70,10 @@ def _safe_identifier_for_instance(instance) -> str:
     )
 
 
-def _attachment_filename_from_document(document: Document | None) -> str:
+def _attachment_filename_from_instance(instance, document: Document | None) -> str:
     if not document or not getattr(document, "file", None):
         return ""
-    return str(document.file.name).split("/")[-1]
+    return build_document_filename(instance)
 
 
 @transaction.atomic
@@ -124,7 +125,7 @@ def create_document_email_log(
         body_text=strip_tags(body_html or "").strip()
         or "Please view this email in an HTML-capable client.",
         include_attachment=bool(include_attachment),
-        attachment_filename=_attachment_filename_from_document(document) if include_attachment else "",
+        attachment_filename=_attachment_filename_from_instance(instance, document) if include_attachment else "",
         status=DocumentEmail.Status.PENDING,
         sent_by=sent_by,
         source_model=source_content_type.model,
@@ -139,7 +140,7 @@ def send_logged_email(
     *,
     email_log: DocumentEmail,
     config: EmailSendingConfig | None = None,
-    attachments: list[str | Path] | None = None,
+    attachments: list[tuple[str, str | Path]] | None = None,
     reply_to: list[str] | None = None,
     fallback_from_email: str | None = None,
     fallback_from_name: str | None = None,
@@ -176,7 +177,7 @@ def send_logged_email(
     )
     message.attach_alternative(email_log.body_html or "", "text/html")
 
-    for attachment in attachments or []:
+    for attachment_name, attachment in attachments or []:
         path = Path(attachment)
         if not path.exists() or not path.is_file():
             email_log.status = DocumentEmail.Status.FAILED
@@ -186,7 +187,7 @@ def send_logged_email(
                 update_fields=["status", "failed_at", "failure_reason", "updated_at"]
             )
             raise FileNotFoundError(f"Attachment not found: {path}")
-        message.attach_file(str(path))
+        message.attach(attachment_name or path.name, path.read_bytes(), "application/pdf")
 
     try:
         sent_count = message.send(fail_silently=False)
@@ -234,10 +235,10 @@ def send_document_email(
     fallback_from_email: str | None = None,
     fallback_from_name: str | None = None,
 ) -> DocumentEmail:
-    attachments: list[str | Path] = []
+    attachments: list[tuple[str, str | Path]] = []
 
     if include_attachment and document_file and getattr(document_file, "path", None):
-        attachments.append(document_file.path)
+        attachments.append((_attachment_filename_from_instance(instance, document), document_file.path))
 
     email_log = create_document_email_log(
         instance=instance,

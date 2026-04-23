@@ -23,7 +23,7 @@ export type SendDocumentEmailPayload = {
   subject: string
   body_html: string
   include_attachment: boolean
-  sending_config_id: number
+  sending_config_id?: number | null
 }
 
 export async function listEmailSendingConfigs(params?: { company?: number | string }) {

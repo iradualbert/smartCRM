@@ -1,10 +1,10 @@
 from decimal import Decimal
+from django.db import transaction
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
 
 from  billing.models import BillingUsage, Subscription, SubscriptionEvent
-from ..models import DeliveryNote, DocumentEvent, Invoice, Proforma, Quotation, Receipt
-import re
+from ..models import Company, DeliveryNote, DocumentEvent, Invoice, Proforma, Quotation, Receipt
 
 
 def _build_company_dashboard_context(company):
@@ -214,30 +214,47 @@ def _build_company_dashboard_context(company):
         },
     }
 
+DOCUMENT_NUMBER_CONFIG = {
+    "quote_number": ("quotation_prefix", "next_quotation_number", "QUO"),
+    "proforma_number": ("proforma_prefix", "next_proforma_number", "PRO"),
+    "invoice_number": ("invoice_prefix", "next_invoice_number", "INV"),
+    "receipt_number": ("receipt_prefix", "next_receipt_number", "REC"),
+    "delivery_note_number": ("delivery_note_prefix", "next_delivery_note_number", "DN"),
+}
 
 
+def _format_document_number(prefix: str, number: int) -> str:
+    return f"{prefix}-{number:04d}"
 
 
+def _parse_document_number(value: str, prefix: str) -> int | None:
+    if not value:
+        return None
+    normalized = value.strip()
+    expected_prefix = f"{prefix}-"
+    if not normalized.startswith(expected_prefix):
+        return None
+    suffix = normalized[len(expected_prefix):]
+    if not suffix.isdigit():
+        return None
+    return int(suffix)
 
-def _next_document_number(company, field_name: str, prefix: str):
-    model_map = {
-        "quote_number": Quotation,
-        "proforma_number": Proforma,
-        "invoice_number": Invoice,
-        "receipt_number": Receipt,
-        "delivery_note_number": DeliveryNote,
-    }
-    model_cls = model_map[field_name]
 
-    values = model_cls.objects.filter(
-        company=company,
-        **{f"{field_name}__startswith": f"{prefix}-"}
-    ).values_list(field_name, flat=True)
+@transaction.atomic
+def _next_document_number(company, field_name: str, prefix: str, provided_value: str | None = None):
+    prefix_field, counter_field, default_prefix = DOCUMENT_NUMBER_CONFIG[field_name]
+    locked_company = Company.objects.select_for_update().get(pk=company.pk)
+    resolved_prefix = prefix or getattr(locked_company, prefix_field) or default_prefix
+    next_number = max(getattr(locked_company, counter_field) or 1, 1)
 
-    max_number = 0
-    for value in values:
-        match = re.search(rf"^{re.escape(prefix)}-(\d+)$", value or "")
-        if match:
-            max_number = max(max_number, int(match.group(1)))
+    if provided_value and provided_value.strip():
+        parsed_value = _parse_document_number(provided_value, resolved_prefix)
+        if parsed_value is not None and parsed_value >= next_number:
+            setattr(locked_company, counter_field, parsed_value + 1)
+            locked_company.save(update_fields=[counter_field, "updated_at"])
+        return provided_value.strip()
 
-    return f"{prefix}-{str(max_number + 1).zfill(5)}"
+    generated_number = _format_document_number(resolved_prefix, next_number)
+    setattr(locked_company, counter_field, next_number + 1)
+    locked_company.save(update_fields=[counter_field, "updated_at"])
+    return generated_number
