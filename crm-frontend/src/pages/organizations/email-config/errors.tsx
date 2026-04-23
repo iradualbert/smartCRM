@@ -4,8 +4,8 @@ import type { FieldValues, Path, UseFormSetError } from "react-hook-form"
 type PrimitiveErrorValue = string | string[]
 type NestedErrorValue =
   | PrimitiveErrorValue
-  | Record<string, PrimitiveErrorValue | NestedErrorValue>
-  | Array<string | Record<string, PrimitiveErrorValue | NestedErrorValue>>
+  | Record<string, unknown>
+  | Array<string | Record<string, unknown>>
 
 function flattenErrorValue(
   value: NestedErrorValue,

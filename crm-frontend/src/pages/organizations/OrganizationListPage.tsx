@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 
 import { listCompanies, type Company, type CompanyMembershipRole } from "./api"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 type OrganizationRecord = Company & {
   role?: CompanyMembershipRole | null
@@ -57,7 +58,8 @@ function RoleBadge({ role }: { role?: CompanyMembershipRole | null }) {
 }
 
 const OrganizationListPage = () => {
-  const [organizations, setOrganizations] = React.useState<OrganizationRecord[]>([])
+  const { currentOrganizationId } = useOrganizations()
+  const [rawCompanies, setRawCompanies] = React.useState<Company[]>([])
   const [count, setCount] = React.useState(0)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -70,13 +72,7 @@ const OrganizationListPage = () => {
         setError(null)
 
         const data = await listCompanies()
-        const mapped = (data.results || []).map((item, index) => ({
-          ...item,
-          role: item.current_membership?.role ?? null,
-          is_current: index === 0,
-        }))
-
-        setOrganizations(mapped)
+        setRawCompanies(data.results || [])
         setCount(data.count)
       } catch (err) {
         console.error(err)
@@ -88,6 +84,16 @@ const OrganizationListPage = () => {
 
     fetchOrganizations()
   }, [])
+
+  const organizations: OrganizationRecord[] = React.useMemo(
+    () =>
+      rawCompanies.map((item) => ({
+        ...item,
+        role: item.current_membership?.role ?? null,
+        is_current: item.id.toString() === currentOrganizationId,
+      })),
+    [rawCompanies, currentOrganizationId]
+  )
 
   const filteredOrganizations = organizations.filter((organization) => {
     const q = search.trim().toLowerCase()

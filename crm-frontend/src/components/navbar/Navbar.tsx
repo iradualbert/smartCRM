@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { FileText, Menu } from "lucide-react";
 import ProfileMenubar from "./NavMenu";
-import NewEmailButton from "./NewEmailButton";
 import OrganizationSwitcher from "../OrganizationSwitcher";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -127,9 +126,6 @@ const Navbar = ({ isAppRoute: _isAppRoute = true }: { isAppRoute?: boolean }) =>
                         setSelectedOrgId(org?.id || org?._id || null)
                       }
                     />
-                    <div className="pt-2">
-                      <NewEmailButton />
-                    </div>
                   </div>
                 ) : (
                   <div className="mt-6 space-y-6">

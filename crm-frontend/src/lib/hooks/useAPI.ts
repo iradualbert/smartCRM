@@ -1,14 +1,18 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 
-export const useApiListView = (url: string, params = {}) => {
+type ApiListParams = Record<string, unknown> & {
+    limit?: number
+}
+
+export const useApiListView = (url: string, params: ApiListParams = {}) => {
     const [count, setCount] = useState(0);
     const [results, setResults] = useState<object[]>([]);
     const [error, setError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [next, setNext] = useState(url);
     const [hasLoaded, setHasLoaded] = useState(false);
-    const [_params, setParams] = useState(params);
+    const [_params, setParams] = useState<ApiListParams>(params);
     const moreAvailable = next ? true : false;
 
     useEffect(() => {
@@ -45,7 +49,7 @@ export const useApiListView = (url: string, params = {}) => {
         setIsLoading(true);
         try {
             const _url = hasLoaded ? next : url;
-            let data
+            let data: { count: number; results: object[]; next: string | null }
 
             if (hasLoaded) {
                 data = (await axios.get(next)).data;

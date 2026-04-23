@@ -3,16 +3,11 @@ import axios from 'axios';
 import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import store from "./redux/store";
 import { checkAuthToken } from "./redux/actions/userActions";
-import BookingCalendar from "./pages/booking/BookingPage";
-import ContactsManagerPage from "./pages/contacts/ContactsPage";
-import MailTemplatesPage from "./pages/mails/MailTemplatesPage";
-import NewMailPage from "./pages/mails/NewMailPage";
 // import EmailsListPage from "./pages/mails/EmailsListPage";
 import { AuthRoute, AuthenticatedRoute, MainRoute, PrivateRoute, RootRoute } from "./routes";
 import { Provider } from "react-redux";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import LoginPage from "./pages/auth/LoginPage";
-import Dashboard from "./pages/DashboardPage";
 
 import LandingPage from "./pages/landing-sales/LandingPage";
 import SignupPage from "./pages/auth/SignupPage";
@@ -96,7 +91,7 @@ function ScrollToTop() {
 
 function App() {
   useEffect(() => {
-    store.dispatch(checkAuthToken())
+    ;(store.dispatch as any)(checkAuthToken())
   }, [])
 
   const lazyFallback = (
@@ -145,13 +140,6 @@ function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/sales-dashboard" element={<SalesDashboardPage />} />
            
-              <Route path="/mail-dashboard" element={<Dashboard />} />
-              {/* <Route path="/emails" element={<MailDashoardPage />} /> */}
-              <Route path="/emails/templates" element={<MailTemplatesPage />} />
-              <Route path="/emails/new" element={<NewMailPage />} />
-
-              <Route path="/schedule-manager" element={<BookingCalendar />} />
-              <Route path="/contacts-manager" element={<ContactsManagerPage />} />
               <Route path="/settings/integration" element={<EmailIntegrationPage />} />
               <Route path="/settings/profile" element={<ProfilePage />} />
               <Route path="/settings/password-reset" element={<PasswordResetPage />} />

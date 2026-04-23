@@ -13,6 +13,7 @@ class DocumentEmailSerializer(serializers.ModelSerializer):
             "sending_config",
             "sending_config_name",
             "source_model",
+            "source_object_id",
             "source_identifier",
             "subject",
             "to_emails",

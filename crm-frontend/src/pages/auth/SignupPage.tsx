@@ -36,7 +36,7 @@ const SignupPage = () => {
       password_confirm: passwordConfirm,
     }
 
-    const newErrors = await dispatch(registerUser(userData) as any)
+    const newErrors = await dispatch(registerUser(userData, navigate) as any)
     if (newErrors) setErrors(newErrors)
     else setStep(2)
 

@@ -37,7 +37,7 @@ const GuideDetailPage = () => {
       const current = document.querySelector(`meta[name="${metaName}"]`)
       if (!current) return
 
-      if (previousContent !== undefined) {
+      if (previousContent != null) {
         current.setAttribute("content", previousContent)
       } else if (!previous) {
         current.remove()

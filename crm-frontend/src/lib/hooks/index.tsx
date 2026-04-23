@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { SHOW_TOAST, CLEAR_TOAST } from "@/redux/types";
-import { IToast } from "./types";
+import { IToast } from "../types";
 
 
 export * from "./useAPI";
@@ -55,7 +55,7 @@ export const useToasts = () => {
         })
     }
 
-    const clearToast = (toastId) => {
+    const clearToast = (toastId: string | number) => {
         dispatch({
             type: CLEAR_TOAST,
             payload: toastId

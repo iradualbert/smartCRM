@@ -64,18 +64,19 @@ function SourceModelBadge({ sourceModel }: { sourceModel: string }) {
 }
 
 function getDocumentUrl(email: DocumentEmail) {
+  const id = email.source_object_id
   switch (email.source_model) {
     case "quotation":
-      return `/quotations/${email.source_identifier}`
+      return `/quotations/${id}`
     case "invoice":
-      return `/invoices/${email.source_identifier}`
+      return `/invoices/${id}`
     case "proforma":
-      return `/proformas/${email.source_identifier}`
+      return `/proformas/${id}`
     case "receipt":
-      return `/receipts/${email.source_identifier}`
+      return `/receipts/${id}`
     case "delivery_note":
     case "deliverynote":
-      return `/delivery-notes/${email.source_identifier}`
+      return `/delivery-notes/${id}`
     default:
       return "#"
   }

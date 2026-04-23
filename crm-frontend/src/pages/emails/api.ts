@@ -20,6 +20,7 @@ export type DocumentEmail = {
   sending_config: string | null
   sending_config_name?: string
   source_model: DocumentEmailSourceModel
+  source_object_id: string
   source_identifier: string
   subject: string
   to_emails: string[]
