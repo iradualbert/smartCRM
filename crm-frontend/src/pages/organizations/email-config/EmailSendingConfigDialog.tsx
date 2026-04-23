@@ -19,6 +19,7 @@ type Props = {
   onOpenChange: (open: boolean) => void
   mode: "create" | "edit"
   currentOrganizationId?: Id | null
+  currentOrganizationName?: string | null
   initialConfig?: EmailSendingConfig | null
   submitting?: boolean
   onSubmit: (
@@ -31,25 +32,27 @@ export default function EmailSendingConfigDialog({
   onOpenChange,
   mode,
   currentOrganizationId,
+  currentOrganizationName,
   initialConfig,
   submitting = false,
   onSubmit,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-3xl bg-white sm:max-w-3xl">
+      <DialogContent className="max-h-[88vh] overflow-y-auto rounded-3xl bg-white sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? "Add email sending configuration" : "Edit email sending configuration"}
+            {mode === "create" ? "Add sender account" : "Edit sender account"}
           </DialogTitle>
           <DialogDescription>
-            Save SMTP settings for personal or organization sending.
+            Save the mailbox details this workspace will use when sending email.
           </DialogDescription>
         </DialogHeader>
 
         <EmailSendingConfigForm
           mode={mode}
           currentOrganizationId={currentOrganizationId}
+          currentOrganizationName={currentOrganizationName}
           initialConfig={initialConfig}
           submitting={submitting}
           onSubmit={onSubmit}

@@ -27,13 +27,13 @@ const schema = z
     owner_type: z.enum(["company", "user"]),
     company: z.string().nullable().optional(),
 
-    name: z.string().min(1, "Configuration name is required"),
+    name: z.string().min(1, "Name is required"),
     from_name: z.string().optional(),
-    from_email: z.string().email("Enter a valid from email"),
+    from_email: z.string().email("Enter a valid sender email"),
 
-    smtp_host: z.string().min(1, "SMTP host is required"),
-    smtp_port: z.coerce.number().int().positive("SMTP port must be a positive number"),
-    smtp_username: z.string().min(1, "SMTP username is required"),
+    smtp_host: z.string().min(1, "Mail server is required"),
+    smtp_port: z.coerce.number().int().positive("Port must be a positive number"),
+    smtp_username: z.string().min(1, "Username is required"),
     smtp_password: z.string().optional(),
 
     security_type: z.enum(["tls", "ssl", "none"]),
@@ -46,12 +46,8 @@ const schema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["company"],
-        message: "Organization is required for organization configs.",
+        message: "Organization is required for an organization sender.",
       })
-    }
-
-    if (data.owner_type === "user") {
-      return
     }
   })
 
@@ -60,6 +56,7 @@ export type EmailSendingConfigFormValues = z.infer<typeof schema>
 type Props = {
   mode: "create" | "edit"
   currentOrganizationId?: Id | null
+  currentOrganizationName?: string | null
   initialConfig?: EmailSendingConfig | null
   submitting?: boolean
   onSubmit: (
@@ -109,6 +106,7 @@ function buildDefaultValues(
 export default function EmailSendingConfigForm({
   mode,
   currentOrganizationId,
+  currentOrganizationName,
   initialConfig,
   submitting = false,
   onSubmit,
@@ -182,7 +180,7 @@ export default function EmailSendingConfigForm({
   }
 
   return (
-    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
       {submitErrors.length ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           <ul className="list-disc space-y-1 pl-5">
@@ -193,185 +191,207 @@ export default function EmailSendingConfigForm({
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Controller
-          name="owner_type"
-          control={form.control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel>Scope</FieldLabel>
-              <select
-                className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm"
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-              >
-                <option value="company">Organization</option>
-                <option value="user">Personal</option>
-              </select>
-              <FieldDescription>
-                Organization configs can be shared. Personal configs are only for you.
-              </FieldDescription>
-            </Field>
-          )}
-        />
+      <section className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+        <h2 className="text-base font-semibold text-slate-900">Account</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Choose whether this sender is shared with the organization or only visible to you.
+        </p>
 
-        <Controller
-          name="company"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Organization</FieldLabel>
-              <Input
-                value={field.value ?? ""}
-                onChange={(e) => field.onChange(e.target.value || null)}
-                className="rounded-2xl bg-slate-50"
-                placeholder="Current organization id"
-                readOnly={ownerType === "company" && Boolean(currentOrganizationId)}
-                disabled={ownerType !== "company"}
-              />
-              {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-            </Field>
-          )}
-        />
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <Controller
+            name="owner_type"
+            control={form.control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Visibility</FieldLabel>
+                <select
+                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                >
+                  <option value="company">Organization</option>
+                  <option value="user">Personal</option>
+                </select>
+                <FieldDescription>
+                  Organization senders can be used by the team. Personal senders stay private to your account.
+                </FieldDescription>
+              </Field>
+            )}
+          />
 
-        <Controller
-          name="name"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Configuration name</FieldLabel>
-              <Input {...field} className="rounded-2xl" placeholder="Sales Gmail" />
-              {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-            </Field>
-          )}
-        />
+          <Field>
+            <FieldLabel>Organization</FieldLabel>
+            <div className="flex h-11 items-center rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-700">
+              {ownerType === "company"
+                ? currentOrganizationName || "Current organization"
+                : "Not shared with an organization"}
+            </div>
+          </Field>
+        </div>
+      </section>
 
-        <Controller
-          name="from_name"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>From name</FieldLabel>
-              <Input {...field} className="rounded-2xl" placeholder="Acme Sales" />
-              {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-            </Field>
-          )}
-        />
+      <section className="rounded-3xl border border-slate-200 bg-white p-4">
+        <h2 className="text-base font-semibold text-slate-900">Sender details</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          These details appear to recipients when email is sent from this account.
+        </p>
 
-        <Controller
-          name="from_email"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>From email</FieldLabel>
-              <Input {...field} className="rounded-2xl" placeholder="sales@acme.com" />
-              {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-            </Field>
-          )}
-        />
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <Controller
+            name="name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Account name</FieldLabel>
+                <Input {...field} className="rounded-2xl" placeholder="Sales mailbox" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
 
-        <Controller
-          name="smtp_host"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>SMTP host</FieldLabel>
-              <Input {...field} className="rounded-2xl" placeholder="smtp.gmail.com" />
-              {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-            </Field>
-          )}
-        />
+          <Controller
+            name="from_name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Sender name</FieldLabel>
+                <Input {...field} className="rounded-2xl" placeholder="Acme Sales" />
+                <FieldDescription>
+                  Leave blank to send with the email address only.
+                </FieldDescription>
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
 
-        <Controller
-          name="smtp_port"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>SMTP port</FieldLabel>
-              <Input
-                type="number"
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-                className="rounded-2xl"
-                placeholder="587"
-              />
-              {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-            </Field>
-          )}
-        />
+          <Controller
+            name="from_email"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid} className="md:col-span-2">
+                <FieldLabel>Sender email</FieldLabel>
+                <Input {...field} className="rounded-2xl" placeholder="sales@acme.com" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+        </div>
+      </section>
 
-        <Controller
-          name="smtp_username"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>SMTP username</FieldLabel>
-              <Input {...field} className="rounded-2xl" placeholder="smtp-user" />
-              {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-            </Field>
-          )}
-        />
+      <section className="rounded-3xl border border-slate-200 bg-white p-4">
+        <h2 className="text-base font-semibold text-slate-900">Connection details</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Enter the mail server details provided by your email provider.
+        </p>
 
-        <Controller
-          name="smtp_password"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>{mode === "edit" ? "New SMTP password" : "SMTP password"}</FieldLabel>
-              <Input
-                {...field}
-                type="password"
-                className="rounded-2xl"
-                placeholder={
-                  mode === "edit"
-                    ? "Leave blank to keep current password"
-                    : "Enter SMTP password"
-                }
-              />
-              <FieldDescription>
-                {mode === "edit"
-                  ? initialConfig?.masked_password
-                    ? `Current password: ${initialConfig.masked_password}`
-                    : "No password stored yet."
-                  : "Stored securely by the backend."}
-              </FieldDescription>
-              {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-            </Field>
-          )}
-        />
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <Controller
+            name="smtp_host"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Mail server</FieldLabel>
+                <Input {...field} className="rounded-2xl" placeholder="smtp.gmail.com" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
 
-        <Controller
-          name="security_type"
-          control={form.control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel>Security</FieldLabel>
-              <select
-                className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm"
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-              >
-                <option value="tls">TLS</option>
-                <option value="ssl">SSL</option>
-                <option value="none">None</option>
-              </select>
-            </Field>
-          )}
-        />
+          <Controller
+            name="security_type"
+            control={form.control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Security</FieldLabel>
+                <select
+                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                >
+                  <option value="tls">TLS</option>
+                  <option value="ssl">SSL</option>
+                  <option value="none">None</option>
+                </select>
+              </Field>
+            )}
+          />
 
+          <Controller
+            name="smtp_port"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Port</FieldLabel>
+                <Input
+                  type="number"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  className="rounded-2xl"
+                  placeholder="587"
+                />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="smtp_username"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Username</FieldLabel>
+                <Input {...field} className="rounded-2xl" placeholder="sales@acme.com" />
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="smtp_password"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid} className="md:col-span-2">
+                <FieldLabel>{mode === "edit" ? "New password" : "Password"}</FieldLabel>
+                <Input
+                  {...field}
+                  type="password"
+                  className="rounded-2xl"
+                  placeholder={
+                    mode === "edit"
+                      ? "Leave blank to keep the current password"
+                      : "Enter password"
+                  }
+                />
+                <FieldDescription>
+                  {mode === "edit"
+                    ? initialConfig?.masked_password
+                      ? "A password is already stored. Add a new one only if it has changed."
+                      : "No password has been saved yet."
+                    : "Saved securely and hidden after setup."}
+                </FieldDescription>
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+        </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-2">
         <Controller
           name="is_active"
           control={form.control}
           render={({ field }) => (
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
               <input
                 type="checkbox"
                 checked={field.value}
                 onChange={(e) => field.onChange(e.target.checked)}
               />
               <div>
-                <div className="text-sm font-medium text-slate-900">Active</div>
-                <div className="text-xs text-slate-500">Allow this config to be used for sending.</div>
+                <div className="text-sm font-medium text-slate-900">Ready to send</div>
+                <div className="text-xs text-slate-500">
+                  Allow this sender account to appear in email flows.
+                </div>
               </div>
             </label>
           )}
@@ -381,20 +401,22 @@ export default function EmailSendingConfigForm({
           name="is_default"
           control={form.control}
           render={({ field }) => (
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
               <input
                 type="checkbox"
                 checked={field.value}
                 onChange={(e) => field.onChange(e.target.checked)}
               />
               <div>
-                <div className="text-sm font-medium text-slate-900">Default</div>
-                <div className="text-xs text-slate-500">Prefer this config in email compose flows.</div>
+                <div className="text-sm font-medium text-slate-900">Use as default</div>
+                <div className="text-xs text-slate-500">
+                  Preselect this sender when composing email.
+                </div>
               </div>
             </label>
           )}
         />
-      </div>
+      </section>
 
       <div className="flex justify-end gap-3">
         {onCancel ? (
@@ -406,10 +428,10 @@ export default function EmailSendingConfigForm({
         <Button type="submit" className="rounded-2xl" disabled={submitting}>
           {submitting
             ? mode === "create"
-              ? "Creating..."
+              ? "Saving..."
               : "Saving..."
             : mode === "create"
-            ? "Create configuration"
+            ? "Save sender account"
             : "Save changes"}
         </Button>
       </div>

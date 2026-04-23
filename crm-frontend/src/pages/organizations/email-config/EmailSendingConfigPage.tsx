@@ -20,7 +20,7 @@ import EmailSendingConfigList from "./EmailSendingConfigList"
 type ScopeTab = "company" | "user"
 
 export default function EmailSendingConfigPage() {
-  const { currentOrganizationId } = useOrganizations()
+  const { currentOrganizationId, currentOrganization } = useOrganizations()
 
   const [tab, setTab] = React.useState<ScopeTab>("company")
   const [configs, setConfigs] = React.useState<EmailSendingConfig[]>([])
@@ -118,7 +118,7 @@ export default function EmailSendingConfigPage() {
       <div className="flex flex-col gap-4 rounded-3xl border bg-white p-6 shadow-sm md:flex-row md:items-start md:justify-between">
         <div>
           <div className="inline-flex items-center rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
-            SMTP settings
+            Email delivery
           </div>
 
           <div className="mt-4 flex items-start gap-4">
@@ -128,18 +128,23 @@ export default function EmailSendingConfigPage() {
 
             <div>
               <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-                Email sending configuration
+                Sender accounts
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-600">
-                Configure SMTP accounts for personal or organization email delivery.
+                Choose which mailbox your team sends from and keep delivery settings ready for live emails.
               </p>
+              {currentOrganization ? (
+                <p className="mt-2 text-sm text-slate-500">
+                  Current organization: {currentOrganization.name || "Organization"}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
 
         <Button className="rounded-2xl" onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
-          Add configuration
+          Add sender account
         </Button>
       </div>
 
@@ -165,7 +170,7 @@ export default function EmailSendingConfigPage() {
 
       {loading ? (
         <div className="rounded-3xl border bg-white p-10 text-center text-sm text-slate-500">
-          Loading email configurations...
+          Loading sender accounts...
         </div>
       ) : (
         <EmailSendingConfigList
@@ -182,6 +187,7 @@ export default function EmailSendingConfigPage() {
         onOpenChange={setDialogOpen}
         mode={dialogMode}
         currentOrganizationId={currentOrganizationId ?? null}
+        currentOrganizationName={currentOrganization?.name ?? null}
         initialConfig={selectedConfig}
         submitting={dialogSubmitting}
         onSubmit={handleSubmit}
