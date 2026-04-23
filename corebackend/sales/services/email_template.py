@@ -215,10 +215,8 @@ def build_email_draft_for_instance(instance, document_type: str, user=None) -> d
     company, customer = _get_company_and_customer(instance, document_type)
     recipient_email = customer.email if customer and getattr(customer, "email", None) else ""
 
-    attachment_url = None
     attachment_name = None
     if getattr(instance, "document", None) and getattr(instance.document, "file", None):
-        attachment_url = instance.document.file.url
         attachment_name = build_document_filename(instance, document_type=document_type)
 
     return {
@@ -227,7 +225,7 @@ def build_email_draft_for_instance(instance, document_type: str, user=None) -> d
         "subject": subject,
         "body_html": body_html,
         "attachment_name": attachment_name,
-        "attachment_url": attachment_url,
+        "attachment_url": None,
         "document_type": document_type,
         "document_number": context.get("DocumentNumber", ""),
         "company_name": company.name if company else "",

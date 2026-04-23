@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import RichEmailEditor from "./RichEmailEditor"
 import { listEmailSendingConfigs } from "./api"
+import axios from "axios"
 
 export type EmailSendingConfigOption = {
   id: number
@@ -89,6 +90,7 @@ export default function EmailComposer({
   const [loadingSendingConfigs, setLoadingSendingConfigs] = React.useState(false)
   const [sendingConfigsError, setSendingConfigsError] = React.useState<string | null>(null)
   const [selectedSendingConfigId, setSelectedSendingConfigId] = React.useState<number | null>(null)
+  const [previewingAttachment, setPreviewingAttachment] = React.useState(false)
 
   React.useEffect(() => setTo(initialTo), [initialTo])
   React.useEffect(() => setCc(initialCc), [initialCc])
@@ -160,6 +162,28 @@ export default function EmailComposer({
       includeAttachment,
       sendingConfigId: selectedSendingConfigId,
     })
+  }
+
+  const handlePreviewAttachment = async () => {
+    if (!attachmentUrl || previewingAttachment) return
+
+    try {
+      setPreviewingAttachment(true)
+      const response = await axios.get(attachmentUrl, {
+        responseType: "blob",
+        withCredentials: true,
+      })
+
+      const blobUrl = window.URL.createObjectURL(
+        new Blob([response.data], { type: "application/pdf" })
+      )
+      window.open(blobUrl, "_blank", "noopener,noreferrer")
+      window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setPreviewingAttachment(false)
+    }
   }
 
   if (loading) {
@@ -402,15 +426,15 @@ export default function EmailComposer({
                       </div>
 
                       {attachmentUrl ? (
-                        <a
-                          href={attachmentUrl}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => void handlePreviewAttachment()}
+                          disabled={previewingAttachment}
                           className="mt-2 inline-flex items-center text-sm font-medium text-sky-700 hover:underline"
                         >
                           <FileText className="mr-1.5 h-4 w-4" />
-                          Preview attachment
-                        </a>
+                          {previewingAttachment ? "Opening attachment..." : "Preview attachment"}
+                        </button>
                       ) : null}
                     </div>
                   </div>

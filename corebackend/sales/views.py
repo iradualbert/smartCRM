@@ -208,6 +208,22 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
     def _build_download_filename(self, instance):
         return build_document_filename(instance, document_type=self.document_type)
 
+    def _build_authenticated_pdf_url(self, request, instance):
+        company_id = request.query_params.get("company") or getattr(getattr(instance, "company", None), "id", None)
+        base_path = request.path.rstrip("/")
+        if base_path.endswith("/email_draft"):
+            pdf_path = f"{base_path[:-len('/email_draft')]}/pdf/"
+        elif base_path.endswith("/generate_pdf"):
+            pdf_path = f"{base_path[:-len('/generate_pdf')]}/pdf/"
+        elif base_path.endswith("/regenerate_pdf"):
+            pdf_path = f"{base_path[:-len('/regenerate_pdf')]}/pdf/"
+        else:
+            pdf_path = f"{base_path}/pdf/"
+
+        if company_id:
+            return request.build_absolute_uri(f"{pdf_path}?company={company_id}")
+        return request.build_absolute_uri(pdf_path)
+
     def _ensure_pdf_for_email(self, instance, user):
         needs_regeneration = bool(getattr(instance, "pdf_needs_regeneration", False))
 
@@ -303,7 +319,7 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
                 {
                     "detail": "PDF generated." if generated else "Existing PDF reused.",
                     "document_id": document.id,
-                    "document_file": document.file.url if document.file else None,
+                    "document_file": self._build_authenticated_pdf_url(request, instance),
                     "pdf_generated_at": instance.pdf_generated_at,
                     "pdf_needs_regeneration": instance.pdf_needs_regeneration,
                 },
@@ -337,7 +353,7 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
                 {
                     "detail": "PDF regenerated.",
                     "document_id": document.id,
-                    "document_file": document.file.url if document.file else None,
+                    "document_file": self._build_authenticated_pdf_url(request, instance),
                     "pdf_generated_at": instance.pdf_generated_at,
                     "pdf_needs_regeneration": instance.pdf_needs_regeneration,
                 },
@@ -357,11 +373,8 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
                 document_type=self.document_type,
                 user=request.user,
             )
-            draft["attachment_url"] = (
-                request.build_absolute_uri(draft.get("attachment_url"))
-                if draft.get("attachment_url")
-                else None
-            )
+            if draft.get("attachment_name"):
+                draft["attachment_url"] = self._build_authenticated_pdf_url(request, instance)
             return Response(draft, status=status.HTTP_200_OK)
         except Exception as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
