@@ -49,6 +49,7 @@ export type TemplateInspectResult = {
 }
 
 export async function listTemplates(params?: {
+  company?: string | number
   search?: string
   document_type?: TemplateDocumentType
 }) {
@@ -58,8 +59,11 @@ export async function listTemplates(params?: {
   return response.data
 }
 
-export async function getTemplate(id: number | string) {
-  const response = await axios.get<Template>(`/templates/${id}/`)
+export async function getTemplate(
+  id: number | string,
+  params?: { company?: string | number }
+) {
+  const response = await axios.get<Template>(`/templates/${id}/`, { params })
   return response.data
 }
 
@@ -96,7 +100,8 @@ export async function createTemplate(payload: TemplatePayload) {
 
 export async function updateTemplate(
   id: number | string,
-  payload: Partial<TemplatePayload>
+  payload: Partial<TemplatePayload>,
+  params?: { company?: string | number }
 ) {
   const formData = new FormData()
 
@@ -124,6 +129,7 @@ export async function updateTemplate(
   if (payload.file) formData.append("file", payload.file)
 
   const response = await axios.patch<Template>(`/templates/${id}/`, formData, {
+    params,
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -132,11 +138,21 @@ export async function updateTemplate(
   return response.data
 }
 
-export async function deleteTemplate(id: number | string) {
-  await axios.delete(`/templates/${id}/`)
+export async function deleteTemplate(
+  id: number | string,
+  params?: { company?: string | number }
+) {
+  await axios.delete(`/templates/${id}/`, { params })
 }
 
-export async function inspectTemplate(id: number | string) {
-  const response = await axios.post<TemplateInspectResult>(`/templates/${id}/inspect/`)
+export async function inspectTemplate(
+  id: number | string,
+  params?: { company?: string | number }
+) {
+  const response = await axios.post<TemplateInspectResult>(
+    `/templates/${id}/inspect/`,
+    {},
+    { params }
+  )
   return response.data
 }

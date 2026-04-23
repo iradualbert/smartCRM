@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { listTemplates, type Template } from "./api"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 function TypeBadge({ type }: { type: Template["document_type"] }) {
   return (
@@ -41,6 +42,7 @@ function TypeBadge({ type }: { type: Template["document_type"] }) {
 
 export default function TemplateListPage() {
   const navigate = useNavigate()
+  const { currentOrganizationId } = useOrganizations()
 
   const [data, setData] = React.useState<Template[]>([])
   const [count, setCount] = React.useState(0)
@@ -50,10 +52,18 @@ export default function TemplateListPage() {
   const [sorting, setSorting] = React.useState<SortingState>([])
 
   React.useEffect(() => {
+    if (!currentOrganizationId) {
+      setData([])
+      setCount(0)
+      setLoading(false)
+      return
+    }
+
     const run = async () => {
       try {
         setLoading(true)
-        const response = await listTemplates()
+        setError(null)
+        const response = await listTemplates({ company: currentOrganizationId })
         setData(response.results)
         setCount(response.count)
       } catch (err) {
@@ -65,7 +75,7 @@ export default function TemplateListPage() {
     }
 
     run()
-  }, [])
+  }, [currentOrganizationId])
 
   const filteredData = React.useMemo(() => {
     const q = globalFilter.trim().toLowerCase()
@@ -200,7 +210,7 @@ export default function TemplateListPage() {
             Upload, inspect, and manage document templates for every document type.
           </p>
 
-          {!loading && !error ? (
+          {!loading && !error && currentOrganizationId ? (
             <p className="mt-2 text-xs text-slate-500">
               {count} total template{count === 1 ? "" : "s"}
             </p>
@@ -245,7 +255,9 @@ export default function TemplateListPage() {
         </CardHeader>
 
         <CardContent className="p-0">
-          {loading ? (
+          {!currentOrganizationId ? (
+            <div className="p-6 text-sm text-slate-500">Loading organization...</div>
+          ) : loading ? (
             <div className="p-6 text-sm text-slate-500">Loading templates...</div>
           ) : error ? (
             <div className="p-6">

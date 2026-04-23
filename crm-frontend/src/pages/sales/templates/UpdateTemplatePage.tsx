@@ -13,10 +13,12 @@ import {
   type Template,
   type TemplateInspectResult,
 } from "./api"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 export default function UpdateTemplatePage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { currentOrganizationId } = useOrganizations()
 
   const [template, setTemplate] = React.useState<Template | null>(null)
   const [values, setValues] = React.useState<TemplateFormValues | null>(null)
@@ -27,11 +29,12 @@ export default function UpdateTemplatePage() {
   const [error, setError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
+    if (!id || !currentOrganizationId) return
+
     const run = async () => {
-      if (!id) return
       try {
         setLoading(true)
-        const data = await getTemplate(id)
+        const data = await getTemplate(id, { company: currentOrganizationId })
         setTemplate(data)
         setValues({
           company: data.company,
@@ -53,17 +56,17 @@ export default function UpdateTemplatePage() {
     }
 
     run()
-  }, [id])
+  }, [id, currentOrganizationId])
 
   const onChange = (patch: Partial<TemplateFormValues>) => {
     setValues((prev) => (prev ? { ...prev, ...patch } : prev))
   }
 
   const handleInspect = async () => {
-    if (!id) return
+    if (!id || !currentOrganizationId) return
     try {
       setIsInspecting(true)
-      const result = await inspectTemplate(id)
+      const result = await inspectTemplate(id, { company: currentOrganizationId })
       setInspectResult(result)
 
       setValues((prev) =>
@@ -86,7 +89,7 @@ export default function UpdateTemplatePage() {
   }
 
   const handleSave = async () => {
-    if (!id || !values) return
+    if (!id || !values || !currentOrganizationId) return
     try {
       setSaving(true)
       setError(null)
@@ -101,7 +104,7 @@ export default function UpdateTemplatePage() {
         is_active: values.is_active,
         is_default: values.is_default,
         file: values.file,
-      })
+      }, { company: currentOrganizationId })
 
       setTemplate(updated)
       setValues((prev) =>
@@ -120,7 +123,7 @@ export default function UpdateTemplatePage() {
     }
   }
 
-  if (loading || !values) {
+  if (!currentOrganizationId || loading || !values) {
     return <div className="mx-auto max-w-7xl p-6 text-sm text-slate-500">Loading template...</div>
   }
 

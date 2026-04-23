@@ -13,10 +13,12 @@ import {
   type Template,
   type TemplateInspectResult,
 } from "./api"
+import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 export default function TemplateDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { currentOrganizationId } = useOrganizations()
 
   const [template, setTemplate] = React.useState<Template | null>(null)
   const [inspectResult, setInspectResult] = React.useState<TemplateInspectResult | null>(null)
@@ -25,11 +27,12 @@ export default function TemplateDetailPage() {
   const [error, setError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
+    if (!id || !currentOrganizationId) return
+
     const run = async () => {
-      if (!id) return
       try {
         setLoading(true)
-        const data = await getTemplate(id)
+        const data = await getTemplate(id, { company: currentOrganizationId })
         setTemplate(data)
       } catch (err) {
         console.error(err)
@@ -40,13 +43,13 @@ export default function TemplateDetailPage() {
     }
 
     run()
-  }, [id])
+  }, [id, currentOrganizationId])
 
   const handleInspect = async () => {
-    if (!id) return
+    if (!id || !currentOrganizationId) return
     try {
       setIsInspecting(true)
-      const result = await inspectTemplate(id)
+      const result = await inspectTemplate(id, { company: currentOrganizationId })
       setInspectResult(result)
     } catch (err) {
       console.error(err)
@@ -56,7 +59,7 @@ export default function TemplateDetailPage() {
     }
   }
 
-  if (loading || !template) {
+  if (!currentOrganizationId || loading || !template) {
     return <div className="mx-auto max-w-7xl p-6 text-sm text-slate-500">Loading template...</div>
   }
 

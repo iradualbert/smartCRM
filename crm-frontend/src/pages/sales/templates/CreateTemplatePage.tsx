@@ -8,12 +8,12 @@ import { createTemplate } from "./api"
 import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 export default function CreateTemplatePage() {
-  const navigate = useNavigate();
-
-  const { organizations, defaultOrganization } = useOrganizations();
+  const navigate = useNavigate()
+  const { currentOrganizationId } = useOrganizations()
+  const companyId = currentOrganizationId ? Number(currentOrganizationId) : null
 
   const [values, setValues] = React.useState<TemplateFormValues>({
-    company: defaultOrganization?.id || 2,
+    company: companyId,
     name: "",
     description: "",
     document_type: "invoice",
@@ -24,6 +24,13 @@ export default function CreateTemplatePage() {
     file: null,
   })
 
+  React.useEffect(() => {
+    setValues((prev) => ({
+      ...prev,
+      company: companyId,
+    }))
+  }, [companyId])
+
   const [saving, setSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -32,6 +39,11 @@ export default function CreateTemplatePage() {
   }
 
   const handleSave = async () => {
+    if (!values.company) {
+      setError("No current organization selected.")
+      return
+    }
+
     setSaving(true)
     setError(null)
 
@@ -59,6 +71,12 @@ export default function CreateTemplatePage() {
 
   return (
     <div className="mx-auto max-w-7xl p-6 md:p-8">
+      {!currentOrganizationId ? (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+          Loading organization...
+        </div>
+      ) : null}
+
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
@@ -99,7 +117,7 @@ export default function CreateTemplatePage() {
           <Button
             className="rounded-2xl"
             onClick={handleSave}
-            disabled={saving || !values.file || !values.name}
+            disabled={saving || !values.file || !values.name || !values.company}
           >
             {saving ? "Creating..." : "Create template"}
           </Button>
