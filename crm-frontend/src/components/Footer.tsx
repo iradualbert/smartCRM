@@ -18,6 +18,10 @@ const Footer = () => {
                     <Button variant="link" size="lg">Privacy Policy</Button>
                 </Link>
                 <span> | </span>
+                <Link to="/guides">
+                    <Button variant="link" size="lg">Guides</Button>
+                </Link>
+                <span> | </span>
                 <Link to="/refund-policy">
                     <Button variant="link" size="lg">Refund Policy</Button>
                 </Link>

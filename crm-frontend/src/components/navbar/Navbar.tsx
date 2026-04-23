@@ -18,6 +18,7 @@ const marketingLinks = [
   { label: "Workflow", href: "/#workflow" },
   { label: "Insights", href: "/#insights" },
   { label: "Plans", href: "/#pricing" },
+  { label: "Guides", href: "/guides" },
 ];
 
 const Navbar = ({ isAppRoute: _isAppRoute = true }: { isAppRoute?: boolean }) => {
@@ -68,15 +69,25 @@ const Navbar = ({ isAppRoute: _isAppRoute = true }: { isAppRoute?: boolean }) =>
           </div>
         ) : (
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            {marketingLinks.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="transition hover:text-foreground"
-              >
-                {item.label}
-              </a>
-            ))}
+            {marketingLinks.map((item) =>
+              item.href.startsWith("/#") ? (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="transition hover:text-foreground"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className="transition hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              )
+            )}
           </nav>
         )}
 
@@ -123,13 +134,19 @@ const Navbar = ({ isAppRoute: _isAppRoute = true }: { isAppRoute?: boolean }) =>
                 ) : (
                   <div className="mt-6 space-y-6">
                     <div className="flex flex-col gap-1">
-                      {marketingLinks.map((item) => (
-                        <a key={item.label} href={item.href}>
-                          <Button variant="ghost" className="w-full justify-start rounded-xl">
-                            {item.label}
+                      {marketingLinks.map((item) =>
+                        item.href.startsWith("/#") ? (
+                          <a key={item.label} href={item.href}>
+                            <Button variant="ghost" className="w-full justify-start rounded-xl">
+                              {item.label}
+                            </Button>
+                          </a>
+                        ) : (
+                          <Button key={item.label} asChild variant="ghost" className="w-full justify-start rounded-xl">
+                            <Link to={item.href}>{item.label}</Link>
                           </Button>
-                        </a>
-                      ))}
+                        )
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-2 border-t pt-4">

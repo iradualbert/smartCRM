@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import axios from 'axios';
 import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import store from "./redux/store";
@@ -13,7 +13,6 @@ import { Provider } from "react-redux";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import LoginPage from "./pages/auth/LoginPage";
 import Dashboard from "./pages/DashboardPage";
-import MailDashoardPage from "./pages/mails/MailDashboardPage";
 
 import LandingPage from "./pages/landing-sales/LandingPage";
 import SignupPage from "./pages/auth/SignupPage";
@@ -75,6 +74,9 @@ import BillingPage from "./pages/billing/BillingPage";
 import OrganizationDetailPage from "./pages/organizations/OrganizationDetailPage";
 import EmailsListPage from "./pages/emails/EmailsListPage";
 
+const GuidesIndexPage = lazy(() => import("./pages/guides/GuidesIndexPage"));
+const GuideDetailPage = lazy(() => import("./pages/guides/GuideDetailPage"));
+
 const dev = "http://127.0.0.1:8000/api";
 const prod = location.origin + "/api";
 
@@ -97,6 +99,12 @@ function App() {
     store.dispatch(checkAuthToken())
   }, [])
 
+  const lazyFallback = (
+    <div className="min-h-[60vh] bg-slate-50 px-6 py-20 text-center text-sm text-slate-500">
+      Loading...
+    </div>
+  )
+
   return (
     <Provider store={store}>
       <TooltipProvider delayDuration={200}>
@@ -109,6 +117,22 @@ function App() {
               <Route path="/landing" element={<LandingPage />} />
               <Route path="/contact-us" element={<ContactUsPage />} />
               <Route path="/subs/:linkId" element={<SubscribePage />} />
+              <Route
+                path="/guides"
+                element={
+                  <Suspense fallback={lazyFallback}>
+                    <GuidesIndexPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/guides/:slug"
+                element={
+                  <Suspense fallback={lazyFallback}>
+                    <GuideDetailPage />
+                  </Suspense>
+                }
+              />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy-policy" element={<PrivacyPage />} />
               <Route path="/refund-policy" element={<RefundPolicyPage />} />
