@@ -32,9 +32,8 @@ function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     draft: "border-slate-200 bg-slate-100 text-slate-700",
     sent: "border-sky-200 bg-sky-50 text-sky-700",
-    approved: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    accepted: "border-emerald-200 bg-emerald-50 text-emerald-700",
     rejected: "border-rose-200 bg-rose-50 text-rose-700",
-    expired: "border-amber-200 bg-amber-50 text-amber-700",
   }
 
   return (
@@ -165,9 +164,8 @@ export default function QuotationListPage() {
             <option value="all">All statuses</option>
             <option value="draft">draft</option>
             <option value="sent">sent</option>
-            <option value="approved">approved</option>
+            <option value="accepted">accepted</option>
             <option value="rejected">rejected</option>
-            <option value="expired">expired</option>
           </select>
 
           <select

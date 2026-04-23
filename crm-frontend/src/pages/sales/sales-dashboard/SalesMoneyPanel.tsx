@@ -14,7 +14,7 @@ export default function SalesMoneyPanel({ money, currencySymbol = "" }: Props) {
     {
       label: "Quotation pipeline",
       value: `${currencySymbol}${money.quotation_pipeline_total}`,
-      hint: "Sent and approved quotation value",
+      hint: "Sent and accepted quotation value",
     },
     {
       label: "Outstanding invoices",

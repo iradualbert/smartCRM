@@ -30,7 +30,7 @@ export const invoiceFormSchema = z.object({
   invoice_number: z.string().optional(),
   currency: z.string().optional(),
   selected_template: z.coerce.number().nullable().optional(),
-  status: z.enum(["draft", "sent", "partially_paid", "paid", "overdue", "cancelled"]),
+  status: z.enum(["draft", "sent", "paid", "overdue"]),
   internal_note: z.string().optional(),
   lines: z
     .array(
@@ -55,10 +55,6 @@ function statusTone(status: InvoiceStatus) {
       return "bg-sky-50 text-sky-700"
     case "overdue":
       return "bg-rose-50 text-rose-700"
-    case "partially_paid":
-      return "bg-amber-50 text-amber-700"
-    case "cancelled":
-      return "bg-zinc-100 text-zinc-700"
     default:
       return "bg-slate-100 text-slate-700"
   }
@@ -306,11 +302,12 @@ export default function InvoiceForm({
                 >
                   <option value="draft">draft</option>
                   <option value="sent">sent</option>
-                  <option value="partially_paid">partially paid</option>
                   <option value="paid">paid</option>
                   <option value="overdue">overdue</option>
-                  <option value="cancelled">cancelled</option>
                 </select>
+                <FieldDescription>
+                  Overdue is applied automatically when the due date passes.
+                </FieldDescription>
               </Field>
             )}
           />

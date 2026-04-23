@@ -26,11 +26,11 @@ def _build_company_dashboard_context(company):
     subscription = company.subscriptions.order_by("-created_at").first()
 
     quote_pipeline_total = quotations.filter(
-        status__in=["sent", "approved"]
+        status__in=["sent", "accepted"]
     ).aggregate(total=Sum("total"))["total"] or Decimal("0.00")
 
     outstanding_invoice_total = invoices.filter(
-        status__in=["sent", "partially_paid", "overdue"]
+        status__in=["sent", "overdue"]
     ).aggregate(total=Sum("total"))["total"] or Decimal("0.00")
 
     receipts_this_month_total = receipts.filter(
@@ -115,7 +115,7 @@ def _build_company_dashboard_context(company):
         {
             "label": "Outstanding invoices",
             "value": str(
-                invoices.filter(status__in=["sent", "partially_paid", "overdue"]).count()
+                invoices.filter(status__in=["sent", "overdue"]).count()
             ),
             "hint": "Invoices still waiting for payment",
         },
@@ -182,17 +182,14 @@ def _build_company_dashboard_context(company):
             "quotations": {
                 "draft": quotations.filter(status="draft").count(),
                 "sent": quotations.filter(status="sent").count(),
-                "approved": quotations.filter(status="approved").count(),
+                "accepted": quotations.filter(status="accepted").count(),
                 "rejected": quotations.filter(status="rejected").count(),
-                "expired": quotations.filter(status="expired").count(),
             },
             "invoices": {
                 "draft": invoices.filter(status="draft").count(),
                 "sent": invoices.filter(status="sent").count(),
-                "partially_paid": invoices.filter(status="partially_paid").count(),
                 "paid": invoices.filter(status="paid").count(),
                 "overdue": invoices.filter(status="overdue").count(),
-                "cancelled": invoices.filter(status="cancelled").count(),
             },
             "proformas": {
                 "draft": proformas.filter(status="draft").count(),

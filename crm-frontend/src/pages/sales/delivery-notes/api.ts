@@ -32,7 +32,7 @@ export type Invoice = {
   pdf_generated_at: string | null
   pdf_needs_regeneration: boolean
   invoice_number: string
-  status: "draft" | "sent" | "partially_paid" | "paid" | "overdue" | "cancelled"
+  status: "draft" | "sent" | "paid" | "overdue"
   subtotal: string
   total: string
   created_at: string

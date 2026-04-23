@@ -431,10 +431,22 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
         except Exception as exc:
             return Response({"detail": f"Failed to send email: {exc}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        previous_status = getattr(instance, "status", None)
+
         # Auto-update document status to "sent" if currently draft
         if hasattr(instance, "status") and instance.status == "draft":
             instance.status = "sent"
             instance.save(update_fields=["status", "updated_at"])
+
+        if isinstance(instance, Invoice):
+            instance.sync_status_from_business_rules()
+            if previous_status != instance.status:
+                log_event(
+                    instance,
+                    "status_changed",
+                    metadata={"from": previous_status, "to": instance.status},
+                    user=request.user,
+                )
 
         log_event(
             instance,
@@ -1003,6 +1015,24 @@ class InvoiceViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     ).prefetch_related("lines").all().order_by("-created_at")
     serializer_class = InvoiceSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        for invoice in queryset:
+            invoice.sync_status_from_business_rules()
+        return queryset
+
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        post_update_status = serializer.instance.status
+        serializer.instance.sync_status_from_business_rules()
+        if post_update_status != serializer.instance.status:
+            log_event(
+                serializer.instance,
+                "status_changed",
+                metadata={"from": post_update_status, "to": serializer.instance.status},
+                user=self.request.user,
+            )
+
 
 class InvoiceLineViewSet(OrganizationScopedLineItemMixin, BaseModelViewSet):
     company_lookup = "invoice__company"
@@ -1044,6 +1074,45 @@ class ReceiptViewSet(DocumentLifecycleMixin, BaseModelViewSet):
         "invoice", "company", "document", "selected_template", "created_by", "updated_by"
     ).all().order_by("-created_at")
     serializer_class = ReceiptSerializer
+
+    def perform_create(self, serializer):
+        invoice = serializer.validated_data.get("invoice")
+        previous_status = invoice.status if invoice else None
+        super().perform_create(serializer)
+        serializer.instance.invoice.sync_status_from_business_rules()
+        if invoice and previous_status != invoice.status:
+            log_event(
+                invoice,
+                "status_changed",
+                metadata={"from": previous_status, "to": invoice.status},
+                user=self.request.user,
+            )
+
+    def perform_update(self, serializer):
+        invoice = serializer.instance.invoice
+        previous_status = invoice.status if invoice else None
+        super().perform_update(serializer)
+        serializer.instance.invoice.sync_status_from_business_rules()
+        if invoice and previous_status != invoice.status:
+            log_event(
+                invoice,
+                "status_changed",
+                metadata={"from": previous_status, "to": invoice.status},
+                user=self.request.user,
+            )
+
+    def perform_destroy(self, instance):
+        invoice = instance.invoice
+        previous_status = invoice.status if invoice else None
+        instance.delete()
+        invoice.sync_status_from_business_rules()
+        if invoice and previous_status != invoice.status:
+            log_event(
+                invoice,
+                "status_changed",
+                metadata={"from": previous_status, "to": invoice.status},
+                user=self.request.user,
+            )
 
 
 class DeliveryNoteViewSet(DocumentLifecycleMixin, BaseModelViewSet):

@@ -32,7 +32,7 @@ const stages = [
   {
     title: "Proforma",
     icon: FileSpreadsheet,
-    subtitle: "Turn approved quotes into a payment-ready document",
+    subtitle: "Turn accepted quotes into a payment-ready document",
     color: "from-violet-500/20 to-fuchsia-500/10",
     bullets: [
       "Convert quotation into proforma",
@@ -131,7 +131,7 @@ export default function SalesWorkflowLifecycle() {
                 {[
                   "Create documents faster with connected stages",
                   "Generate PDFs and email them from the same workflow",
-                  "Track what was sent, approved, invoiced, and delivered",
+                  "Track what was sent, accepted, invoiced, and delivered",
                   "Give ops, finance, and sales one shared view",
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-slate-900/60 p-3">

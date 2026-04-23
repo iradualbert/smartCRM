@@ -4,6 +4,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -323,9 +324,8 @@ class Quotation(DocumentAbstractModel):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
         SENT = "sent", "Sent"
-        APPROVED = "approved", "Approved"
+        ACCEPTED = "accepted", "Accepted"
         REJECTED = "rejected", "Rejected"
-        EXPIRED = "expired", "Expired"
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="quotations")
     selected_template = models.ForeignKey(
@@ -438,10 +438,8 @@ class Invoice(DocumentAbstractModel):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
         SENT = "sent", "Sent"
-        PARTIALLY_PAID = "partially_paid", "Partially Paid"
         PAID = "paid", "Paid"
         OVERDUE = "overdue", "Overdue"
-        CANCELLED = "cancelled", "Cancelled"
 
     proforma = models.ForeignKey(
         Proforma,
@@ -528,6 +526,29 @@ class Invoice(DocumentAbstractModel):
                 "updated_at",
             ]
         )
+
+    def sync_status_from_business_rules(self, save: bool = True):
+        issued_receipts_total = self.receipts.filter(
+            status=Receipt.Status.ISSUED
+        ).aggregate(total=models.Sum("amount_paid"))["total"] or Decimal("0.00")
+        today = timezone.localdate()
+
+        if self.total and issued_receipts_total >= self.total:
+            next_status = self.Status.PAID
+        elif self.status == self.Status.DRAFT:
+            next_status = self.Status.DRAFT
+        elif self.valid_until and self.valid_until < today:
+            next_status = self.Status.OVERDUE
+        else:
+            next_status = self.Status.SENT
+
+        if self.status == next_status:
+            return False
+
+        self.status = next_status
+        if save:
+            self.save(update_fields=["status", "updated_at"])
+        return True
 
 class Receipt(DocumentAbstractModel):
     class Status(models.TextChoices):

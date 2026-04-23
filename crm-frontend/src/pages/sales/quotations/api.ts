@@ -42,9 +42,8 @@ export type Template = {
 export type QuotationStatus =
   | "draft"
   | "sent"
-  | "approved"
+  | "accepted"
   | "rejected"
-  | "expired"
 
 export type QuotationTaxMode = "exclusive" | "inclusive"
 

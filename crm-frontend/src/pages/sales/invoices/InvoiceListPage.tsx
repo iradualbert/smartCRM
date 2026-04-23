@@ -26,10 +26,8 @@ function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     draft: "border-slate-200 bg-slate-100 text-slate-700",
     sent: "border-sky-200 bg-sky-50 text-sky-700",
-    partially_paid: "border-amber-200 bg-amber-50 text-amber-700",
     paid: "border-emerald-200 bg-emerald-50 text-emerald-700",
     overdue: "border-rose-200 bg-rose-50 text-rose-700",
-    cancelled: "border-zinc-200 bg-zinc-100 text-zinc-700",
   }
 
   return (
@@ -139,10 +137,8 @@ export default function InvoiceListPage() {
             <option value="all">All statuses</option>
             <option value="draft">draft</option>
             <option value="sent">sent</option>
-            <option value="partially_paid">partially paid</option>
             <option value="paid">paid</option>
             <option value="overdue">overdue</option>
-            <option value="cancelled">cancelled</option>
           </select>
 
           <Button

@@ -74,7 +74,7 @@ export const quotationFormSchema = z
     description: z.string().optional(),
     currency: z.string().min(1, "Currency is required"),
     selected_template: z.coerce.number().nullable().optional(),
-    status: z.enum(["draft", "sent", "approved", "rejected", "expired"]),
+    status: z.enum(["draft", "sent", "accepted", "rejected"]),
     issue_date: z.string().optional(),
     valid_until: z.string().optional(),
 
@@ -667,9 +667,8 @@ export default function QuotationForm({
                     >
                       <option value="draft">draft</option>
                       <option value="sent">sent</option>
-                      <option value="approved">approved</option>
+                      <option value="accepted">accepted</option>
                       <option value="rejected">rejected</option>
-                      <option value="expired">expired</option>
                     </select>
                   </Field>
                 )}

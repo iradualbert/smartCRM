@@ -44,7 +44,7 @@ export type Quotation = {
   name: string
   description: string | null
   quote_number: string
-  status: "draft" | "sent" | "approved" | "rejected" | "expired"
+  status: "draft" | "sent" | "accepted" | "rejected"
   subtotal: string
   total: string
   created_at: string

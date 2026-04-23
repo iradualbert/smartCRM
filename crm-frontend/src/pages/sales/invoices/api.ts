@@ -31,10 +31,8 @@ export type ProformaStatus =
 export type InvoiceStatus =
   | "draft"
   | "sent"
-  | "partially_paid"
   | "paid"
   | "overdue"
-  | "cancelled"
 
 export type Proforma = {
   id: number

@@ -17,14 +17,12 @@ type Props = {
 
 function StatusBadge({ status }: { status: string }) {
   const styles =
-    status === "approved"
+    status === "accepted"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : status === "sent"
       ? "border-sky-200 bg-sky-50 text-sky-700"
       : status === "rejected"
       ? "border-rose-200 bg-rose-50 text-rose-700"
-      : status === "expired"
-      ? "border-amber-200 bg-amber-50 text-amber-700"
       : "border-slate-200 bg-slate-100 text-slate-700"
 
   return <Badge className={`rounded-full border ${styles}`}>{status}</Badge>
