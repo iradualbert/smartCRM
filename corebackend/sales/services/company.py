@@ -3,7 +3,7 @@ from django.db import transaction
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
 
-from  billing.models import BillingUsage, Subscription, SubscriptionEvent
+from  billing.models import BillingUsage, Plan, Subscription, SubscriptionEvent
 from ..models import Company, DeliveryNote, DocumentEvent, Invoice, Proforma, Quotation, Receipt
 from ..models_email import EmailSendingConfig
 
@@ -198,6 +198,27 @@ def _build_company_dashboard_context(company):
 
     workspace_metrics[-1]["value"] = str(len(attention))
 
+    is_new_workspace = (
+        not quotations.exists()
+        and not invoices.exists()
+        and not proformas.exists()
+    )
+
+    # Resolve effective plan for limits (fall back to free plan when no active subscription)
+    active_sub = company.subscriptions.filter(status="active").select_related("plan").order_by("-created_at").first()
+    if active_sub:
+        effective_plan = active_sub.plan
+    else:
+        effective_plan = Plan.objects.filter(code="free").first()
+
+    plan_limits = {
+        "max_documents_per_month": effective_plan.max_documents_per_month if effective_plan else None,
+        "max_emails_per_month": effective_plan.max_emails_per_month if effective_plan else None,
+        "max_storage_mb": effective_plan.max_storage_mb if effective_plan else None,
+        "allow_pdf_generation": effective_plan.allow_pdf_generation if effective_plan else True,
+        "allow_email_sending": effective_plan.allow_email_sending if effective_plan else True,
+    }
+
     return {
         "company": {
             "id": company.id,
@@ -205,6 +226,7 @@ def _build_company_dashboard_context(company):
             "currency": company.default_currency,
             "currency_symbol": company.currency_symbol,
         },
+        "is_new_workspace": is_new_workspace,
         "workspace_metrics": workspace_metrics,
         "sales_metrics": sales_metrics,
         "setup": setup_items,
@@ -214,6 +236,7 @@ def _build_company_dashboard_context(company):
             "storage_bytes": usage.storage_bytes if usage else 0,
             "storage_mb": round((usage.storage_bytes / (1024 * 1024)), 2) if usage else 0,
         },
+        "plan_limits": plan_limits,
         "subscription": {
             "plan": subscription.plan if subscription else "",
             "status": subscription.status if subscription else "",

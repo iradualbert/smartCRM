@@ -45,13 +45,13 @@ const LoginPage = () => {
             className={cn(
               "h-11 rounded-2xl border-slate-200 focus-visible:ring-teal-600",
               {
-                "focus-visible:ring-red-500": errors?.email,
+                "border-rose-400 focus-visible:ring-rose-500": errors?.email,
               }
             )}
             placeholder="you@example.com"
           />
           {errors?.email ? (
-            <p className="text-sm text-red-500">{errors.email}</p>
+            <p className="text-sm text-rose-600" role="alert">{errors.email}</p>
           ) : null}
         </div>
 
@@ -73,13 +73,13 @@ const LoginPage = () => {
             className={cn(
               "h-11 rounded-2xl border-slate-200 focus-visible:ring-teal-600",
               {
-                "focus-visible:ring-red-500": errors?.password,
+                "border-rose-400 focus-visible:ring-rose-500": errors?.password,
               }
             )}
             placeholder="Enter your password"
           />
           {errors?.password ? (
-            <p className="text-sm text-red-500">{errors.password}</p>
+            <p className="text-sm text-rose-600" role="alert">{errors.password}</p>
           ) : null}
         </div>
 

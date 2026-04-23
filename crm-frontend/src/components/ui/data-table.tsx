@@ -51,7 +51,12 @@ function DataTable<TData, TValue>({
 
     return (
         <div>
-            {isLoading && (<h3 className="text-lg">Loading.....</h3>)}
+            {isLoading && (
+                <div className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+                    Loading...
+                </div>
+            )}
             <div className="flex items-center justify-end space-x-2 py-4 gap-3">
                 <span >Total: {count}</span>
                 <Button

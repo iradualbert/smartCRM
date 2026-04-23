@@ -19,6 +19,8 @@ export type ContactFormProps = {
 const inputClassName =
   "w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
+const inputErrorClassName = `${inputClassName} border-rose-400 focus-visible:ring-rose-500`;
+
 const ContactForm = ({
   onFieldChange,
   isReadOnly,
@@ -28,7 +30,9 @@ const ContactForm = ({
   return (
     <form className="flex flex-col gap-4 md:px-10">
       {errors?.non_field_errors && (
-        <p className="text-sm text-destructive">{errors.non_field_errors}</p>
+        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+          {errors.non_field_errors}
+        </div>
       )}
 
       <div className="flex flex-col gap-2">
@@ -37,14 +41,14 @@ const ContactForm = ({
         </label>
         <input
           id="first_name"
-          className={inputClassName}
+          className={errors?.first_name ? inputErrorClassName : inputClassName}
           value={contact.first_name}
           disabled={isReadOnly}
           name="first_name"
           onChange={onFieldChange}
         />
         {errors?.first_name && (
-          <p className="text-sm text-destructive">{errors.first_name}</p>
+          <p className="text-sm text-rose-600" role="alert">{errors.first_name}</p>
         )}
       </div>
 
@@ -54,14 +58,14 @@ const ContactForm = ({
         </label>
         <input
           id="last_name"
-          className={inputClassName}
+          className={errors?.last_name ? inputErrorClassName : inputClassName}
           value={contact.last_name}
           disabled={isReadOnly}
           name="last_name"
           onChange={onFieldChange}
         />
         {errors?.last_name && (
-          <p className="text-sm text-destructive">{errors.last_name}</p>
+          <p className="text-sm text-rose-600" role="alert">{errors.last_name}</p>
         )}
       </div>
 
@@ -71,7 +75,7 @@ const ContactForm = ({
         </label>
         <input
           id="email"
-          className={inputClassName}
+          className={errors?.email ? inputErrorClassName : inputClassName}
           type="email"
           value={contact.email}
           disabled={isReadOnly}
@@ -79,7 +83,7 @@ const ContactForm = ({
           name="email"
         />
         {errors?.email && (
-          <p className="text-sm text-destructive">{errors.email}</p>
+          <p className="text-sm text-rose-600" role="alert">{errors.email}</p>
         )}
       </div>
 
@@ -89,14 +93,14 @@ const ContactForm = ({
         </label>
         <input
           id="phone_number"
-          className={inputClassName}
+          className={errors?.phone_number ? inputErrorClassName : inputClassName}
           value={contact.phone_number}
           disabled={isReadOnly}
           name="phone_number"
           onChange={onFieldChange}
         />
         {errors?.phone_number && (
-          <p className="text-sm text-destructive">{errors.phone_number}</p>
+          <p className="text-sm text-rose-600" role="alert">{errors.phone_number}</p>
         )}
       </div>
 
@@ -106,7 +110,7 @@ const ContactForm = ({
         </label>
         <textarea
           id="address"
-          className={inputClassName}
+          className={errors?.address ? inputErrorClassName : inputClassName}
           value={contact.address}
           rows={2}
           placeholder="Address"
@@ -115,7 +119,7 @@ const ContactForm = ({
           onChange={onFieldChange}
         />
         {errors?.address && (
-          <p className="text-sm text-destructive">{errors.address}</p>
+          <p className="text-sm text-rose-600" role="alert">{errors.address}</p>
         )}
       </div>
     </form>

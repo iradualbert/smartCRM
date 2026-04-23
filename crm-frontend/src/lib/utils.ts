@@ -4,6 +4,33 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { TemplateParameter } from "./types";
 
+export function extractApiErrorMessage(error: unknown, fallback: string): string {
+  if (!axios.isAxiosError(error)) {
+    return error instanceof Error ? error.message : fallback
+  }
+
+  const data = error.response?.data
+  if (!data) return fallback
+
+  if (typeof data.detail === "string") return data.detail
+
+  if (Array.isArray(data.non_field_errors) && data.non_field_errors.length > 0) {
+    return data.non_field_errors.join(" ")
+  }
+
+  if (typeof data === "object") {
+    const messages: string[] = []
+    for (const [key, val] of Object.entries(data)) {
+      if (key === "non_field_errors") continue
+      if (Array.isArray(val)) messages.push(`${key}: ${val.join(", ")}`)
+      else if (typeof val === "string") messages.push(`${key}: ${val}`)
+    }
+    if (messages.length > 0) return messages.join(" • ")
+  }
+
+  return fallback
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

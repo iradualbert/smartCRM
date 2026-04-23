@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { useDispatch } from "react-redux"
 import { useState } from "react"
+import { cn } from "@/lib/utils"
 import {
   registerUser,
   resend_verification_code,
@@ -144,10 +145,10 @@ const SignupPage = () => {
             placeholder="John Doe"
             onChange={(e) => setFullname(e.target.value)}
             disabled={isLoading}
-            className="h-11 rounded-2xl border-slate-200"
+            className={cn("h-11 rounded-2xl border-slate-200", { "border-rose-400 focus-visible:ring-rose-500": errors?.fullname })}
           />
           {errors?.fullname ? (
-            <p className="text-sm text-destructive">{errors.fullname}</p>
+            <p className="text-sm text-rose-600" role="alert">{errors.fullname}</p>
           ) : null}
         </div>
 
@@ -159,9 +160,9 @@ const SignupPage = () => {
             placeholder="you@example.com"
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
-            className="h-11 rounded-2xl border-slate-200"
+            className={cn("h-11 rounded-2xl border-slate-200", { "border-rose-400 focus-visible:ring-rose-500": errors?.email })}
           />
-          {errors?.email ? <p className="text-sm text-destructive">{errors.email}</p> : null}
+          {errors?.email ? <p className="text-sm text-rose-600" role="alert">{errors.email}</p> : null}
         </div>
 
         <div className="space-y-2">
@@ -172,9 +173,9 @@ const SignupPage = () => {
             placeholder="Create a password"
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
-            className="h-11 rounded-2xl border-slate-200"
+            className={cn("h-11 rounded-2xl border-slate-200", { "border-rose-400 focus-visible:ring-rose-500": errors?.password })}
           />
-          {errors?.password ? <p className="text-sm text-destructive">{errors.password}</p> : null}
+          {errors?.password ? <p className="text-sm text-rose-600" role="alert">{errors.password}</p> : null}
         </div>
 
         <div className="space-y-2">
@@ -185,10 +186,10 @@ const SignupPage = () => {
             placeholder="Confirm your password"
             onChange={(e) => setPasswordConfirm(e.target.value)}
             disabled={isLoading}
-            className="h-11 rounded-2xl border-slate-200"
+            className={cn("h-11 rounded-2xl border-slate-200", { "border-rose-400 focus-visible:ring-rose-500": errors?.password_confirm })}
           />
           {errors?.password_confirm ? (
-            <p className="text-sm text-destructive">{errors.password_confirm}</p>
+            <p className="text-sm text-rose-600" role="alert">{errors.password_confirm}</p>
           ) : null}
         </div>
 

@@ -12,19 +12,29 @@ export * from "./useAPI";
 export const useDashboardData = () => {
     const [dashboardData, setDashboardData] = useState({
         sent_emails: 0,
-        scheduled_emails:0,
+        scheduled_emails: 0,
         failed_emails: 0,
         total_contacts: 0,
         newsletter_subs: 0,
         mail_templates: 0,
-        max_emails_per_day:100,
+        max_emails_per_day: 100,
         emails_sent_today: 0,
     });
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
     useEffect(() => {
+        setIsLoading(true);
         axios.get("/accounts/dashboard_data")
-            .then(res => setDashboardData(res.data))
-    }, [])
-    return { data: dashboardData }
+            .then(res => {
+                setDashboardData(res.data);
+                setError(null);
+            })
+            .catch(() => setError("Failed to load dashboard data."))
+            .finally(() => setIsLoading(false));
+    }, []);
+
+    return { data: dashboardData, isLoading, error };
 }
 export const useDashboardData_ = () => {
     const [dashboardData, setDashboardData] = useState({

@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from billing.services.utils import (
     can_create_document,
+    can_generate_pdf,
     can_send_email,
     increment_documents_created,
     increment_emails_sent,
@@ -296,6 +297,11 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
     @action(detail=True, methods=["post"])
     def generate_pdf(self, request, pk=None):
         instance = self.get_object()
+        company = getattr(instance, "company", None)
+        if company:
+            allowed, message = can_generate_pdf(company)
+            if not allowed:
+                return Response({"detail": message}, status=status.HTTP_403_FORBIDDEN)
         try:
             document, generated = generate_document_for_instance(
                 instance=instance,
@@ -331,6 +337,11 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
     @action(detail=True, methods=["post"])
     def regenerate_pdf(self, request, pk=None):
         instance = self.get_object()
+        company = getattr(instance, "company", None)
+        if company:
+            allowed, message = can_generate_pdf(company)
+            if not allowed:
+                return Response({"detail": message}, status=status.HTTP_403_FORBIDDEN)
         try:
             document, _ = generate_document_for_instance(
                 instance=instance,
@@ -1462,9 +1473,11 @@ class CompanyViewSet(BaseModelViewSet):
 
         data = {
             "company": payload["company"],
+            "is_new_workspace": payload["is_new_workspace"],
             "metrics": payload["workspace_metrics"],
             "setup": payload["setup"],
             "usage": payload["usage"],
+            "plan_limits": payload["plan_limits"],
             "subscription": payload["subscription"],
             "attention": payload["attention"],
             "activity": payload["activity"],

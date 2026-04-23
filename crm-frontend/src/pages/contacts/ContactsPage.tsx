@@ -26,6 +26,8 @@ import { useToast } from "@/components/ui/use-toast";
 
 const ContactsManagerPage = () => {
   const [_contacts, setContacts] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { categories: contactCategories, all_contacts } = useSelector(
     (state: any) => state.contacts
@@ -34,8 +36,18 @@ const ContactsManagerPage = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    getContacts();
-    getCategories();
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setHasError(false);
+        await Promise.all([getContacts(), getCategories()]);
+      } catch {
+        setHasError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
   }, []);
 
   const showToast = (message: string, variant: "default" | "destructive") => {
@@ -79,6 +91,17 @@ const ContactsManagerPage = () => {
   const category = categoryId
     ? contactCategories?.find((cat) => cat.id === parseInt(categoryId))
     : null;
+
+  if (hasError) {
+    return (
+      <div className="flex flex-col gap-4 p-3 md:p-6">
+        <h1 className="text-2xl font-semibold">My Contacts</h1>
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+          Failed to load contacts. Please refresh the page to try again.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 bg-muted/30 p-3 md:p-6">
@@ -169,7 +192,20 @@ const ContactsManagerPage = () => {
             </TableHeader>
 
             <TableBody>
-              {all_contacts?.results?.map((contact: any) => (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                    Loading contacts...
+                  </TableCell>
+                </TableRow>
+              ) : all_contacts?.results?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                    No contacts found. Add your first contact to get started.
+                  </TableCell>
+                </TableRow>
+              ) : null}
+              {!isLoading && all_contacts?.results?.map((contact: any) => (
                 <TableRow key={contact.id}>
                   <TableCell>
                     <div className="flex flex-col gap-1">

@@ -77,11 +77,21 @@ class DashboardSetupItemSerializer(serializers.Serializer):
     action_href = serializers.CharField(required=False, allow_blank=True, default="")
 
 
+class DashboardPlanLimitsSerializer(serializers.Serializer):
+    max_documents_per_month = serializers.IntegerField(allow_null=True)
+    max_emails_per_month = serializers.IntegerField(allow_null=True)
+    max_storage_mb = serializers.IntegerField(allow_null=True)
+    allow_pdf_generation = serializers.BooleanField()
+    allow_email_sending = serializers.BooleanField()
+
+
 class WorkspaceDashboardSerializer(serializers.Serializer):
     company = serializers.DictField()
+    is_new_workspace = serializers.BooleanField(default=False)
     metrics = DashboardMetricCardSerializer(many=True)
     setup = DashboardSetupItemSerializer(many=True)
     usage = serializers.DictField()
+    plan_limits = DashboardPlanLimitsSerializer()
     attention = DashboardAttentionItemSerializer(many=True)
     activity = DashboardActivityItemSerializer(many=True)
     recent_quotations = DashboardRecentQuotationSerializer(many=True)

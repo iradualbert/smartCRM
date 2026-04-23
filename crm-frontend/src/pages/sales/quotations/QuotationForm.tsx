@@ -43,7 +43,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { cn } from "@/lib/utils"
+import { cn, extractApiErrorMessage } from "@/lib/utils"
 
 import {
   createCustomer,
@@ -383,7 +383,7 @@ export default function QuotationForm({
       await onSubmit(values, removedLineIds)
     } catch (error) {
       console.error(error)
-      setSubmitError(error instanceof Error ? error.message : "Failed to save quotation.")
+      setSubmitError(extractApiErrorMessage(error, "Failed to save quotation."))
     }
   }
 
@@ -440,7 +440,7 @@ export default function QuotationForm({
     <>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         {submitError ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
             {submitError}
           </div>
         ) : null}

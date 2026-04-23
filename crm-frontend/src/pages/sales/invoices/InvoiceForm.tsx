@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import SearchSelect from "../shared-components/SearchSelect"
 import TemplatePicker from "../shared-components/TemplatePicker"
 import DocumentLineItemsEditor from "@/shared/DocumentLineItemsEditor"
+import { extractApiErrorMessage } from "@/lib/utils"
 import {
   getProforma,
   getQuotation,
@@ -382,14 +383,14 @@ export default function InvoiceForm({
       await onSubmit(values, removedLineIds)
     } catch (error) {
       console.error(error)
-      setSubmitError(error instanceof Error ? error.message : "Failed to save invoice.")
+      setSubmitError(extractApiErrorMessage(error, "Failed to save invoice."))
     }
   }
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
       {submitError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
           {submitError}
         </div>
       ) : null}

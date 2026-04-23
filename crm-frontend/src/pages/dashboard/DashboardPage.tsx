@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
-import { AlertTriangle, FileText, Package2, Plus, Users } from "lucide-react"
+import { AlertTriangle, ArrowRight, FileText, Package2, Plus, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useOrganizations } from "@/redux/hooks/useOrganizations"
@@ -79,6 +79,55 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {data.is_new_workspace ? (
+        <div className="mb-8 overflow-hidden rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-sm">
+          <div className="p-6 md:p-8">
+            <div className="inline-flex items-center rounded-full border border-sky-200 bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
+              Getting started
+            </div>
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">
+              Welcome to Modura
+            </h2>
+            <p className="mt-2 max-w-xl text-sm text-slate-600">
+              Create professional quotations, convert them to invoices, and send everything directly to your clients — all in one place.
+            </p>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              {[
+                { step: "1", title: "Add a customer", detail: "Add the client you'll be billing.", href: "/customers", cta: "Add customer" },
+                { step: "2", title: "Create a quotation", detail: "Fill in line items, taxes, and send.", href: "/quotations/new", cta: "Create quotation" },
+                { step: "3", title: "Convert & collect", detail: "Turn accepted quotations into invoices.", href: null, cta: null },
+              ].map((item) => (
+                <div key={item.step} className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sm font-semibold text-sky-700">
+                    {item.step}
+                  </div>
+                  <div className="font-medium text-slate-900">{item.title}</div>
+                  <p className="mt-1 text-sm text-slate-600">{item.detail}</p>
+                  {item.href && item.cta ? (
+                    <Button asChild variant="outline" className="mt-4 rounded-xl" size="sm">
+                      <Link to={item.href}>
+                        {item.cta}
+                        <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6">
+              <Button asChild className="rounded-2xl">
+                <Link to="/quotations/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create your first quotation
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {data.metrics.map((item: any, index: number) => (
           <DashboardMetricCard
@@ -99,7 +148,7 @@ export default function DashboardPage() {
 
         <div className="space-y-6 xl:col-span-4">
           <DashboardAttentionPanel items={data.attention} />
-          <DashboardUsageCard usage={data.usage} subscription={data.subscription} />
+          <DashboardUsageCard usage={data.usage} planLimits={data.plan_limits} subscription={data.subscription} />
         </div>
       </div>
     </div>

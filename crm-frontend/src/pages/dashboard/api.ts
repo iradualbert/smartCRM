@@ -38,6 +38,14 @@ export type DashboardSetupItem = {
   action_href?: string
 }
 
+export type DashboardPlanLimits = {
+  max_documents_per_month: number | null
+  max_emails_per_month: number | null
+  max_storage_mb: number | null
+  allow_pdf_generation: boolean
+  allow_email_sending: boolean
+}
+
 export type WorkspaceDashboardResponse = {
   company: {
     id: number
@@ -45,6 +53,7 @@ export type WorkspaceDashboardResponse = {
     currency: string
     currency_symbol: string
   }
+  is_new_workspace: boolean
   metrics: DashboardMetric[]
   setup: DashboardSetupItem[]
   usage: {
@@ -53,6 +62,7 @@ export type WorkspaceDashboardResponse = {
     storage_bytes: number
     storage_mb: number
   }
+  plan_limits: DashboardPlanLimits
   subscription: {
     plan: string
     status: string

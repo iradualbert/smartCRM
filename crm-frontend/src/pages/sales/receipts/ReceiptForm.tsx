@@ -9,6 +9,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import SearchSelect from "../shared-components/SearchSelect"
 import TemplatePicker from "../shared-components/TemplatePicker"
+import { extractApiErrorMessage } from "@/lib/utils"
 import {
   listInvoices,
   listReceiptTemplates,
@@ -147,14 +148,14 @@ export default function ReceiptForm({
     try {
       await onSubmit(values)
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Failed to save receipt.")
+      setSubmitError(extractApiErrorMessage(error, "Failed to save receipt."))
     }
   }
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
       {submitError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
           {submitError}
         </div>
       ) : null}
