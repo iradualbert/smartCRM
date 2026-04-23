@@ -14,6 +14,7 @@ export type Invoice = {
   id: number
   company: number | null
   proforma: number
+  customer: number | null
   selected_template: number | null
   document: number | null
   currency: string | null
@@ -36,6 +37,7 @@ export type Receipt = {
   id: number
   company: number | null
   invoice: number
+  customer: number | null
   selected_template: number | null
   document: number | null
   currency: string | null
@@ -46,14 +48,16 @@ export type Receipt = {
   status: ReceiptStatus
   created_at: string
   updated_at: string
+  customer_name?: string | null
 }
 
 export type ReceiptPayload = {
   company: number
   invoice: number
+  customer?: number | null
   selected_template?: number | null
   currency?: string
-  receipt_number: string
+  receipt_number?: string
   amount_paid: string
   status?: ReceiptStatus
 }

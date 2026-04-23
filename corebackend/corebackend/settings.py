@@ -232,30 +232,26 @@ if ENV=="PRODUCTION":
 LOGGING = {}
 
 if not DEBUG:
-    # REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = ('rest_framework.renderers.JSONRenderer', )
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = ('rest_framework.renderers.JSONRenderer', )
     
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-                },
-            },
-        'loggers': {
-            'django': {
-                'level': 'ERROR',
-                'handlers': ['console'],
-                },
-            }
-        }
+#     LOGGING = {
+#         'version': 1,
+#         'disable_existing_loggers': False,
+#         'handlers': {
+#             'console': {
+#                 'class': 'logging.StreamHandler',
+#                 },
+#             },
+#         'loggers': {
+#             'django': {
+#                 'level': 'ERROR',
+#                 'handlers': ['console'],
+#                 },
+#             }
+#         }
     
 
-# return {
-#         "api_key": settings.IYZICO_API_KEY,
-#         "secret_key": settings.IYZICO_SECRET_KEY,
-#         "base_url": settings.IYZICO_BASE_URL,
-#     }
+
 
 IYZICO_API_KEY = os.environ.get("IYZICO_API_KEY")
 IYZICO_SECRET_KEY = os.environ.get("IYZICO_SECRET_KEY") 

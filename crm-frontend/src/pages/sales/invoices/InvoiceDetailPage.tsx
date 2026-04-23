@@ -82,6 +82,7 @@ export default function InvoiceDetailPage() {
           </div>
 
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
+            {invoice.customer_name && <span className="font-medium text-gray-700">{invoice.customer_name}</span>}
             <span>Currency: {invoice.currency || "—"}</span>
             {invoice.pdf_generated_at && (
               <span>PDF: {new Date(invoice.pdf_generated_at).toLocaleDateString()}</span>
@@ -136,6 +137,22 @@ export default function InvoiceDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
+          {/* Bill To */}
+          {invoice.customer_name && (
+            <div className="rounded-2xl border bg-white p-5 shadow-sm">
+              <h3 className="mb-3 text-xs uppercase tracking-wide text-gray-500">Bill To</h3>
+              <div className="space-y-1">
+                <p className="text-base font-semibold text-gray-900">{invoice.customer_name}</p>
+                {invoice.customer_email && (
+                  <p className="text-sm text-gray-600">{invoice.customer_email}</p>
+                )}
+                {invoice.customer_address && (
+                  <p className="whitespace-pre-line text-sm text-gray-600">{invoice.customer_address}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Line Items */}
           <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
             <table className="w-full text-sm">

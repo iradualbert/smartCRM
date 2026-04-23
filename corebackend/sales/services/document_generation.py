@@ -33,12 +33,18 @@ def template_supports_currency(template, currency):
 
 def get_company_payload(company):
     if not company:
-        return {"name": "", "address": "", "email": "", "phone": ""}
+        return {
+            "name": "", "legal_name": "", "address": "",
+            "email": "", "phone": "", "website": "", "tax_number": "",
+        }
     return {
-        "name": company.name or "",
+        "name": company.legal_name or company.name or "",
+        "legal_name": company.legal_name or company.name or "",
         "address": company.address or "",
         "email": company.email or "",
         "phone": company.phone or "",
+        "website": company.website or "",
+        "tax_number": company.tax_number or "",
     }
 
 
@@ -84,6 +90,10 @@ def get_document_customer_name(instance) -> str:
     proforma = getattr(instance, "proforma", None)
     if proforma and getattr(proforma, "customer", None) and getattr(proforma.customer, "name", None):
         return proforma.customer.name
+
+    quotation = getattr(instance, "quotation", None)
+    if quotation and getattr(quotation, "customer", None) and getattr(quotation.customer, "name", None):
+        return quotation.customer.name
 
     invoice = getattr(instance, "invoice", None)
     if invoice and getattr(invoice, "customer", None) and getattr(invoice.customer, "name", None):
@@ -229,8 +239,12 @@ def build_standard_data_from_instance(instance, document_type: str):
         )
 
     if document_type == "invoice":
-        customer = instance.proforma.customer if instance.proforma and instance.proforma.customer else None
-        effective_company = company or (instance.proforma.company if instance.proforma else None)
+        customer = (
+            instance.customer
+            or (instance.proforma.customer if instance.proforma and instance.proforma.customer else None)
+            or (instance.quotation.customer if instance.quotation and instance.quotation.customer else None)
+        )
+        effective_company = company or (instance.proforma.company if instance.proforma else None) or (instance.quotation.company if instance.quotation else None)
         return build_standard_sales_document_data(
             {
                 "document": {
@@ -259,11 +273,15 @@ def build_standard_data_from_instance(instance, document_type: str):
         )
 
     if document_type == "delivery_note":
-        customer = (
-            instance.invoice.proforma.customer
-            if instance.invoice and instance.invoice.proforma and instance.invoice.proforma.customer
-            else None
-        )
+        customer = None
+        if instance.customer:
+            customer = instance.customer
+        elif instance.invoice:
+            customer = instance.invoice.customer or (
+                instance.invoice.proforma.customer
+                if instance.invoice.proforma and instance.invoice.proforma.customer
+                else None
+            )
         effective_company = company or (
             instance.invoice.company if instance.invoice else None
         ) or (
@@ -295,11 +313,15 @@ def build_standard_data_from_instance(instance, document_type: str):
         )
 
     if document_type == "receipt":
-        customer = (
-            instance.invoice.proforma.customer
-            if instance.invoice and instance.invoice.proforma and instance.invoice.proforma.customer
-            else None
-        )
+        customer = None
+        if instance.customer:
+            customer = instance.customer
+        elif instance.invoice:
+            customer = instance.invoice.customer or (
+                instance.invoice.proforma.customer
+                if instance.invoice.proforma and instance.invoice.proforma.customer
+                else None
+            )
         effective_company = company or (
             instance.invoice.company if instance.invoice else None
         ) or (

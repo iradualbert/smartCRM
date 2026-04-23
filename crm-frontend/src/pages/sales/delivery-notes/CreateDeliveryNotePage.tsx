@@ -14,6 +14,7 @@ export default function CreateDeliveryNotePage() {
       companyId: values.companyId,
       deliveryNote: {
         invoice: values.invoice,
+        customer: values.customer ?? null,
         delivery_note_number: values.delivery_note_number,
         delivery_date: values.delivery_date,
         currency: values.currency || "USD",

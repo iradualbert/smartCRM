@@ -81,11 +81,20 @@ export type Proforma = {
   pdf_needs_regeneration: boolean
   proforma_number: string
   status: ProformaStatus
+  issue_date?: string | null
+  valid_until?: string | null
+  tax_mode?: "exclusive" | "inclusive"
+  tax_label?: string | null
+  tax_rate?: string | null
+  tax_total?: string | null
   subtotal: string
   total: string
   created_at: string
   updated_at: string
   lines?: ProformaLine[]
+  customer_name?: string | null
+  customer_email?: string | null
+  customer_address?: string | null
 }
 
 export type ProformaPayload = {
@@ -96,6 +105,11 @@ export type ProformaPayload = {
   currency?: string
   proforma_number: string
   status?: ProformaStatus
+  issue_date?: string | null
+  valid_until?: string | null
+  tax_mode?: "exclusive" | "inclusive"
+  tax_label?: string
+  tax_rate?: string
 }
 
 export type ProformaLinePayload = {
@@ -203,6 +217,11 @@ export async function createProformaWithLines(input: {
     currency?: string
     selected_template?: number | null
     status?: ProformaStatus
+    issue_date?: string | null
+    valid_until?: string | null
+    tax_mode?: "exclusive" | "inclusive"
+    tax_label?: string
+    tax_rate?: string
   }
   lines: Array<{
     product?: number | null
@@ -219,6 +238,11 @@ export async function createProformaWithLines(input: {
     currency: input.proforma.currency || undefined,
     selected_template: input.proforma.selected_template ?? null,
     status: input.proforma.status ?? "draft",
+    issue_date: input.proforma.issue_date ?? null,
+    valid_until: input.proforma.valid_until ?? null,
+    tax_mode: input.proforma.tax_mode ?? "exclusive",
+    tax_label: input.proforma.tax_label ?? "VAT",
+    tax_rate: input.proforma.tax_rate ?? "0.00",
   })
 
   for (const line of input.lines) {
@@ -243,6 +267,11 @@ export async function updateProformaWithLines(input: {
     currency?: string
     selected_template?: number | null
     status?: ProformaStatus
+    issue_date?: string | null
+    valid_until?: string | null
+    tax_mode?: "exclusive" | "inclusive"
+    tax_label?: string
+    tax_rate?: string
   }
   lines: Array<{
     id?: number
@@ -260,6 +289,11 @@ export async function updateProformaWithLines(input: {
     currency: input.proforma.currency || undefined,
     selected_template: input.proforma.selected_template ?? null,
     status: input.proforma.status ?? "draft",
+    issue_date: input.proforma.issue_date ?? null,
+    valid_until: input.proforma.valid_until ?? null,
+    tax_mode: input.proforma.tax_mode ?? "exclusive",
+    tax_label: input.proforma.tax_label ?? "VAT",
+    tax_rate: input.proforma.tax_rate ?? "0.00",
   })
 
   for (const lineId of input.removedLineIds) {

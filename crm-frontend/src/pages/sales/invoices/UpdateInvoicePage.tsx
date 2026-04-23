@@ -45,7 +45,9 @@ const UpdateInvoicePage = () => {
     const updated = await updateInvoiceWithLines({
       invoiceId: Number(id),
       invoice: {
-        proforma: values.proforma,
+        proforma: values.proforma ?? null,
+        quotation: values.quotation ?? null,
+        customer: values.customer ?? null,
         invoice_number: values.invoice_number,
         currency: values.currency || "USD",
         selected_template: values.selected_template ?? null,
@@ -113,7 +115,9 @@ const UpdateInvoicePage = () => {
         initialInvoice={invoice}
         initialValues={{
           companyId: invoice.company ?? 0,
-          proforma: invoice.proforma,
+          proforma: invoice.proforma ?? null,
+          quotation: invoice.quotation ?? null,
+          customer: invoice.customer ?? null,
           invoice_number: invoice.invoice_number,
           currency: invoice.currency ?? "USD",
           selected_template: invoice.selected_template ?? null,

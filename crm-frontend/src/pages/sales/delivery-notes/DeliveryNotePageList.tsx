@@ -190,7 +190,7 @@ export default function DeliveryNoteListPage() {
                 <thead className="bg-slate-50">
                   <tr className="text-left">
                     <th className="px-6 py-3 font-medium text-slate-700">Note #</th>
-                    <th className="px-4 py-3 font-medium text-slate-700">Invoice</th>
+                    <th className="px-4 py-3 font-medium text-slate-700">Customer</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Delivery date</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Status</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Created</th>
@@ -205,7 +205,9 @@ export default function DeliveryNoteListPage() {
                           {note.delivery_note_number}
                         </Link>
                       </td>
-                      <td className="px-4 py-4 text-slate-700">#{note.invoice}</td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {note.customer_name || "—"}
+                      </td>
                       <td className="px-4 py-4 text-slate-700">{note.delivery_date}</td>
                       <td className="px-4 py-4">
                         <StatusBadge status={note.status} />

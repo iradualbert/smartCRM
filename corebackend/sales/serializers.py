@@ -392,9 +392,18 @@ class InvoiceSerializer(UserStampMixin, serializers.ModelSerializer):
     lines = InvoiceLineSerializer(many=True, read_only=True)
     invoice_number = serializers.CharField(required=False, allow_blank=True)
 
-    customer_name = serializers.CharField(source="customer.name", read_only=True)
+    customer_name = serializers.SerializerMethodField()
     customer_email = serializers.EmailField(source="customer.email", read_only=True)
     customer_address = serializers.CharField(source="customer.address", read_only=True)
+
+    def get_customer_name(self, obj):
+        if obj.customer:
+            return obj.customer.name
+        if obj.proforma and obj.proforma.customer:
+            return obj.proforma.customer.name
+        if obj.quotation and obj.quotation.customer:
+            return obj.quotation.customer.name
+        return None
 
     class Meta:
         model = Invoice
@@ -420,6 +429,18 @@ class InvoiceSerializer(UserStampMixin, serializers.ModelSerializer):
 
 class ReceiptSerializer(UserStampMixin, serializers.ModelSerializer):
     receipt_number = serializers.CharField(required=False, allow_blank=True)
+    customer_name = serializers.SerializerMethodField()
+
+    def get_customer_name(self, obj):
+        if obj.customer:
+            return obj.customer.name
+        if obj.invoice:
+            if obj.invoice.customer:
+                return obj.invoice.customer.name
+            if obj.invoice.proforma and obj.invoice.proforma.customer:
+                return obj.invoice.proforma.customer.name
+        return None
+
     class Meta:
         model = Receipt
         fields = "__all__"
@@ -442,6 +463,17 @@ class ReceiptSerializer(UserStampMixin, serializers.ModelSerializer):
 class DeliveryNoteSerializer(UserStampMixin, serializers.ModelSerializer):
     lines = DeliveryNoteLineSerializer(many=True, read_only=True)
     delivery_note_number = serializers.CharField(required=False, allow_blank=True)
+    customer_name = serializers.SerializerMethodField()
+
+    def get_customer_name(self, obj):
+        if obj.customer:
+            return obj.customer.name
+        if obj.invoice:
+            if obj.invoice.customer:
+                return obj.invoice.customer.name
+            if obj.invoice.proforma and obj.invoice.proforma.customer:
+                return obj.invoice.proforma.customer.name
+        return None
 
     class Meta:
         model = DeliveryNote

@@ -84,9 +84,7 @@ const Navbar = ({ isAppRoute: _isAppRoute = true }: { isAppRoute?: boolean }) =>
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
-              <div className="hidden md:block">
-                <NewEmailButton />
-              </div>
+              
               <ProfileMenubar user={user} />
             </>
           ) : (

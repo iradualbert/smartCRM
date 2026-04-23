@@ -31,6 +31,7 @@ export default function UpdateDeliveryNotePage() {
       deliveryNoteId: Number(id),
       deliveryNote: {
         invoice: values.invoice,
+        customer: values.customer ?? null,
         delivery_note_number: values.delivery_note_number,
         delivery_date: values.delivery_date,
         currency: values.currency || "USD",
@@ -91,6 +92,7 @@ export default function UpdateDeliveryNotePage() {
         initialValues={{
           companyId,
           invoice: deliveryNote.invoice,
+          customer: deliveryNote.customer ?? null,
           delivery_note_number: deliveryNote.delivery_note_number,
           delivery_date: deliveryNote.delivery_date,
           currency: deliveryNote.currency ?? "USD",

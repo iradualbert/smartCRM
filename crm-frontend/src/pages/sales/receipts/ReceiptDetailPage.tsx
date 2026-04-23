@@ -68,6 +68,7 @@ export default function ReceiptDetailPage() {
           </div>
 
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
+            {receipt.customer_name && <span className="font-medium text-gray-700">{receipt.customer_name}</span>}
             <span>Currency: {receipt.currency || "—"}</span>
             <span>Amount paid: {receipt.amount_paid || "—"}</span>
             {receipt.pdf_generated_at ? (
@@ -125,6 +126,13 @@ export default function ReceiptDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
+          {receipt.customer_name && (
+            <div className="rounded-2xl border bg-white p-5 shadow-sm">
+              <h3 className="mb-3 text-xs uppercase tracking-wide text-gray-500">Customer</h3>
+              <p className="text-base font-semibold text-gray-900">{receipt.customer_name}</p>
+            </div>
+          )}
+
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <h3 className="mb-3 text-xs uppercase tracking-wide text-gray-500">Receipt Summary</h3>
             <div className="grid gap-4 text-sm sm:grid-cols-2">

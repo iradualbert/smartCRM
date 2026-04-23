@@ -192,7 +192,6 @@ export default function ProformaListPage() {
                     <th className="px-6 py-3 font-medium text-slate-700">Proforma #</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Customer</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Status</th>
-                    <th className="px-4 py-3 font-medium text-slate-700">Currency</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Total</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Created</th>
                     <th className="px-6 py-3 text-right font-medium text-slate-700">Actions</th>
@@ -207,12 +206,11 @@ export default function ProformaListPage() {
                         </Link>
                       </td>
                       <td className="px-4 py-4 text-slate-700">
-                        {proforma.customer ? `#${proforma.customer}` : "—"}
+                        {proforma.customer_name || "—"}
                       </td>
                       <td className="px-4 py-4">
                         <StatusBadge status={proforma.status} />
                       </td>
-                      <td className="px-4 py-4 text-slate-700">{proforma.currency || "—"}</td>
                       <td className="px-4 py-4 text-slate-700">{proforma.total}</td>
                       <td className="px-4 py-4 text-slate-700">
                         {new Date(proforma.created_at).toLocaleDateString()}

@@ -34,6 +34,25 @@ export type InvoiceStatus =
   | "paid"
   | "overdue"
 
+export type Customer = {
+  id: number
+  company: number | null
+  name: string
+  email: string | null
+  phone_number: string | null
+  address: string | null
+}
+
+export type ProformaLine = {
+  id: number
+  proforma: number
+  product: number | null
+  description: string | null
+  quantity: string
+  unit_price: string
+  line_total: string
+}
+
 export type Proforma = {
   id: number
   company: number | null
@@ -51,6 +70,34 @@ export type Proforma = {
   created_at: string
   updated_at: string
   customer_name?: string | null
+  lines?: ProformaLine[]
+}
+
+export type QuotationLine = {
+  id: number
+  quotation: number
+  product: number | null
+  product_name?: string | null
+  description: string | null
+  quantity: string
+  unit_price: string
+  line_total: string
+}
+
+export type Quotation = {
+  id: number
+  company: number | null
+  customer: number | null
+  currency: string | null
+  quote_number: string
+  name: string
+  status: string
+  subtotal: string
+  total: string
+  created_at: string
+  updated_at: string
+  customer_name?: string | null
+  lines?: QuotationLine[]
 }
 
 export type InvoiceLine = {
@@ -68,7 +115,9 @@ export type InvoiceLine = {
 export type Invoice = {
   id: number
   company: number | null
-  proforma: number
+  proforma: number | null
+  quotation: number | null
+  customer: number | null
   selected_template: number | null
   document: number | null
   currency: string | null
@@ -82,14 +131,18 @@ export type Invoice = {
   updated_at: string
   lines?: InvoiceLine[]
   customer_name?: string | null
+  customer_email?: string | null
+  customer_address?: string | null
 }
 
 export type InvoicePayload = {
   company: number
-  proforma: number
+  proforma?: number | null
+  quotation?: number | null
+  customer?: number | null
   selected_template?: number | null
   currency?: string
-  invoice_number: string
+  invoice_number?: string
   status?: InvoiceStatus
 }
 
@@ -99,6 +152,21 @@ export type InvoiceLinePayload = {
   description?: string
   quantity: string
   unit_price: string
+}
+
+export async function listCustomers(params?: {
+  company?: string | number
+  limit?: number
+  offset?: number
+  search?: string
+}) {
+  const response = await axios.get<PaginatedResponse<Customer>>("/customers/", { params })
+  return response.data
+}
+
+export async function listQuotations(params?: { company?: string | number; limit?: number; offset?: number; search?: string }) {
+  const response = await axios.get<PaginatedResponse<Quotation>>("/quotations/", { params })
+  return response.data
 }
 
 export async function listProducts(params?: {
@@ -134,6 +202,11 @@ export async function listProformas(params?: { company?: string | number; limit?
 
 export async function getProforma(id: number | string) {
   const response = await axios.get<Proforma>(`/proformas/${id}/`)
+  return response.data
+}
+
+export async function getQuotation(id: number | string) {
+  const response = await axios.get<Quotation>(`/quotations/${id}/`)
   return response.data
 }
 
@@ -203,8 +276,10 @@ export function invoicePdfUrl(id: number | string) {
 export async function createInvoiceWithLines(input: {
   companyId: number
   invoice: {
-    proforma: number
-    invoice_number: string
+    proforma?: number | null
+    quotation?: number | null
+    customer?: number | null
+    invoice_number?: string
     currency?: string
     selected_template?: number | null
     status?: InvoiceStatus
@@ -218,8 +293,10 @@ export async function createInvoiceWithLines(input: {
 }) {
   const invoice = await createInvoice({
     company: input.companyId,
-    proforma: input.invoice.proforma,
-    invoice_number: input.invoice.invoice_number.trim(),
+    proforma: input.invoice.proforma ?? null,
+    quotation: input.invoice.quotation ?? null,
+    customer: input.invoice.customer ?? null,
+    invoice_number: input.invoice.invoice_number?.trim(),
     currency: input.invoice.currency || undefined,
     selected_template: input.invoice.selected_template ?? null,
     status: input.invoice.status ?? "draft",
@@ -241,8 +318,10 @@ export async function createInvoiceWithLines(input: {
 export async function updateInvoiceWithLines(input: {
   invoiceId: number
   invoice: {
-    proforma: number
-    invoice_number: string
+    proforma?: number | null
+    quotation?: number | null
+    customer?: number | null
+    invoice_number?: string
     currency?: string
     selected_template?: number | null
     status?: InvoiceStatus
@@ -257,8 +336,10 @@ export async function updateInvoiceWithLines(input: {
   removedLineIds: number[]
 }) {
   await updateInvoice(input.invoiceId, {
-    proforma: input.invoice.proforma,
-    invoice_number: input.invoice.invoice_number.trim(),
+    proforma: input.invoice.proforma ?? null,
+    quotation: input.invoice.quotation ?? null,
+    customer: input.invoice.customer ?? null,
+    invoice_number: input.invoice.invoice_number?.trim(),
     currency: input.invoice.currency || undefined,
     selected_template: input.invoice.selected_template ?? null,
     status: input.invoice.status ?? "draft",

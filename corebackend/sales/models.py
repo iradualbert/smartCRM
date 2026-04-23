@@ -556,6 +556,13 @@ class Receipt(DocumentAbstractModel):
         CANCELLED = "cancelled", "Cancelled"
 
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="receipts")
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="receipts",
+    )
     selected_template = models.ForeignKey(
         Template,
         on_delete=models.SET_NULL,
@@ -569,12 +576,15 @@ class Receipt(DocumentAbstractModel):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ISSUED)
 
     def __str__(self):
-        customer = (
-            self.invoice.proforma.customer.name
-            if self.invoice and self.invoice.proforma and self.invoice.proforma.customer
-            else "Unknown Customer"
-        )
-        return f"Receipt {self.receipt_number} for {customer}"
+        customer_name = "Unknown Customer"
+        if self.customer:
+            customer_name = self.customer.name
+        elif self.invoice:
+            if self.invoice.customer:
+                customer_name = self.invoice.customer.name
+            elif self.invoice.proforma and self.invoice.proforma.customer:
+                customer_name = self.invoice.proforma.customer.name
+        return f"Receipt {self.receipt_number} for {customer_name}"
 
 
 class DeliveryNote(DocumentAbstractModel):
@@ -585,6 +595,13 @@ class DeliveryNote(DocumentAbstractModel):
         CANCELLED = "cancelled", "Cancelled"
 
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="delivery_notes")
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="delivery_notes",
+    )
     selected_template = models.ForeignKey(
         Template,
         on_delete=models.SET_NULL,
@@ -598,12 +615,15 @@ class DeliveryNote(DocumentAbstractModel):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
 
     def __str__(self):
-        customer = (
-            self.invoice.proforma.customer.name
-            if self.invoice and self.invoice.proforma and self.invoice.proforma.customer
-            else "Unknown Customer"
-        )
-        return f"Delivery Note {self.delivery_note_number} for {customer}"
+        customer_name = "Unknown Customer"
+        if self.customer:
+            customer_name = self.customer.name
+        elif self.invoice:
+            if self.invoice.customer:
+                customer_name = self.invoice.customer.name
+            elif self.invoice.proforma and self.invoice.proforma.customer:
+                customer_name = self.invoice.proforma.customer.name
+        return f"Delivery Note {self.delivery_note_number} for {customer_name}"
 
 
 class BaseLineItem(TimeStampedModel):

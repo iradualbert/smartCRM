@@ -27,6 +27,7 @@ export default function UpdateReceiptPage() {
     const updated = await updateReceipt(id, {
       company: values.companyId,
       invoice: values.invoice,
+      customer: values.customer ?? null,
       receipt_number: values.receipt_number,
       amount_paid: values.amount_paid,
       currency: values.currency || "USD",
@@ -79,6 +80,7 @@ export default function UpdateReceiptPage() {
         initialValues={{
           companyId,
           invoice: receipt.invoice,
+          customer: receipt.customer ?? null,
           receipt_number: receipt.receipt_number,
           amount_paid: receipt.amount_paid,
           currency: receipt.currency ?? "USD",

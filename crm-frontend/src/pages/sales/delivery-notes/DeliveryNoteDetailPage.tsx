@@ -78,6 +78,7 @@ export default function DeliveryNoteDetailPage() {
           </div>
 
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
+            {deliveryNote.customer_name && <span className="font-medium text-gray-700">{deliveryNote.customer_name}</span>}
             <span>Delivery date: {deliveryNote.delivery_date || "—"}</span>
             <span>Currency: {deliveryNote.currency || "—"}</span>
             {deliveryNote.pdf_generated_at ? (
@@ -137,6 +138,13 @@ export default function DeliveryNoteDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
+          {deliveryNote.customer_name && (
+            <div className="rounded-2xl border bg-white p-5 shadow-sm">
+              <h3 className="mb-3 text-xs uppercase tracking-wide text-gray-500">Customer</h3>
+              <p className="text-base font-semibold text-gray-900">{deliveryNote.customer_name}</p>
+            </div>
+          )}
+
           <div className="rounded-2xl border bg-white p-5 shadow-sm">
             <h3 className="mb-3 text-xs uppercase tracking-wide text-gray-500">
               Delivery Summary

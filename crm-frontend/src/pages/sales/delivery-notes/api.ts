@@ -26,6 +26,7 @@ export type Invoice = {
   id: number
   company: number | null
   proforma: number
+  customer: number | null
   selected_template: number | null
   document: number | null
   currency: string | null
@@ -62,6 +63,7 @@ export type DeliveryNote = {
   id: number
   company: number | null
   invoice: number
+  customer: number | null
   selected_template: number | null
   document: number | null
   currency: string | null
@@ -73,14 +75,16 @@ export type DeliveryNote = {
   created_at: string
   updated_at: string
   lines?: DeliveryNoteLine[]
+  customer_name?: string | null
 }
 
 export type DeliveryNotePayload = {
   company: number
   invoice: number
+  customer?: number | null
   selected_template?: number | null
   currency?: string
-  delivery_note_number: string
+  delivery_note_number?: string
   delivery_date: string
   status?: DeliveryNoteStatus
 }
@@ -187,7 +191,8 @@ export async function createDeliveryNoteWithLines(input: {
   companyId: number
   deliveryNote: {
     invoice: number
-    delivery_note_number: string
+    customer?: number | null
+    delivery_note_number?: string
     delivery_date: string
     currency?: string
     selected_template?: number | null
@@ -203,7 +208,8 @@ export async function createDeliveryNoteWithLines(input: {
   const deliveryNote = await createDeliveryNote({
     company: input.companyId,
     invoice: input.deliveryNote.invoice,
-    delivery_note_number: input.deliveryNote.delivery_note_number.trim(),
+    customer: input.deliveryNote.customer ?? null,
+    delivery_note_number: input.deliveryNote.delivery_note_number?.trim(),
     delivery_date: input.deliveryNote.delivery_date,
     currency: input.deliveryNote.currency || undefined,
     selected_template: input.deliveryNote.selected_template ?? null,
@@ -227,7 +233,8 @@ export async function updateDeliveryNoteWithLines(input: {
   deliveryNoteId: number
   deliveryNote: {
     invoice: number
-    delivery_note_number: string
+    customer?: number | null
+    delivery_note_number?: string
     delivery_date: string
     currency?: string
     selected_template?: number | null
@@ -244,7 +251,8 @@ export async function updateDeliveryNoteWithLines(input: {
 }) {
   await updateDeliveryNote(input.deliveryNoteId, {
     invoice: input.deliveryNote.invoice,
-    delivery_note_number: input.deliveryNote.delivery_note_number.trim(),
+    customer: input.deliveryNote.customer ?? null,
+    delivery_note_number: input.deliveryNote.delivery_note_number?.trim(),
     delivery_date: input.deliveryNote.delivery_date,
     currency: input.deliveryNote.currency || undefined,
     selected_template: input.deliveryNote.selected_template ?? null,

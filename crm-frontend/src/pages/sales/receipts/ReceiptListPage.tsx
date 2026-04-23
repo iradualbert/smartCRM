@@ -186,10 +186,9 @@ export default function ReceiptListPage() {
                 <thead className="bg-slate-50">
                   <tr className="text-left">
                     <th className="px-6 py-3 font-medium text-slate-700">Receipt #</th>
-                    <th className="px-4 py-3 font-medium text-slate-700">Invoice</th>
+                    <th className="px-4 py-3 font-medium text-slate-700">Customer</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Status</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Amount paid</th>
-                    <th className="px-4 py-3 font-medium text-slate-700">Currency</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Created</th>
                     <th className="px-6 py-3 text-right font-medium text-slate-700">Actions</th>
                   </tr>
@@ -202,12 +201,13 @@ export default function ReceiptListPage() {
                           {receipt.receipt_number}
                         </Link>
                       </td>
-                      <td className="px-4 py-4 text-slate-700">#{receipt.invoice}</td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {receipt.customer_name || "—"}
+                      </td>
                       <td className="px-4 py-4">
                         <StatusBadge status={receipt.status} />
                       </td>
                       <td className="px-4 py-4 font-medium text-slate-900">{receipt.amount_paid}</td>
-                      <td className="px-4 py-4 text-slate-700">{receipt.currency || "—"}</td>
                       <td className="px-4 py-4 text-slate-700">
                         {new Date(receipt.created_at).toLocaleDateString()}
                       </td>

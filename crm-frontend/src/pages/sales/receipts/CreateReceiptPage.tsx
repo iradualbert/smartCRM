@@ -13,6 +13,7 @@ export default function CreateReceiptPage() {
     const receipt = await createReceipt({
       company: values.companyId,
       invoice: values.invoice,
+      customer: values.customer ?? null,
       receipt_number: values.receipt_number,
       amount_paid: values.amount_paid,
       currency: values.currency || "USD",

@@ -190,8 +190,8 @@ export default function InvoiceListPage() {
                 <thead className="bg-slate-50">
                   <tr className="text-left">
                     <th className="px-6 py-3 font-medium text-slate-700">Invoice #</th>
+                    <th className="px-4 py-3 font-medium text-slate-700">Customer</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Status</th>
-                    <th className="px-4 py-3 font-medium text-slate-700">Currency</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Total</th>
                     <th className="px-4 py-3 font-medium text-slate-700">Created</th>
                     <th className="px-6 py-3 text-right font-medium text-slate-700">Actions</th>
@@ -205,10 +205,12 @@ export default function InvoiceListPage() {
                           {invoice.invoice_number}
                         </Link>
                       </td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {invoice.customer_name || "—"}
+                      </td>
                       <td className="px-4 py-4">
                         <StatusBadge status={invoice.status} />
                       </td>
-                      <td className="px-4 py-4 text-slate-700">{invoice.currency || "—"}</td>
                       <td className="px-4 py-4 text-slate-700">{invoice.total}</td>
                       <td className="px-4 py-4 text-slate-700">
                         {new Date(invoice.created_at).toLocaleDateString()}

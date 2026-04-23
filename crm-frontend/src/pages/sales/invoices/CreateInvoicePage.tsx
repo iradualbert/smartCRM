@@ -21,19 +21,15 @@ const CreateInvoicePage = () => {
   const initialValues = React.useMemo<Partial<InvoiceFormValues>>(
     () => ({
       companyId: state?.defaults?.companyId ?? companyId,
-      proforma: state?.defaults?.proforma ?? 0,
+      proforma: state?.defaults?.proforma ?? null,
+      quotation: state?.defaults?.quotation ?? null,
+      customer: state?.defaults?.customer ?? null,
       invoice_number: state?.defaults?.invoice_number,
       currency: state?.defaults?.currency ?? "USD",
       selected_template: state?.defaults?.selected_template ?? null,
       status: state?.defaults?.status ?? "draft",
-      internal_note: state?.defaults?.internal_note ?? "",
       lines: state?.defaults?.lines ?? [
-        {
-          product: null,
-          description: "",
-          quantity: "1",
-          unit_price: "0.00",
-        },
+        { product: null, description: "", quantity: "1", unit_price: "0.00" },
       ],
     }),
     [state, companyId]
@@ -47,7 +43,9 @@ const CreateInvoicePage = () => {
     const invoice = await createInvoiceWithLines({
       companyId: values.companyId,
       invoice: {
-        proforma: values.proforma,
+        proforma: values.proforma ?? null,
+        quotation: values.quotation ?? null,
+        customer: values.customer ?? null,
         invoice_number: values.invoice_number,
         currency: values.currency || "USD",
         selected_template: values.selected_template ?? null,

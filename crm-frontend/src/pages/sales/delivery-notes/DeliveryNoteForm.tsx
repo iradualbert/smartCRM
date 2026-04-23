@@ -22,6 +22,7 @@ import {
 export const deliveryNoteFormSchema = z.object({
   companyId: z.coerce.number().min(1, "Company is required"),
   invoice: z.coerce.number().min(1, "Invoice is required"),
+  customer: z.coerce.number().nullable().optional(),
   delivery_note_number: z.string().optional(),
   delivery_date: z.string().min(1, "Delivery date is required"),
   currency: z.string().optional(),
@@ -75,6 +76,7 @@ export default function DeliveryNoteForm({
     defaultValues: {
       companyId: initialValues?.companyId ?? 1,
       invoice: initialValues?.invoice ?? 0,
+      customer: initialValues?.customer ?? null,
       delivery_note_number: initialValues?.delivery_note_number ?? "",
       delivery_date: initialValues?.delivery_date ?? new Date().toISOString().slice(0, 10),
       currency: initialValues?.currency ?? "USD",
@@ -218,6 +220,7 @@ export default function DeliveryNoteForm({
               onLoadMore={() => void loadInvoices(invoiceSearch, invoiceOffset, true)}
               onSelect={(invoice) => {
                 form.setValue("invoice", invoice.id)
+                form.setValue("customer", invoice.customer ?? null)
                 setInvoiceResults((prev) =>
                   prev.some((item) => item.id === invoice.id) ? prev : [invoice, ...prev]
                 )
@@ -229,6 +232,13 @@ export default function DeliveryNoteForm({
             {form.formState.errors.invoice ? (
               <FieldError errors={[form.formState.errors.invoice]} />
             ) : null}
+          </Field>
+
+          <Field>
+            <FieldLabel>Customer</FieldLabel>
+            <div className="flex h-11 items-center rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700">
+              {selectedInvoice?.customer_name ?? initialDeliveryNote?.customer_name ?? "Auto-populated from invoice"}
+            </div>
           </Field>
 
           <Controller

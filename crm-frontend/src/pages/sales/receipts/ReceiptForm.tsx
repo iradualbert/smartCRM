@@ -20,6 +20,7 @@ import {
 export const receiptFormSchema = z.object({
   companyId: z.coerce.number().min(1, "Company is required"),
   invoice: z.coerce.number().min(1, "Invoice is required"),
+  customer: z.coerce.number().nullable().optional(),
   receipt_number: z.string().optional(),
   amount_paid: z.string().min(1, "Amount paid is required"),
   currency: z.string().optional(),
@@ -63,6 +64,7 @@ export default function ReceiptForm({
     defaultValues: {
       companyId: initialValues?.companyId ?? companyId,
       invoice: initialValues?.invoice ?? 0,
+      customer: initialValues?.customer ?? null,
       receipt_number: initialValues?.receipt_number ?? "",
       amount_paid: initialValues?.amount_paid ?? "",
       currency: initialValues?.currency ?? "USD",
@@ -189,6 +191,7 @@ export default function ReceiptForm({
               onLoadMore={() => void loadInvoices(invoiceSearch, invoiceOffset, true)}
               onSelect={(invoice) => {
                 form.setValue("invoice", invoice.id)
+                form.setValue("customer", invoice.customer ?? null)
                 setInvoiceResults((prev) =>
                   prev.some((item) => item.id === invoice.id) ? prev : [invoice, ...prev]
                 )
@@ -200,6 +203,13 @@ export default function ReceiptForm({
             {form.formState.errors.invoice ? (
               <FieldError errors={[form.formState.errors.invoice]} />
             ) : null}
+          </Field>
+
+          <Field>
+            <FieldLabel>Customer</FieldLabel>
+            <div className="flex h-11 items-center rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700">
+              {selectedInvoice?.customer_name ?? initialReceipt?.customer_name ?? "Auto-populated from invoice"}
+            </div>
           </Field>
 
           <Controller

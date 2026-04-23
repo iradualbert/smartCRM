@@ -21,7 +21,8 @@ def send_confirmation_email(user, request):
     from_email = f"BEINPARK <hello@beinpark.com>"
     confirmation_email = EmailMessage(email_subject, message, from_email, to=[user.email])
     # confirmation_email.content_subtype = "html"
-    confirmation_email.send()
+    print(message)
+    # confirmation_email.send()
     
     
 def send_mail_verification_code(request, user, new_email):
