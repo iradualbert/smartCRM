@@ -106,7 +106,7 @@ const FormWrapper = ({ title, description, children }: FormWrapperProps) => {
 
             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_20px_70px_-30px_rgba(15,23,42,0.18)] sm:p-8">
               <div className="mb-8">
-                <div className="mb-5 hidden lg:flex">
+                <div className="mb-5 hidden justify-center lg:flex">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                     <Logo className="h-10 w-auto" />
                   </div>

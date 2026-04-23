@@ -53,5 +53,6 @@ def send_password_reset_email(user, request):
     })
     
     password_reset_email = EmailMessage(email_subject, message, from_email, to=[user.email])
+    print(message)
     # password_reset_email.content_subtype = "html"
-    password_reset_email.send()
+    # password_reset_email.send()

@@ -319,6 +319,9 @@ def forgot_password(request):
         send_password_reset_email(user, request)
     except ObjectDoesNotExist:
         return JsonResponse({'email': 'account not found'}, status=401)
+    
+    
+    
     return JsonResponse({"status": "ok"})
 
 
