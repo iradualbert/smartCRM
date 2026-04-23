@@ -62,7 +62,7 @@ export default function SalesDashboardPage() {
             Sales Dashboard
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            Track quotations, invoice movement, collections, and revenue workflow health.
+            Watch the revenue pipeline, payment pressure, and document movement in one place.
           </p>
         </div>
 
@@ -100,7 +100,13 @@ export default function SalesDashboardPage() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-12">
         <div className="space-y-6 xl:col-span-8">
-          <DashboardRecentQuotations items={data.recent_quotations} />
+          <DashboardRecentQuotations
+            items={data.recent_quotations}
+            title="Recent quotations"
+            emptyMessage="Create a quotation to start building the sales pipeline."
+            ctaLabel="View all quotations"
+            ctaHref="/quotations"
+          />
         </div>
 
         <div className="space-y-6 xl:col-span-4">

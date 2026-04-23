@@ -28,6 +28,16 @@ export type DashboardRecentQuotation = {
   created_at: string
 }
 
+export type DashboardSetupItem = {
+  key: string
+  label: string
+  value: string
+  ready: boolean
+  detail?: string
+  action_label?: string
+  action_href?: string
+}
+
 export type WorkspaceDashboardResponse = {
   company: {
     id: number
@@ -36,6 +46,7 @@ export type WorkspaceDashboardResponse = {
     currency_symbol: string
   }
   metrics: DashboardMetric[]
+  setup: DashboardSetupItem[]
   usage: {
     documents_created: number
     emails_sent: number

@@ -18,7 +18,7 @@ export default function DashboardAttentionPanel({ items }: Props) {
         <div className="mt-5 space-y-3">
           {items.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-              Everything looks healthy right now.
+              No urgent issues right now. The team can stay focused on current work.
             </div>
           ) : (
             items.map((item, index) => (

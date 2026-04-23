@@ -1463,6 +1463,7 @@ class CompanyViewSet(BaseModelViewSet):
         data = {
             "company": payload["company"],
             "metrics": payload["workspace_metrics"],
+            "setup": payload["setup"],
             "usage": payload["usage"],
             "subscription": payload["subscription"],
             "attention": payload["attention"],

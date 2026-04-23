@@ -67,9 +67,20 @@ class DashboardRecentQuotationSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField()
 
 
+class DashboardSetupItemSerializer(serializers.Serializer):
+    key = serializers.CharField()
+    label = serializers.CharField()
+    value = serializers.CharField()
+    ready = serializers.BooleanField()
+    detail = serializers.CharField(required=False, allow_blank=True, default="")
+    action_label = serializers.CharField(required=False, allow_blank=True, default="")
+    action_href = serializers.CharField(required=False, allow_blank=True, default="")
+
+
 class WorkspaceDashboardSerializer(serializers.Serializer):
     company = serializers.DictField()
     metrics = DashboardMetricCardSerializer(many=True)
+    setup = DashboardSetupItemSerializer(many=True)
     usage = serializers.DictField()
     attention = DashboardAttentionItemSerializer(many=True)
     activity = DashboardActivityItemSerializer(many=True)

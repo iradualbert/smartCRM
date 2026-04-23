@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from  billing.models import BillingUsage, Subscription, SubscriptionEvent
 from ..models import Company, DeliveryNote, DocumentEvent, Invoice, Proforma, Quotation, Receipt
+from ..models_email import EmailSendingConfig
 
 
 def _build_company_dashboard_context(company):
@@ -16,6 +17,10 @@ def _build_company_dashboard_context(company):
     invoices = company.invoices.all()
     receipts = company.receipts.all()
     delivery_notes = company.deliverynotes.all()
+    customers = company.customers.all()
+    products = company.products.all()
+    templates = company.templates.filter(is_active=True)
+    sending_configs = EmailSendingConfig.objects.filter(company=company, is_active=True)
 
     usage = BillingUsage.objects.filter(
         company=company,
@@ -108,26 +113,24 @@ def _build_company_dashboard_context(company):
 
     workspace_metrics = [
         {
-            "label": "Open quotations",
-            "value": str(draft_quotations_count + sent_quotations_count),
-            "hint": "Draft and sent quotations in motion",
+            "label": "Customers",
+            "value": str(customers.count()),
+            "hint": "Customer records available to the team",
         },
         {
-            "label": "Outstanding invoices",
-            "value": str(
-                invoices.filter(status__in=["sent", "overdue"]).count()
-            ),
-            "hint": "Invoices still waiting for payment",
+            "label": "Products",
+            "value": str(products.count()),
+            "hint": "Catalog items ready for line items",
         },
         {
-            "label": "Documents this month",
-            "value": str(usage.documents_created if usage else 0),
-            "hint": "Monthly document activity",
+            "label": "Templates ready",
+            "value": str(templates.count()),
+            "hint": "Active document templates in this workspace",
         },
         {
-            "label": "Emails sent",
-            "value": str(usage.emails_sent if usage else 0),
-            "hint": "Monthly communication volume",
+            "label": "Open issues",
+            "value": "0",
+            "hint": "Items that need attention before the workflow is fully clear",
         },
     ]
 
@@ -135,24 +138,65 @@ def _build_company_dashboard_context(company):
         {
             "label": "Draft quotations",
             "value": str(draft_quotations_count),
-            "hint": "Need review or sending",
+            "hint": "Quotations still being prepared",
         },
         {
             "label": "Sent quotations",
             "value": str(sent_quotations_count),
-            "hint": "Currently in client hands",
+            "hint": "Waiting for a customer decision",
+        },
+        {
+            "label": "Outstanding invoices",
+            "value": str(invoices.filter(status__in=["sent", "overdue"]).count()),
+            "hint": "Invoices still awaiting payment",
         },
         {
             "label": "Overdue invoices",
             "value": str(overdue_invoices_count),
-            "hint": "Require follow-up",
-        },
-        {
-            "label": "Receipts this month",
-            "value": str(receipts.filter(created_at__gte=month_start).count()),
-            "hint": "Issued this billing period",
+            "hint": "Collections that need follow-up now",
         },
     ]
+
+    setup_items = [
+        {
+            "key": "customers",
+            "label": "Customer records",
+            "value": str(customers.count()),
+            "ready": customers.exists(),
+            "detail": "Add at least one customer so the team can create quotations quickly.",
+            "action_label": "Manage customers",
+            "action_href": "/customers",
+        },
+        {
+            "key": "products",
+            "label": "Product catalog",
+            "value": str(products.count()),
+            "ready": products.exists(),
+            "detail": "Keep your catalog ready so line items can be reused across documents.",
+            "action_label": "Manage products",
+            "action_href": "/products",
+        },
+        {
+            "key": "templates",
+            "label": "Custom templates",
+            "value": str(templates.count()),
+            "ready": templates.exists(),
+            "detail": "Built-in templates already work. Add branded templates when you are ready.",
+            "action_label": "Open templates",
+            "action_href": "/templates",
+        },
+        {
+            "key": "sending_configs",
+            "label": "Sending accounts",
+            "value": str(sending_configs.count()),
+            "ready": sending_configs.exists(),
+            "detail": "The default sender works for testing. Add a mailbox before going live.",
+            "action_label": "Configure email",
+            "action_href": "/settings/email",
+        },
+    ]
+
+    workspace_metrics[-1]["value"] = str(len(attention))
 
     return {
         "company": {
@@ -163,6 +207,7 @@ def _build_company_dashboard_context(company):
         },
         "workspace_metrics": workspace_metrics,
         "sales_metrics": sales_metrics,
+        "setup": setup_items,
         "usage": {
             "documents_created": usage.documents_created if usage else 0,
             "emails_sent": usage.emails_sent if usage else 0,

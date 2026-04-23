@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Link } from "react-router-dom"
-import { FileText, Mail, Plus, Receipt, ScrollText } from "lucide-react"
+import { AlertTriangle, FileText, Package2, Plus, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useOrganizations } from "@/redux/hooks/useOrganizations"
@@ -8,8 +8,8 @@ import { getWorkspaceDashboard } from "./api"
 import DashboardMetricCard from "./DashboardMetricCard"
 import DashboardAttentionPanel from "./DashboardAttentionPanel"
 import DashboardActivityFeed from "./DashboardActivityFeed"
+import DashboardSetupCard from "./DashboardSetupCard"
 import DashboardUsageCard from "./DashboardUsageCard"
-import DashboardRecentQuotations from "./DashboardRecentQuotations"
 
 export default function DashboardPage() {
   const { currentOrganizationId } = useOrganizations()
@@ -49,7 +49,7 @@ export default function DashboardPage() {
     return <div className="mx-auto max-w-7xl p-6 md:p-8 text-sm text-rose-700">{error || "Failed to load dashboard."}</div>
   }
 
-  const metricIcons = [<ScrollText className="h-5 w-5" />, <Receipt className="h-5 w-5" />, <FileText className="h-5 w-5" />, <Mail className="h-5 w-5" />]
+  const metricIcons = [<Users className="h-5 w-5" />, <Package2 className="h-5 w-5" />, <FileText className="h-5 w-5" />, <AlertTriangle className="h-5 w-5" />]
 
   return (
     <div className="mx-auto max-w-7xl p-6 md:p-8">
@@ -62,7 +62,7 @@ export default function DashboardPage() {
             Dashboard
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            Keep your organization moving with a calm view of documents, activity, and workspace health.
+            Keep an eye on workspace readiness, recent movement, and the few items that need attention.
           </p>
         </div>
 
@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-12">
         <div className="space-y-6 xl:col-span-8">
-          <DashboardRecentQuotations items={data.recent_quotations} />
+          <DashboardSetupCard items={data.setup} />
           <DashboardActivityFeed items={data.activity} />
         </div>
 

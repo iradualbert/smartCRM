@@ -12,19 +12,19 @@ type Props = {
 export default function SalesMoneyPanel({ money, currencySymbol = "" }: Props) {
   const cards = [
     {
-      label: "Quotation pipeline",
+      label: "Quotation pipeline value",
       value: `${currencySymbol}${money.quotation_pipeline_total}`,
-      hint: "Sent and accepted quotation value",
+      hint: "Open value sitting in sent and accepted quotations",
     },
     {
-      label: "Outstanding invoices",
+      label: "Outstanding invoice value",
       value: `${currencySymbol}${money.invoice_outstanding_total}`,
-      hint: "Invoices still awaiting payment",
+      hint: "Amount still waiting to be collected",
     },
     {
-      label: "Receipts this month",
+      label: "Cash collected this month",
       value: `${currencySymbol}${money.receipts_collected_this_month}`,
-      hint: "Collected in current period",
+      hint: "Receipts recorded in the current month",
     },
   ]
 

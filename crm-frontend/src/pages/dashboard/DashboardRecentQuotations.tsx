@@ -13,6 +13,10 @@ import type { DashboardRecentQuotation } from "./api"
 
 type Props = {
   items: DashboardRecentQuotation[]
+  title?: string
+  emptyMessage?: string
+  ctaLabel?: string
+  ctaHref?: string
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -28,17 +32,23 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge className={`rounded-full border ${styles}`}>{status}</Badge>
 }
 
-export default function DashboardRecentQuotations({ items }: Props) {
+export default function DashboardRecentQuotations({
+  items,
+  title = "Recent quotations",
+  emptyMessage = "No quotations yet.",
+  ctaLabel = "View all",
+  ctaHref = "/quotations",
+}: Props) {
   return (
     <Card className="rounded-3xl border-slate-200 shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-slate-900">Recent quotations</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
           <Link
-            to="/quotations"
+            to={ctaHref}
             className="text-sm font-medium text-teal-700 hover:text-teal-800"
           >
-            View all
+            {ctaLabel}
           </Link>
         </div>
 
@@ -57,7 +67,7 @@ export default function DashboardRecentQuotations({ items }: Props) {
               {items.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
-                    No quotations yet.
+                    {emptyMessage}
                   </TableCell>
                 </TableRow>
               ) : (
