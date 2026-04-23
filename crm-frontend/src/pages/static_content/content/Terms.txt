@@ -1,93 +1,184 @@
 # Terms of Service
 
-**Effective Date:** 22.04.2026
+**Effective Date:** April 23, 2026
 
-Welcome to Modura.
+Welcome to Beinpark. These Terms of Service ("Terms") govern your access to and use of the Beinpark website, application, and related services.
 
-By accessing or using our services, you agree to these Terms of Service.
-
----
-
-## 1. Overview
-
-Modura provides a platform for creating, managing, and sending business documents such as quotations and invoices.
+By creating an account, accessing the service, or using the service, you agree to these Terms.
 
 ---
 
-## 2. Accounts
+## 1. The Service
 
-- You must provide accurate information  
-- You are responsible for your account and password  
-- You are responsible for all activity under your account  
+Beinpark is a business workflow platform that helps organizations create, manage, convert, generate, and send business documents including quotations, proformas, invoices, receipts, delivery notes, templates, and related operational records.
+
+Features may change over time as the service evolves.
 
 ---
 
-## 3. Use of Service
+## 2. Eligibility and Accounts
 
-You agree to use Modura only for lawful business purposes.
+To use the service, you must be legally able to enter into a binding agreement and use the service on behalf of yourself or the organization you represent.
+
+You agree to:
+
+- provide accurate and complete account information
+- keep your credentials secure
+- promptly update information that becomes inaccurate
+- remain responsible for activity that occurs under your account
+
+You must notify us promptly if you believe your account or organization access has been used without authorization.
+
+---
+
+## 3. Organizations and Workspace Access
+
+The service supports organization-based workspaces. When you create or join an organization:
+
+- organization data may be visible to authorized members of that organization
+- organization owners and administrators may manage membership, settings, and organization-level data
+- each user is responsible for actions taken through their own account
+
+If you use the service on behalf of an organization, you represent that you are authorized to do so.
+
+---
+
+## 4. Acceptable Use
+
+You agree to use the service only for lawful business purposes and in accordance with these Terms.
 
 You must not:
 
-- misuse the platform  
-- attempt to disrupt the service  
-- access data that does not belong to you  
+- access or attempt to access data that does not belong to you or your organization
+- interfere with, disrupt, or degrade the service
+- reverse engineer, probe, or test the service in an unauthorized manner
+- upload or send content that is unlawful, fraudulent, abusive, infringing, or misleading
+- use the service to send spam or unauthorized communications
+- use the service in a way that violates applicable law, regulation, or third-party rights
+
+We may investigate and take action where misuse is suspected.
 
 ---
 
-## 4. Organizations & Data
+## 5. Your Data and Documents
 
-- Data belongs to the organization that created it  
-- You are responsible for the accuracy of your documents  
-- Modura is not responsible for financial or legal errors  
+You are responsible for:
 
----
+- the accuracy, legality, and completeness of the information you enter into the service
+- reviewing documents before sending them to customers or third parties
+- ensuring taxes, pricing, payment terms, and customer information are correct
+- maintaining any internal approvals required by your business
 
-## 5. Subscriptions & Payments
-
-- Paid plans are billed in advance  
-- Failure to pay may result in suspension  
-- Pricing may change with notice  
+You retain your rights in your data. These Terms do not transfer ownership of your business records to us.
 
 ---
 
-## 6. Termination
+## 6. Email Sending and Communications
 
-We may suspend or terminate accounts that violate these terms.
+The service may allow you to draft or send emails and attachments.
+
+When you use email functionality:
+
+- you are responsible for recipient lists, message content, and lawful use
+- you must have the right to contact the recipients you send to
+- you are responsible for any sender account details you configure
+- delivery may depend on third-party providers outside our control
+
+We are not responsible for blocked mailboxes, spam filtering, recipient-side delivery failures, or third-party provider issues outside our reasonable control.
+
+---
+
+## 7. Subscriptions, Billing, and Usage Limits
+
+Some parts of the service may be offered on free or paid plans. By subscribing to a paid plan, you agree that:
+
+- fees are billed in advance on the billing cycle presented at checkout
+- usage limits may apply to documents, emails, storage, users, or organizations depending on the plan
+- we or our billing partners may charge the payment method associated with your subscription
+- unpaid balances may result in plan downgrade, suspension, or restricted access
+
+We may update pricing or plan structure from time to time. If we do, we will provide notice where required before changes apply to a future billing cycle.
+
+---
+
+## 8. Suspension and Termination
 
 You may stop using the service at any time.
 
----
+We may suspend or terminate access if:
 
-## 7. Limitation of Liability
+- you violate these Terms
+- payment remains overdue
+- your use creates risk to the service, other users, or third parties
+- we are required to do so by law
 
-Modura is provided “as is” without warranties.
-
-We are not liable for:
-
-- financial loss  
-- business interruption  
-- data inaccuracies  
+Where appropriate, we may provide notice and an opportunity to correct the issue before suspension or termination.
 
 ---
 
-## 8. Intellectual Property
+## 9. Intellectual Property
 
-All platform content, branding, and software belong to Modura.
+The service, including software, interface design, branding, logos, and related materials, is owned by Beinpark or its licensors and is protected by applicable intellectual property laws.
 
-You may not copy, distribute, or resell any part of the service without permission.
+Subject to these Terms, we grant you a limited, non-exclusive, non-transferable right to use the service for your internal business purposes.
 
----
-
-## 9. Changes to Terms
-
-We may update these Terms from time to time.
-
-Continued use of the service means you accept the updated Terms.
+You may not copy, distribute, modify, resell, sublicense, or create derivative works from the service except as permitted by law or with our prior written consent.
 
 ---
 
-## 10. Contact
+## 10. Feedback
 
-For questions:
+If you share suggestions, feedback, or ideas with us, we may use them to improve the service without restriction or obligation to you.
+
+---
+
+## 11. Disclaimers
+
+The service is provided on an "as is" and "as available" basis to the fullest extent permitted by law.
+
+We do not guarantee that:
+
+- the service will be uninterrupted or error-free
+- every feature will always be available
+- the service will meet every business, legal, tax, or accounting requirement you may have
+
+Beinpark is a workflow tool, not legal, tax, or accounting advice.
+
+---
+
+## 12. Limitation of Liability
+
+To the fullest extent permitted by law, Beinpark and its affiliates, officers, employees, and service providers will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for loss of profits, revenue, business opportunity, goodwill, or data arising from or related to your use of the service.
+
+To the extent liability cannot be excluded, our aggregate liability for claims arising out of or relating to the service will be limited to the amounts you paid us for the service during the 12 months before the event giving rise to the claim.
+
+---
+
+## 13. Indemnity
+
+You agree to indemnify and hold Beinpark harmless from claims, liabilities, losses, damages, and expenses arising out of:
+
+- your use of the service
+- your documents, communications, or workspace content
+- your violation of these Terms
+- your violation of applicable law or third-party rights
+
+---
+
+## 14. Governing Law
+
+These Terms are governed by the laws applicable in the jurisdiction where the service operator is established, unless otherwise required by mandatory local law.
+
+---
+
+## 15. Changes to These Terms
+
+We may update these Terms from time to time. When we do, we will update the effective date above. Material changes may also be communicated through the service or by email where appropriate. Continued use of the service after updated Terms take effect means you accept the revised Terms.
+
+---
+
+## 16. Contact
+
+For questions about these Terms, contact:
 
 **support@modura.app**

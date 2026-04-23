@@ -1,116 +1,201 @@
 # Privacy Policy
 
-**Effective Date:** 22.04.2026
+**Effective Date:** April 23, 2026
 
-Modura ("we", "our", "us") respects your privacy and is committed to protecting your information.
+Beinpark ("we", "our", or "us") provides a workspace for creating, sending, and managing business documents such as quotations, proformas, invoices, receipts, delivery notes, templates, and related account activity.
 
-This Privacy Policy explains how we collect, use, and protect your data when you use our services.
-
----
-
-## 1. Information We Collect
-
-### Information You Provide
-When you create an account or use the service, we may collect:
-
-- Name
-- Email address
-- Company / organization details
-- Customer and product data you enter
-- Billing information (processed securely via third-party providers)
+This Privacy Policy explains what information we collect, how we use it, when we share it, and the choices available to you when you use the service.
 
 ---
 
-### Information Collected Automatically
+## 1. Scope
 
-We may collect:
+This policy applies to:
 
-- Usage data (features used, interactions)
-- Device and browser information
-- Log data (IP address, timestamps)
+- the Beinpark web application
+- public website pages
+- customer support interactions
+- billing and account administration related to the service
 
----
-
-## 2. How We Use Your Information
-
-We use your information to:
-
-- Provide and operate the service
-- Generate documents (quotations, invoices)
-- Send emails on your behalf
-- Improve performance and reliability
-- Communicate with you (support, updates)
+This policy does not apply to third-party services that you connect to or access separately.
 
 ---
 
-## 3. Data Ownership
+## 2. Information We Collect
 
-- You retain full ownership of your data
-- We do not sell your data
-- We only process your data to provide the service
+### Information you provide directly
 
----
+When you create an account, join an organization, configure the workspace, or use the product, we may collect:
 
-## 4. Data Sharing
+- name
+- email address
+- password credentials or authentication data
+- organization name and business profile details
+- billing and subscription details
+- sender account details you configure for email delivery
+- customer records, product records, document line items, notes, and templates you create in the workspace
+- support requests and other messages you send to us
 
-We do not share your data except:
+### Information created through your use of the service
 
-- With trusted service providers (hosting, email, payments)
-- When required by law
-- To protect our rights and users
+When you work in the app, we may store:
 
----
+- quotations, proformas, invoices, receipts, and delivery notes
+- generated PDFs and related filenames
+- document activity history such as created, updated, converted, generated, and sent events
+- email draft and email send history
+- organization membership and role information
+- plan usage information such as document count, email usage, and storage usage
 
-## 5. Data Security
+### Information collected automatically
 
-We implement reasonable security measures to protect your data.
+We may automatically collect technical and usage information such as:
 
-However, no system is completely secure.
-
----
-
-## 6. Data Retention
-
-We retain your data while your account is active.
-
-You may request deletion of your data at any time.
-
----
-
-## 7. Your Rights (GDPR)
-
-You have the right to:
-
-- Access your data  
-- Correct inaccurate data  
-- Request deletion  
-- Restrict processing  
-- Request data portability  
-
-To exercise these rights, contact:
-
-**support@modura.app**
+- IP address
+- browser type and device information
+- operating system
+- log entries and timestamps
+- page visits and feature usage
+- error and diagnostic information used to maintain reliability and security
 
 ---
 
-## 8. Children's Information
+## 3. How We Use Information
 
-Our service is not intended for users under the age of 13.
+We use information to:
 
-We do not knowingly collect personal data from children.
+- provide, operate, and maintain the service
+- authenticate users and protect accounts
+- create, generate, and deliver business documents
+- send emails and attachments on your behalf when you use configured sender accounts or default sending options
+- support organization management, permissions, and workspace scoping
+- calculate usage against plan limits and administer subscriptions
+- respond to support requests and service inquiries
+- improve product performance, stability, and usability
+- detect, investigate, and prevent fraud, abuse, security incidents, and unauthorized access
+- comply with legal obligations
 
 ---
 
-## 9. Changes to This Policy
+## 4. Legal Bases for Processing
 
-We may update this policy from time to time.
+Where applicable under laws such as the GDPR, we rely on one or more of the following legal bases:
 
-Continued use of the service means you accept the updated policy.
+- performance of a contract with you or your organization
+- legitimate interests in operating, securing, and improving the service
+- compliance with legal obligations
+- consent, where consent is specifically requested
 
 ---
 
-## 10. Contact
+## 5. Data Ownership and Workspace Responsibility
 
-For any questions:
+- You or the organization controlling the workspace remain responsible for the business data entered into the service.
+- We process that data to provide the service and related support.
+- We do not sell your personal information or workspace data.
+- Organization administrators may be able to access and manage workspace content associated with their organization.
+
+---
+
+## 6. How We Share Information
+
+We may share information only in the following limited circumstances:
+
+- with infrastructure, hosting, storage, billing, and email service providers that help us operate the service
+- with professional advisers where reasonably necessary
+- if required by law, regulation, subpoena, or valid legal process
+- to protect the safety, rights, or property of our users, our service, or the public
+- in connection with a merger, acquisition, financing, or sale of business assets, subject to standard confidentiality protections where practicable
+
+We do not sell personal information to third parties.
+
+---
+
+## 7. Email Sending and Sender Accounts
+
+If you configure sender accounts or email delivery settings in the service:
+
+- sender configuration details are stored so the service can send emails on your behalf
+- generated attachments may include your document data and business identity
+- email logs may record recipients, timestamps, subject lines, and delivery-related metadata
+
+You are responsible for using email features lawfully, including obtaining any permissions required to contact your recipients.
+
+---
+
+## 8. Security
+
+We use reasonable administrative, technical, and organizational measures designed to protect information, including access controls, workspace scoping, authenticated routes, and operational safeguards appropriate to the nature of the service.
+
+No method of transmission or storage is completely secure, and we cannot guarantee absolute security.
+
+You are responsible for maintaining the confidentiality of your credentials and for notifying us promptly if you believe your account has been compromised.
+
+---
+
+## 9. Data Retention
+
+We retain information for as long as needed to:
+
+- provide the service
+- maintain account and organization history
+- meet legal, tax, accounting, and security obligations
+- resolve disputes and enforce our agreements
+
+If you request deletion, we will review the request and delete or anonymize information where reasonably possible, subject to legitimate business and legal retention requirements.
+
+---
+
+## 10. International Transfers
+
+Your information may be processed in countries other than your own. Where required, we take reasonable steps to support lawful transfer mechanisms and protect information handled across jurisdictions.
+
+---
+
+## 11. Your Rights
+
+Depending on your location, you may have rights to:
+
+- access personal information we hold about you
+- request correction of inaccurate information
+- request deletion of personal information
+- object to or restrict certain processing
+- request a copy of your data in a portable format where applicable
+- withdraw consent where processing is based on consent
+
+To make a request, contact us at **support@modura.app**. We may need to verify your identity before completing certain requests.
+
+---
+
+## 12. Cookies and Similar Technologies
+
+We may use cookies, local storage, and similar technologies to:
+
+- keep you signed in
+- remember preferences
+- improve performance and reliability
+- understand product usage patterns
+
+You can manage some browser-level controls directly in your browser settings, but disabling certain technologies may affect how the service works.
+
+---
+
+## 13. Children's Privacy
+
+The service is intended for business use and is not directed to children under 13. We do not knowingly collect personal information from children under 13.
+
+If you believe a child has provided personal information to us, contact us and we will take appropriate steps to review and remove it.
+
+---
+
+## 14. Changes to This Policy
+
+We may update this Privacy Policy from time to time to reflect changes in the service, legal requirements, or our practices. When we do, we will update the effective date above. Material changes may also be communicated through the service or by email where appropriate.
+
+---
+
+## 15. Contact
+
+For privacy questions, support requests, or data rights requests, contact:
 
 **support@modura.app**

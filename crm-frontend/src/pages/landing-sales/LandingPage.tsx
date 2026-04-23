@@ -45,9 +45,7 @@ function SectionHeader({
       ) : null}
       <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">{title}</h2>
       {description ? (
-        <p className="mt-4 text-base text-muted-foreground md:text-lg">
-          {description}
-        </p>
+        <p className="mt-4 text-base text-muted-foreground md:text-lg">{description}</p>
       ) : null}
     </div>
   )
@@ -152,7 +150,13 @@ function PlanCard({
   const isExternal = ctaHref.startsWith("mailto:")
 
   return (
-    <div className={cn("relative rounded-3xl border p-6 shadow-sm flex flex-col", accent, highlighted && "ring-2 ring-blue-500")}>
+    <div
+      className={cn(
+        "relative flex flex-col rounded-3xl border p-6 shadow-sm",
+        accent,
+        highlighted && "ring-2 ring-blue-500"
+      )}
+    >
       {highlighted && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow">
@@ -165,9 +169,9 @@ function PlanCard({
       <div className="mb-4">
         <h3 className="text-xl font-semibold">{name}</h3>
         <p className="mt-1 text-2xl font-bold tracking-tight">{price}</p>
-        {priceTry !== price && (
+        {priceTry !== price ? (
           <p className="mt-0.5 text-xs text-muted-foreground">{priceTry}</p>
-        )}
+        ) : null}
       </div>
 
       <div className="flex-1 space-y-3">
@@ -223,30 +227,30 @@ export default function LandingPage() {
             <div>
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
                 <Shield className="h-3.5 w-3.5" />
-                Create, send, track, and get paid
+                Professional documents for growing teams
               </div>
 
               <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">
-                From quotation to payment —
-                <span className="text-primary"> faster, clearer, and all in one place.</span>
+                Beinpark keeps your sales documents
+                <span className="text-primary"> clear, consistent, and ready to send.</span>
               </h1>
 
               <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-                A modern business workflow platform for SMEs to create professional documents,
-                share them instantly, track payments, collaborate across companies, and manage
-                operations from one simple interface.
+                Create quotations, proformas, invoices, receipts, and delivery notes in one
+                workspace. Keep customers, products, templates, PDFs, email sending, and team
+                activity organized without the overhead of a heavy ERP.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="rounded-2xl">
-                  <Link to="/sales">
-                    Open Sales Workspace
+                  <Link to="/signup">
+                    Start free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
 
                 <Button asChild size="lg" variant="outline" className="rounded-2xl">
-                  <Link to="/quotations/new">Create Your First Quotation</Link>
+                  <Link to="/login">Open the app</Link>
                 </Button>
               </div>
 
@@ -270,12 +274,12 @@ export default function LandingPage() {
                     <div>
                       <p className="text-sm font-medium">Sales workspace</p>
                       <p className="text-xs text-muted-foreground">
-                        Documents, communication, and payment visibility
+                        Documents, templates, email sending, and activity in one place
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                       <Globe className="h-3.5 w-3.5" />
-                      Multi-company ready
+                      Organization-scoped
                     </div>
                   </div>
 
@@ -307,37 +311,39 @@ export default function LandingPage() {
 
                     <div className="rounded-2xl border bg-background p-4 shadow-sm">
                       <div className="mb-3 flex items-center justify-between">
-                        <p className="text-sm font-medium">Payments</p>
+                        <p className="text-sm font-medium">Operations</p>
                         <BarChart3 className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="space-y-3">
                         <div className="rounded-xl bg-muted/60 p-3">
-                          <p className="text-xs text-muted-foreground">Outstanding</p>
-                          <p className="mt-1 text-xl font-semibold">$12,480</p>
+                          <p className="text-xs text-muted-foreground">Recent activity</p>
+                          <p className="mt-1 text-xl font-semibold">Create, send, convert</p>
                         </div>
                         <div className="rounded-xl bg-muted/60 p-3">
-                          <p className="text-xs text-muted-foreground">Overdue</p>
-                          <p className="mt-1 text-xl font-semibold text-amber-600">8 invoices</p>
+                          <p className="text-xs text-muted-foreground">Dashboards</p>
+                          <p className="mt-1 text-xl font-semibold text-slate-900">
+                            Workspace and sales views
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     <div className="rounded-2xl border bg-background p-4 shadow-sm">
                       <div className="mb-3 flex items-center justify-between">
-                        <p className="text-sm font-medium">Sharing</p>
+                        <p className="text-sm font-medium">Delivery</p>
                         <Shield className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="space-y-3 text-sm text-muted-foreground">
                         <div className="flex items-center justify-between rounded-xl bg-muted/60 p-3">
-                          <span>Email delivery</span>
+                          <span>Generated PDFs</span>
                           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                         </div>
                         <div className="flex items-center justify-between rounded-xl bg-muted/60 p-3">
-                          <span>Secure links</span>
+                          <span>Email sender accounts</span>
                           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                         </div>
                         <div className="flex items-center justify-between rounded-xl bg-muted/60 p-3">
-                          <span>WhatsApp sharing</span>
+                          <span>Template fallback</span>
                           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                         </div>
                       </div>
@@ -353,7 +359,9 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium">Professional documents</p>
-                    <p className="text-xs text-muted-foreground">Generated and ready to share</p>
+                    <p className="text-xs text-muted-foreground">
+                      Generated, named, and ready to send
+                    </p>
                   </div>
                 </div>
               </div>
@@ -364,8 +372,10 @@ export default function LandingPage() {
                     <BarChart3 className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Dashboard & insights</p>
-                    <p className="text-xs text-muted-foreground">Planned and expanding</p>
+                    <p className="text-sm font-medium">Dashboards built in</p>
+                    <p className="text-xs text-muted-foreground">
+                      Workspace health and sales visibility
+                    </p>
                   </div>
                 </div>
               </div>
@@ -377,8 +387,8 @@ export default function LandingPage() {
           <div className="mx-auto max-w-7xl px-4 md:px-6">
             <SectionHeader
               badge="Core platform"
-              title="A business operations hub, not just an invoicing tool"
-              description="The product summary frames this as a workflow and communication platform: create documents, send them instantly, track payments, centralize operations, and support multiple companies and teams."
+              title="A sales document workspace that stays practical"
+              description="Beinpark helps teams create business documents, generate polished PDFs, send them through the app, and keep the surrounding workflow organized."
             />
 
             <div className="mt-12 grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
@@ -394,7 +404,7 @@ export default function LandingPage() {
             <SectionHeader
               badge="Workflow"
               title="Built around the way businesses actually work"
-              description="Move from document creation to sending, payment follow-up, and team collaboration without jumping between disconnected tools."
+              description="Move from document creation to email delivery, conversion, and status follow-up without juggling separate tools."
             />
 
             <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -414,18 +424,19 @@ export default function LandingPage() {
         <section id="insights" className="bg-muted/30 py-20 md:py-24">
           <div className="mx-auto max-w-7xl px-4 md:px-6">
             <SectionHeader
-              badge="Insights"
-              title="Dashboards and business visibility, designed to grow with the product"
-              description="Your summary highlights planned dashboard and insights features around revenue overview, unpaid invoices, overdue tracking, customer insights, and business performance."
+              badge="Visibility"
+              title="Dashboards that support the work already happening"
+              description="See recent quotations, open attention items, usage, subscription details, and sales progress from inside the app."
             />
 
             <div className="mt-12 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="rounded-3xl border bg-card p-6 shadow-sm">
                 <div className="mb-6 flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-semibold">Planned dashboard experience</h3>
+                    <h3 className="text-xl font-semibold">Built-in dashboard experience</h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Revenue, receivables, overdue trends, customer activity, and operational health in one place.
+                      Workspace and sales dashboards help teams keep an eye on activity,
+                      documents in motion, and account readiness.
                     </p>
                   </div>
                   <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -443,30 +454,34 @@ export default function LandingPage() {
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="rounded-2xl bg-background p-4 shadow-sm">
                       <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                        Outstanding
+                        Open quotations
                       </p>
-                      <p className="mt-2 text-2xl font-semibold">$18,420</p>
+                      <p className="mt-2 text-2xl font-semibold">Draft and sent</p>
                     </div>
                     <div className="rounded-2xl bg-background p-4 shadow-sm">
                       <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                        Paid this month
+                        Workspace health
                       </p>
-                      <p className="mt-2 text-2xl font-semibold">$42,800</p>
+                      <p className="mt-2 text-2xl font-semibold">Usage and plan visibility</p>
                     </div>
                     <div className="rounded-2xl bg-background p-4 shadow-sm">
                       <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                        Overdue
+                        Sales follow-up
                       </p>
-                      <p className="mt-2 text-2xl font-semibold text-amber-600">12 docs</p>
+                      <p className="mt-2 text-2xl font-semibold text-amber-600">
+                        Invoices and receipts
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="rounded-3xl border bg-card p-6 shadow-sm">
-                <h3 className="text-xl font-semibold">Future-ready features</h3>
+                <h3 className="text-xl font-semibold">Inside the workspace</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  The roadmap already points toward recurring invoices, payment integrations, notifications, logs, portals, and expansion into purchases and expenses.
+                  The current app already covers the parts teams reach for most often:
+                  document setup, templates, sender accounts, billing, and organization
+                  settings.
                 </p>
 
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -489,7 +504,7 @@ export default function LandingPage() {
             <SectionHeader
               badge="Why this product"
               title="Simple enough for SMEs, strong enough for growing teams"
-              description="The positioning in your summary is clear: this should avoid ERP complexity while still solving real document, payment, and communication pain points."
+              description="The app is designed to remove document chaos without turning day-to-day work into an enterprise project."
             />
 
             <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -510,7 +525,7 @@ export default function LandingPage() {
             <SectionHeader
               badge="Plans"
               title="Simple, transparent pricing"
-              description="Start free and upgrade when you're ready. No hidden fees, no surprises."
+              description="Start free and upgrade when your workspace needs more volume, users, or sending capacity."
             />
 
             <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -529,25 +544,25 @@ export default function LandingPage() {
               </div>
 
               <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-                Create, send, and get paid — all in one place
+                Create, send, and manage customer documents in one place
               </h2>
 
               <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-                Start with quotations today, expand into secure sharing, payment tracking,
-                dashboards, and multi-company collaboration as the platform grows.
+                Start with quotations, invoices, templates, and sender accounts today, then
+                run the rest of the workflow from the same calm workspace.
               </p>
 
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Button asChild size="lg" className="rounded-2xl">
-                  <Link to="/companies/new">
-                    Start with your company
+                  <Link to="/signup">
+                    Start free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
 
                 <Button asChild size="lg" variant="outline" className="rounded-2xl">
-                  <Link to="/sales">
-                    Explore the sales workspace
+                  <Link to="/login">
+                    Open the app
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>

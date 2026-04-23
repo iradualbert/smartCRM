@@ -1,53 +1,120 @@
 # Refund Policy
 
-**Effective Date:** 22.04.2026
+**Effective Date:** April 23, 2026
 
-Thank you for using Modura.
-
----
-
-## 1. Subscription Fees
-
-Modura operates on a subscription-based model.
-
-All subscription fees are billed in advance.
+This Refund Policy explains how subscription charges, cancellations, and refund requests are handled for Beinpark.
 
 ---
 
-## 2. Refunds
+## 1. Subscription Billing
 
-Payments are generally **non-refundable**.
+Beinpark is offered on a subscription basis. Unless otherwise stated in a custom agreement:
 
-However, refunds may be issued in limited cases such as:
-
-- Duplicate charges  
-- Billing errors  
-- Service unavailability caused by us  
-
-All refund requests are reviewed on a case-by-case basis.
+- subscription fees are billed in advance
+- paid plans renew automatically at the end of each billing period until cancelled
+- taxes, duties, or similar charges may apply depending on your location
 
 ---
 
-## 3. Cancellation
+## 2. General Refund Position
 
-You may cancel your subscription at any time.
+Except where required by law, subscription fees are generally **non-refundable** once charged.
 
-- Your subscription remains active until the end of the billing period  
-- No future charges will occur after cancellation  
-
----
-
-## 4. Free Trial (If Applicable)
-
-If a free trial is offered:
-
-- You will not be charged until the trial ends  
-- You may cancel at any time before billing begins  
+This is because paid access, usage capacity, and service availability are made available immediately when the billing period begins.
 
 ---
 
-## 5. Contact
+## 3. Cases We May Review for Refund
 
-For billing or refund inquiries:
+We may review and, where appropriate, issue a full or partial refund in limited situations such as:
+
+- duplicate charges
+- incorrect billing amount caused by our systems
+- payment collected after a valid cancellation request that should have taken effect
+- material service unavailability directly caused by us for a meaningful portion of the billing period
+
+Any refund determination is made case by case and at our reasonable discretion unless a stricter legal right applies.
+
+---
+
+## 4. Cases That Usually Do Not Qualify
+
+Refunds are generally not issued for:
+
+- partial use of a billing period
+- change of mind after purchase
+- failure to cancel before renewal
+- dissatisfaction based on missing features not expressly promised at the time of purchase
+- issues caused by your devices, network, third-party email providers, or internal business processes outside our control
+
+---
+
+## 5. Cancelling a Subscription
+
+You may cancel your subscription at any time through the service or by contacting support.
+
+When you cancel:
+
+- your paid plan usually remains active until the end of the current billing period
+- you will not be charged for the next billing period unless you reactivate
+- current-period fees already charged are usually not refunded unless one of the review cases above applies
+
+---
+
+## 6. Free Plans and Trials
+
+If a free plan or free trial is offered:
+
+- no refund applies to the free portion of the service
+- once a paid subscription begins, standard billing and refund rules apply
+- you are responsible for cancelling before the paid period begins if you do not want to be charged
+
+---
+
+## 7. Downgrades and Plan Changes
+
+If you change plans during an active billing period:
+
+- changes may take effect immediately or at the next renewal, depending on the billing flow presented
+- any credits, prorations, or adjustments will follow the billing terms shown during the change process or any custom agreement with you
+
+---
+
+## 8. How to Request a Refund Review
+
+To request a refund review, contact:
+
+**support@modura.app**
+
+Please include:
+
+- the account email address
+- organization name
+- date and amount charged
+- a short explanation of the issue
+
+Providing complete information helps us review the request faster.
+
+---
+
+## 9. Processing Time
+
+If a refund is approved:
+
+- we will initiate the refund using the original payment method where possible
+- processing time depends on your bank or payment provider
+- any access changes related to the refunded subscription may take effect at the same time
+
+---
+
+## 10. Changes to This Policy
+
+We may update this Refund Policy from time to time. When we do, we will update the effective date above. The version in effect when you are charged will generally govern that billing period unless the law requires otherwise.
+
+---
+
+## 11. Contact
+
+For billing questions, cancellations, or refund requests, contact:
 
 **support@modura.app**

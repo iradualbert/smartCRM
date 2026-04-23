@@ -10,12 +10,12 @@ import {
   Mail,
   MessageCircle,
   Receipt,
+  RefreshCcw,
   ShieldCheck,
   Truck,
   Users,
   Wallet,
   Zap,
-  RefreshCcw,
   BellRing,
   PlugZap,
 } from "lucide-react"
@@ -28,13 +28,13 @@ export const heroStats = [
   },
   {
     label: "Core workflow",
-    value: "Create → Send → Track → Get paid",
-    hint: "One place for business operations",
+    value: "Create -> Send -> Track",
+    hint: "One steady workflow for customer documents",
   },
   {
     label: "Built for",
-    value: "SMEs & teams",
-    hint: "Freelancers, agencies, service providers, traders",
+    value: "SMEs and teams",
+    hint: "Agencies, service businesses, traders, and growing operations",
   },
 ]
 
@@ -42,61 +42,61 @@ export const coreFeatures = [
   {
     title: "Document Management",
     description:
-      "Create, edit, organize, and generate professional business documents with automatic totals and PDF export.",
+      "Create, edit, organize, and generate professional business documents with automatic totals and polished PDF output.",
     icon: Files,
     bullets: [
       "Quotations, proformas, invoices, receipts, delivery notes",
-      "Automatic totals and calculations",
-      "PDF generation and template-based output",
-      "Document lifecycle management",
+      "Automatic totals, tax handling, and calculations",
+      "PDF generation with template-based output",
+      "Activity history across document actions",
     ],
   },
   {
-    title: "Payment Tracking",
+    title: "Sales Workflow",
     description:
-      "Track unpaid, partially paid, and paid invoices with due dates, balances, and overdue visibility.",
+      "Move cleanly from quotation to invoice and receipt with consistent statuses, timelines, and follow-up visibility.",
     icon: Wallet,
     bullets: [
-      "Payment status visibility",
-      "Due date tracking",
-      "Outstanding balances",
-      "Overdue monitoring",
+      "Quotation to invoice conversion",
+      "Invoice to receipt workflow",
+      "Due date and overdue visibility",
+      "Status tracking across sales documents",
     ],
   },
   {
     title: "Sending & Communication",
     description:
-      "Send documents directly from the platform through email, WhatsApp-style sharing, and secure links.",
+      "Send documents directly from the platform with professional attachments, sender accounts, and reusable email content.",
     icon: Mail,
     bullets: [
-      "Email with PDF or link",
-      "WhatsApp sharing via link",
-      "Message templates and dynamic variables",
-      "Reusable communication templates",
+      "Email with generated PDF attachments",
+      "Organization sender accounts",
+      "Default and reusable email templates",
+      "Sent email history",
     ],
   },
   {
-    title: "Secure Document Access",
+    title: "Organizations & Access",
     description:
-      "Give customers access through secure public links with revocation and tracking controls.",
+      "Work inside organization-scoped workspaces with membership-aware access and cleaner team separation.",
     icon: ShieldCheck,
     bullets: [
-      "Token-based access",
-      "No login required for customers",
-      "Expiry and revoke controls",
-      "View/open tracking",
+      "Organization-based scoping",
+      "Membership-aware access control",
+      "Safer document and template separation",
+      "Shared sender and template settings",
     ],
   },
   {
-    title: "Multi-Company & Team Support",
+    title: "Templates & Output",
     description:
-      "Support one user across multiple companies with roles and company-specific profiles.",
+      "Keep documents consistent with reusable templates and fallback defaults that work from day one.",
     icon: Building2,
     bullets: [
-      "One user, multiple companies",
-      "Company membership system",
-      "Roles: owner, admin, staff, viewer",
-      "Company-specific user profiles",
+      "Document templates by type",
+      "Organization-scoped templates",
+      "Professional default templates",
+      "Consistent filenames for downloads and email attachments",
     ],
   },
   {
@@ -121,17 +121,17 @@ export const workflowSteps = [
   },
   {
     title: "Send",
-    description: "Share via email, WhatsApp-style links, or secure public access.",
+    description: "Prepare a PDF automatically and send it by email with the right sender account.",
     icon: MessageCircle,
   },
   {
     title: "Track",
-    description: "Monitor payment status, due dates, balances, and document access.",
+    description: "Monitor statuses, due dates, activity history, and sent email records.",
     icon: CreditCard,
   },
   {
     title: "Collaborate",
-    description: "Work across teams and companies with structured roles and shared workflows.",
+    description: "Work inside the right organization with shared templates, catalogs, and document settings.",
     icon: Users,
   },
 ]
@@ -166,50 +166,50 @@ export const quickHighlights = [
 
 export const insights = [
   {
-    title: "Revenue overview",
+    title: "Workspace overview",
     icon: BarChart3,
   },
   {
-    title: "Unpaid invoices",
+    title: "Recent quotations",
     icon: CreditCard,
   },
   {
-    title: "Overdue tracking",
+    title: "Open attention items",
     icon: BellRing,
   },
   {
-    title: "Customer insights",
+    title: "Document activity feed",
     icon: Users,
   },
   {
-    title: "Business performance metrics",
+    title: "Subscription and usage visibility",
     icon: Zap,
   },
 ]
 
 export const futureReady = [
   {
-    title: "Recurring invoices",
+    title: "Quotation dashboard",
     icon: RefreshCcw,
   },
   {
-    title: "Payment integrations",
+    title: "Invoice follow-up",
     icon: PlugZap,
   },
   {
-    title: "SMS notifications",
+    title: "Email sending setup",
     icon: MessageCircle,
   },
   {
-    title: "Activity logs",
+    title: "Template management",
     icon: Link2,
   },
   {
-    title: "Client portal",
+    title: "Organization management",
     icon: ShieldCheck,
   },
   {
-    title: "Expense & purchase module",
+    title: "Billing controls",
     icon: FolderKanban,
   },
 ]
@@ -217,19 +217,19 @@ export const futureReady = [
 export const differentiators = [
   {
     title: "Communication-first",
-    description: "Not just documents — send them instantly and keep operations moving.",
+    description: "Create the document, prepare the PDF, and send it without leaving the workflow.",
   },
   {
-    title: "Link-based sharing",
-    description: "Modern, mobile-friendly document access through secure public links.",
+    title: "Operationally practical",
+    description: "Built around everyday sales documents and the work that happens right after they are created.",
   },
   {
     title: "Multi-company support",
-    description: "Built for agencies, teams, and growing businesses with shared workflows.",
+    description: "Support more than one organization without blending data, templates, or sending settings.",
   },
   {
     title: "Simple but powerful",
-    description: "A practical alternative to heavy ERP systems without losing core business value.",
+    description: "A calmer alternative to heavier systems while still covering the work most small teams need daily.",
   },
 ]
 
@@ -237,7 +237,7 @@ export const plans = [
   {
     name: "Free",
     price: "$0 / month",
-    priceTry: "₺0 / month",
+    priceTry: "TRY 0 / month",
     accent: "border-slate-200 bg-white",
     highlighted: false,
     cta: "Get started free",
@@ -248,13 +248,13 @@ export const plans = [
       "20 documents / month",
       "5 emails / month",
       "100 MB storage",
-      "PDF generation",
+      "PDF generation and default templates",
     ],
   },
   {
     name: "Business",
     price: "$6 / month",
-    priceTry: "₺200 / month",
+    priceTry: "TRY 200 / month",
     accent: "border-blue-500 bg-blue-50/60",
     highlighted: true,
     cta: "Get started",
@@ -265,8 +265,8 @@ export const plans = [
       "200 documents / month",
       "200 emails / month",
       "1 GB storage",
-      "PDF generation",
-      "Email sending",
+      "PDF generation and email sending",
+      "Organization templates",
     ],
   },
   {
@@ -283,11 +283,10 @@ export const plans = [
       "Unlimited documents",
       "Unlimited emails",
       "Unlimited storage",
-      "PDF generation",
-      "Email sending",
+      "PDF generation and email sending",
       "Custom templates",
-      "AI quote extraction",
       "Branding removal",
+      "Priority support",
     ],
   },
 ]
