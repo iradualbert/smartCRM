@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import SearchSelect from "../shared-components/SearchSelect"
+import TemplatePicker from "../shared-components/TemplatePicker"
 import DocumentLineItemsEditor from "@/shared/DocumentLineItemsEditor"
 import {
   getProforma,
@@ -554,18 +555,13 @@ export default function InvoiceForm({
             render={({ field }) => (
               <Field>
                 <FieldLabel>Template</FieldLabel>
-                <select
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm"
-                  value={field.value ?? ""}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                >
-                  <option value="">Default invoice template</option>
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
-                    </option>
-                  ))}
-                </select>
+                <TemplatePicker
+                  documentType="invoice"
+                  value={field.value}
+                  templates={templates}
+                  onChange={field.onChange}
+                  defaultLabel="Use default invoice template"
+                />
               </Field>
             )}
           />

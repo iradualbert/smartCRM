@@ -208,6 +208,32 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
     def _build_download_filename(self, instance):
         return build_document_filename(instance, document_type=self.document_type)
 
+    def _ensure_pdf_for_email(self, instance, user):
+        needs_regeneration = bool(getattr(instance, "pdf_needs_regeneration", False))
+
+        if instance.document and file_exists(instance.document.file) and not needs_regeneration:
+            return instance.document, False
+
+        document, generated = generate_document_for_instance(
+            instance=instance,
+            document_type=self.document_type,
+            user=user,
+            force=needs_regeneration,
+        )
+
+        log_event(
+            instance,
+            "pdf_generated",
+            metadata={
+                "generated": generated,
+                "document_id": document.id,
+                "trigger": "email",
+                "regenerated": needs_regeneration,
+            },
+            user=user,
+        )
+        return document, generated
+
     @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated], url_path="activity")
     def activity(self, request, pk=None):
         instance = self.get_object()
@@ -325,6 +351,7 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
         instance = self.get_object()
 
         try:
+            self._ensure_pdf_for_email(instance, request.user)
             draft = build_email_draft_for_instance(
                 instance=instance,
                 document_type=self.document_type,
@@ -415,6 +442,10 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
                 return Response({"detail": message}, status=status.HTTP_403_FORBIDDEN)
 
         try:
+            if include_attachment:
+                doc, _ = self._ensure_pdf_for_email(instance, request.user)
+                doc_file = doc.file if doc else None
+
             email_log = send_document_email(
                 instance=instance,
                 config=sending_config,

@@ -11,6 +11,7 @@ from billing.services.utils import adjust_storage_usage, can_generate_pdf, can_s
 from ..models import CURRENCY_SYMBOL_MAP, Document, Template
 from ..template_mapper_utils import (
     build_standard_sales_document_data,
+    get_document_schema,
     inspect_template,
     render_mapped_template_to_pdf,
 )
@@ -54,6 +55,14 @@ DOCUMENT_FILENAME_TYPE_MAP = {
     "invoice": "invoice",
     "receipt": "receipt",
     "delivery_note": "delivery_note",
+}
+
+BUILTIN_TEMPLATE_FILENAMES = {
+    "quotation": "quotation_standard_template.docx",
+    "proforma": "proforma_standard_template.docx",
+    "invoice": "invoice_standard_template.docx",
+    "receipt": "receipt_standard_template.docx",
+    "delivery_note": "delivery_note_standard_template.docx",
 }
 
 
@@ -116,6 +125,39 @@ def build_document_filename(instance, document_type: str | None = None) -> str:
     identifier = sanitize_filename_part(get_document_identifier(instance))
     customer_name = sanitize_filename_part(get_document_customer_name(instance))
     return f"{filename_type}_{identifier}_{customer_name}.pdf"
+
+
+def get_builtin_template_path(document_type: str) -> Path:
+    default_dir = Path(__file__).resolve().parent.parent / "default"
+    filename = BUILTIN_TEMPLATE_FILENAMES.get(document_type)
+    if not filename:
+        raise ValidationError(f"Unsupported document type for builtin template: '{document_type}'.")
+
+    path = default_dir / filename
+    if path.exists():
+        return path
+
+    invoice_fallback = default_dir / BUILTIN_TEMPLATE_FILENAMES["invoice"]
+    if invoice_fallback.exists():
+        return invoice_fallback
+
+    raise ValidationError(f"No builtin template file found for document_type='{document_type}'.")
+
+
+def resolve_template_source(instance, document_type: str):
+    template = get_template_for_instance(instance, document_type)
+    if template and template.file and os.path.exists(template.file.path):
+        return {
+            "template": template,
+            "template_path": template.file.path,
+            "mapping": template.mapping or {},
+        }
+
+    return {
+        "template": None,
+        "template_path": str(get_builtin_template_path(document_type)),
+        "mapping": get_document_schema(document_type)["suggested_mapping"],
+    }
 
 
 def get_template_for_instance(instance, document_type: str):
@@ -403,18 +445,17 @@ def generate_document_for_instance(instance, document_type, user=None, force=Fal
         if not allowed:
             raise ValidationError(message)
 
-    template = get_template_for_instance(instance, document_type)
-    if not template or not template.file:
-        raise ValidationError(f"No active template found for document_type='{document_type}'.")
+    template_source = resolve_template_source(instance, document_type)
+    template = template_source["template"]
 
     standard_data = build_standard_data_from_instance(instance, document_type)
-    mapping = template.mapping or {}
+    mapping = template_source["mapping"]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         output_pdf_path = Path(tmpdir) / f"{document_type}_{instance.pk}.pdf"
 
         render_mapped_template_to_pdf(
-            template_path=template.file.path,
+            template_path=template_source["template_path"],
             output_pdf_path=output_pdf_path,
             standard_data=standard_data,
             mapping=mapping,

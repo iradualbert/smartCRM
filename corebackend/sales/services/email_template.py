@@ -81,7 +81,11 @@ def _get_company_and_customer(instance, document_type: str):
     elif document_type == "receipt":
         invoice = getattr(instance, "invoice", None)
         proforma = getattr(invoice, "proforma", None) if invoice else None
-        customer = getattr(proforma, "customer", None) if proforma else None
+        customer = (
+            getattr(instance, "customer", None)
+            or getattr(invoice, "customer", None)
+            or (getattr(proforma, "customer", None) if proforma else None)
+        )
         company = (
             getattr(instance, "company", None)
             or getattr(invoice, "company", None)
@@ -91,7 +95,11 @@ def _get_company_and_customer(instance, document_type: str):
     elif document_type == "delivery_note":
         invoice = getattr(instance, "invoice", None)
         proforma = getattr(invoice, "proforma", None) if invoice else None
-        customer = getattr(proforma, "customer", None) if proforma else None
+        customer = (
+            getattr(instance, "customer", None)
+            or getattr(invoice, "customer", None)
+            or (getattr(proforma, "customer", None) if proforma else None)
+        )
         company = (
             getattr(instance, "company", None)
             or getattr(invoice, "company", None)

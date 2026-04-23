@@ -111,7 +111,7 @@ export type QuotationPayload = {
   currency?: string
   name: string
   description?: string
-  quote_number: string
+  quote_number?: string
   status?: QuotationStatus
 
   // backend additions expected
@@ -284,7 +284,7 @@ export async function createQuotationWithLines(input: {
   quotation: {
     name: string
     description?: string
-    quote_number: string
+    quote_number?: string
     currency?: string
     selected_template?: string | null
     status?: QuotationStatus
@@ -323,12 +323,11 @@ export async function createQuotationWithLines(input: {
     throw new Error("Customer is required.")
   }
 
-  const quotation = await createQuotation({
+  const quotationPayload: QuotationPayload = {
     company: input.companyId,
     customer: customerId,
     name: input.quotation.name.trim(),
     description: input.quotation.description?.trim() || "",
-    quote_number: input.quotation.quote_number.trim(),
     currency: input.quotation.currency || undefined,
     selected_template: input.quotation.selected_template ?? null,
     status: input.quotation.status ?? "draft",
@@ -337,7 +336,14 @@ export async function createQuotationWithLines(input: {
     tax_mode: input.quotation.tax_mode ?? "exclusive",
     tax_label: input.quotation.tax_label ?? "VAT",
     tax_rate: input.quotation.tax_rate ?? "0.00",
-  })
+  }
+
+  const quoteNumber = input.quotation.quote_number?.trim()
+  if (quoteNumber) {
+    quotationPayload.quote_number = quoteNumber
+  }
+
+  const quotation = await createQuotation(quotationPayload)
 
   for (const line of input.lines) {
     await createQuotationLine({

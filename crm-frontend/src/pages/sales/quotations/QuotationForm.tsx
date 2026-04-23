@@ -58,6 +58,7 @@ import {
   type QuotationTaxMode,
   type Template,
 } from "./api"
+import TemplatePicker from "../shared-components/TemplatePicker"
 
 export const quotationFormSchema = z
   .object({
@@ -635,20 +636,13 @@ export default function QuotationForm({
               render={({ field }) => (
                 <Field>
                   <FieldLabel>Template</FieldLabel>
-                  <select
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(e.target.value ? Number(e.target.value) : null)
-                    }
-                  >
-                    <option value="">Default quotation template</option>
-                    {templates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.name}
-                      </option>
-                    ))}
-                  </select>
+                  <TemplatePicker
+                    documentType="quotation"
+                    value={field.value == null ? null : Number(field.value)}
+                    templates={templates}
+                    onChange={field.onChange}
+                    defaultLabel="Use default quotation template"
+                  />
                 </Field>
               )}
             />

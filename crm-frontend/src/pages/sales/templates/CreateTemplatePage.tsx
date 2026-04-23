@@ -1,22 +1,37 @@
 import * as React from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import TemplateUploadCard, { type TemplateFormValues } from "./TemplateUploadCard"
-import { createTemplate } from "./api"
+import { createTemplate, type TemplateDocumentType } from "./api"
 import { useOrganizations } from "@/redux/hooks/useOrganizations"
+
+const SUPPORTED_DOCUMENT_TYPES = new Set<TemplateDocumentType>([
+  "invoice",
+  "quotation",
+  "proforma",
+  "delivery_note",
+  "receipt",
+])
 
 export default function CreateTemplatePage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { currentOrganizationId } = useOrganizations()
   const companyId = currentOrganizationId ? Number(currentOrganizationId) : null
+  const requestedDocumentType = searchParams.get("documentType")
+  const returnTo = searchParams.get("returnTo")
+  const initialDocumentType: TemplateDocumentType =
+    requestedDocumentType && SUPPORTED_DOCUMENT_TYPES.has(requestedDocumentType as TemplateDocumentType)
+      ? (requestedDocumentType as TemplateDocumentType)
+      : "invoice"
 
   const [values, setValues] = React.useState<TemplateFormValues>({
     company: companyId,
     name: "",
     description: "",
-    document_type: "invoice",
+    document_type: initialDocumentType,
     mapping: {},
     supported_currencies: [],
     is_active: true,
@@ -28,8 +43,12 @@ export default function CreateTemplatePage() {
     setValues((prev) => ({
       ...prev,
       company: companyId,
+      document_type:
+        requestedDocumentType && SUPPORTED_DOCUMENT_TYPES.has(requestedDocumentType as TemplateDocumentType)
+          ? (requestedDocumentType as TemplateDocumentType)
+          : prev.document_type,
     }))
-  }, [companyId])
+  }, [companyId, requestedDocumentType])
 
   const [saving, setSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -60,7 +79,7 @@ export default function CreateTemplatePage() {
         file: values.file,
       })
 
-      navigate(`/templates/${created.id}`)
+      navigate(returnTo || `/templates/${created.id}`)
     } catch (err) {
       console.error(err)
       setError("Failed to create template.")
@@ -90,7 +109,7 @@ export default function CreateTemplatePage() {
         <Button
           variant="outline"
           className="rounded-2xl"
-          onClick={() => navigate("/templates")}
+          onClick={() => navigate(returnTo || "/templates")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to templates
@@ -110,7 +129,7 @@ export default function CreateTemplatePage() {
           <Button
             variant="outline"
             className="rounded-2xl"
-            onClick={() => navigate("/templates")}
+            onClick={() => navigate(returnTo || "/templates")}
           >
             Cancel
           </Button>
