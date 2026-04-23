@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -640,8 +642,26 @@ class DocumentEvent(models.Model):
     document = models.ForeignKey(
         "Document",
         on_delete=models.CASCADE,
-        related_name="events"
+        related_name="events",
+        null=True,
+        blank=True,
     )
+    company = models.ForeignKey(
+        "Company",
+        on_delete=models.CASCADE,
+        related_name="document_events",
+        null=True,
+        blank=True,
+    )
+    source_content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name="sales_document_events",
+        null=True,
+        blank=True,
+    )
+    source_object_id = models.CharField(max_length=255, blank=True, default="")
+    source_object = GenericForeignKey("source_content_type", "source_object_id")
 
     event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
 
@@ -660,3 +680,7 @@ class DocumentEvent(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["company", "created_at"]),
+            models.Index(fields=["source_content_type", "source_object_id"]),
+        ]

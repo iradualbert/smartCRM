@@ -39,8 +39,9 @@ def _build_company_dashboard_context(company):
 
     recent_document_events = DocumentEvent.objects.filter(
         created_at__gte=month_start,
-        created_by__company_memberships__company=company,
-    ).select_related("document").order_by("-created_at")[:8]
+    ).filter(
+        Q(company=company) | Q(created_by__company_memberships__company=company)
+    ).select_related("document").distinct().order_by("-created_at")[:8]
 
     recent_subscription_events = SubscriptionEvent.objects.filter(
         company=company

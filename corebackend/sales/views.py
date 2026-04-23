@@ -25,7 +25,6 @@ from .models import (
     DeliveryNote,
     DeliveryNoteLine,
     Document,
-    DocumentEvent,
     Invoice,
     InvoiceLine,
     Product,
@@ -60,7 +59,7 @@ from .services.document_generation import (
     get_existing_document_or_raise,
     inspect_template_file,
 )
-from .services.events import log_event
+from .services.events import get_events_for_instance, get_events_for_instances, log_event
 from .services.company import _build_company_dashboard_context, _next_document_number
 from .serializers_dashboard import WorkspaceDashboardSerializer, SalesDashboardSerializer
 
@@ -145,6 +144,34 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
         queryset = self._scope_by_company_param(queryset)
         return queryset.distinct()
 
+    def perform_create(self, serializer):
+        instance = serializer.save(
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+        log_event(instance, "created", user=self.request.user)
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        old_status = getattr(instance, "status", None)
+
+        updated = serializer.save(updated_by=self.request.user)
+
+        log_event(
+            updated,
+            "updated",
+            metadata={"fields": list(serializer.validated_data.keys())},
+            user=self.request.user,
+        )
+
+        if "status" in serializer.validated_data and old_status != getattr(updated, "status", None):
+            log_event(
+                updated,
+                "status_changed",
+                metadata={"from": old_status, "to": updated.status},
+                user=self.request.user,
+            )
+
     def _build_download_filename(self, instance):
         customer_name = ""
         if hasattr(instance, "customer") and instance.customer:
@@ -175,15 +202,7 @@ class DocumentLifecycleMixin(OrganizationScopeMixin):
     @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated], url_path="activity")
     def activity(self, request, pk=None):
         instance = self.get_object()
-        doc = getattr(instance, "document", None)
-        if not doc:
-            return Response([], status=status.HTTP_200_OK)
-
-        events = (
-            DocumentEvent.objects.filter(document=doc)
-            .select_related("created_by")
-            .order_by("-created_at")
-        )
+        events = get_events_for_instance(instance)
 
         payload = [
             {
@@ -547,24 +566,11 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     def activity(self, request, pk=None):
         quotation = self.get_object()
 
-        document_ids = []
+        related_documents = [quotation]
+        related_documents.extend(quotation.proformas.select_related("document").all())
+        related_documents.extend(quotation.invoices.select_related("document").all())
 
-        if quotation.document_id:
-            document_ids.append(quotation.document_id)
-
-        for proforma in quotation.proformas.select_related("document").all():
-            if proforma.document_id:
-                document_ids.append(proforma.document_id)
-
-        for invoice in quotation.invoices.select_related("document").all():
-            if invoice.document_id:
-                document_ids.append(invoice.document_id)
-
-        events = (
-            DocumentEvent.objects.filter(document_id__in=document_ids)
-            .select_related("created_by", "document")
-            .order_by("-created_at")
-        )
+        events = get_events_for_instances(related_documents)
 
         payload = [
             {
@@ -641,6 +647,12 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
                 )
 
             proforma.recalculate_totals()
+            log_event(
+                proforma,
+                "created",
+                metadata={"proforma_number": proforma.proforma_number, "created_from": "quotation"},
+                user=request.user,
+            )
 
             log_event(
                 quotation,
@@ -723,6 +735,12 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
                 )
 
             invoice.recalculate_totals()
+            log_event(
+                invoice,
+                "created",
+                metadata={"invoice_number": invoice.invoice_number, "created_from": "quotation"},
+                user=request.user,
+            )
 
             log_event(
                 quotation,
@@ -847,6 +865,12 @@ class ProformaViewSet(DocumentLifecycleMixin, BaseModelViewSet):
                 )
 
             invoice.recalculate_totals()
+            log_event(
+                invoice,
+                "created",
+                metadata={"invoice_number": invoice.invoice_number, "created_from": "proforma"},
+                user=request.user,
+            )
 
             log_event(
                 proforma,
