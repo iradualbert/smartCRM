@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom"
 import { ArrowRight, Building2, Loader2, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { getMembershipOrganizations } from "@/redux/actions/userActions"
+import Logo from "@/components/Logo"
 
 const ORG_STORAGE_KEY = "currentOrganizationId"
 
@@ -18,7 +19,7 @@ export default function SelectOrganizationPage() {
       await (dispatch as any)(getMembershipOrganizations())
       setLoading(false)
     }
-    load()
+    void load()
   }, [dispatch])
 
   const handleSelect = (org: any) => {
@@ -30,22 +31,25 @@ export default function SelectOrganizationPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-12">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-xl">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
-            <Building2 className="h-7 w-7" />
+          <div className="mb-6 flex justify-center">
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <Logo className="h-10 w-auto" />
+            </div>
           </div>
+
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
             Welcome back, {firstName}
           </h1>
           <p className="mt-2 text-sm text-slate-500">
             {loading
-              ? "Loading your workspaces…"
+              ? "Loading your workspaces..."
               : organizations.length === 0
-              ? "You don't have any organizations yet."
+              ? "You do not have any organizations yet."
               : organizations.length === 1
               ? "Select your workspace to continue."
-              : "Select a workspace to continue."}
+              : "Choose the workspace you want to open."}
           </p>
         </div>
 
@@ -70,11 +74,11 @@ export default function SelectOrganizationPage() {
                     <span className="truncate text-sm font-semibold text-slate-900">
                       {org.name}
                     </span>
-                    {org.current_membership?.role && (
+                    {org.current_membership?.role ? (
                       <Badge className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0 text-xs text-slate-600">
                         {org.current_membership.role}
                       </Badge>
-                    )}
+                    ) : null}
                   </div>
                   <p className="mt-0.5 truncate text-xs text-slate-500">
                     {[

@@ -31,10 +31,6 @@ import { useDispatch } from "react-redux"
           <MenubarTrigger>{user.credentials.first_name.split(" ")[0]}</MenubarTrigger>
           <MenubarContent>
             <MenubarItem inset>
-                <Link to="/settings/integration">Email Configuration</Link>
-            </MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem inset>
                 <Link to="/settings/profile"> Edit Profile</Link>
             </MenubarItem>
             <MenubarSeparator />

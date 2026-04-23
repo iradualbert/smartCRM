@@ -1,83 +1,80 @@
-import { Link, useNavigate } from "react-router-dom";
-import FormWrapper from "./FormWrapper";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
-import { useDispatch } from "react-redux";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom"
+import FormWrapper from "./FormWrapper"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ArrowLeft, Loader2 } from "lucide-react"
+import { useDispatch } from "react-redux"
+import { useState } from "react"
 import {
   registerUser,
   resend_verification_code,
   verify_code,
-} from "@/redux/actions/userActions";
+} from "@/redux/actions/userActions"
 
 const SignupPage = () => {
-  const [fullname, setFullname] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [step, setStep] = useState(1);
-  const [errors, setErrors] = useState<any>({});
-  const [verificationCode, setVerificationCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [fullname, setFullname] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
+  const [step, setStep] = useState(1)
+  const [errors, setErrors] = useState<any>({})
+  const [verificationCode, setVerificationCode] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault()
+    setIsLoading(true)
 
     const userData = {
       fullname,
       email,
       password,
       password_confirm: passwordConfirm,
-    };
-
-    const newErrors = await dispatch(registerUser(userData));
-    if (newErrors) {
-      setErrors(newErrors);
-    } else {
-      setStep(2);
     }
 
-    setIsLoading(false);
-  };
+    const newErrors = await dispatch(registerUser(userData) as any)
+    if (newErrors) setErrors(newErrors)
+    else setStep(2)
+
+    setIsLoading(false)
+  }
 
   const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault()
+    setIsLoading(true)
 
     const newErrors = await dispatch(
-      verify_code({ code: verificationCode, email }, navigate)
-    );
+      verify_code({ code: verificationCode, email }, navigate) as any
+    )
 
-    setErrors(newErrors);
-    setIsLoading(false);
-  };
+    setErrors(newErrors || {})
+    setIsLoading(false)
+  }
 
   const handleResend = async () => {
-    setIsLoading(true);
-    const newErrors = await resend_verification_code({ email });
+    setIsLoading(true)
+    const newErrors = await resend_verification_code({ email })
 
     if (newErrors) {
-      alert(newErrors.error);
-    } else {
-      alert("Verification code was sent again");
+      setErrors(newErrors)
     }
 
-    setIsLoading(false);
-  };
+    setIsLoading(false)
+  }
 
-  // 🔐 STEP 2: VERIFY
   if (step === 2) {
     return (
-      <FormWrapper title="Email Verification">
-        <form onSubmit={handleVerifyCode} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>Enter verification code sent to your email</Label>
+      <FormWrapper
+        title="Check your email"
+        description={`Enter the verification code we sent to ${email}.`}
+      >
+        <form onSubmit={handleVerifyCode} className="space-y-5">
+          <div className="space-y-2">
+            <Label>Verification code</Label>
             <Input
               value={verificationCode}
               type="password"
@@ -86,148 +83,155 @@ const SignupPage = () => {
               required
               disabled={isLoading}
               autoFocus
+              className="h-11 rounded-2xl border-slate-200"
             />
           </div>
 
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleResend}
-            disabled={isLoading}
-          >
-            Resend Code
-          </Button>
+          {errors?.code ? (
+            <div className="text-sm text-rose-600">{errors.code}</div>
+          ) : null}
 
-          <Button disabled={isLoading} type="submit">
-            {isLoading && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Submit
-          </Button>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            Use the most recent code if you requested more than one.
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              disabled={isLoading}
+              type="submit"
+              className="h-11 flex-1 rounded-2xl"
+            >
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Verify account
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResend}
+              disabled={isLoading}
+              className="h-11 rounded-2xl"
+            >
+              Resend code
+            </Button>
+          </div>
 
           <Button
             disabled={isLoading}
             onClick={() => setStep(1)}
-            variant="outline"
+            variant="ghost"
             type="button"
+            className="rounded-2xl px-0 text-slate-500 hover:bg-transparent"
           >
-            {"< Back"}
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
         </form>
       </FormWrapper>
-    );
+    )
   }
 
-  // 📝 STEP 1: SIGNUP
   return (
-    <FormWrapper title="Create Account">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Full Name */}
-        <div className="flex flex-col gap-2">
-          <Label>Full Name</Label>
+    <FormWrapper
+      title="Create your account"
+      description="Start with your account details. Your organization will be ready during onboarding."
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
+          <Label>Full name</Label>
           <Input
             value={fullname}
             placeholder="John Doe"
             onChange={(e) => setFullname(e.target.value)}
             disabled={isLoading}
+            className="h-11 rounded-2xl border-slate-200"
           />
-          {errors?.fullname && (
+          {errors?.fullname ? (
             <p className="text-sm text-destructive">{errors.fullname}</p>
-          )}
+          ) : null}
         </div>
 
-        {/* Email */}
-        <div className="flex flex-col gap-2">
+        <div className="space-y-2">
           <Label>Email</Label>
           <Input
             type="email"
             value={email}
-            placeholder="Email"
+            placeholder="you@example.com"
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
+            className="h-11 rounded-2xl border-slate-200"
           />
-          {errors?.email && (
-            <p className="text-sm text-destructive">{errors.email}</p>
-          )}
+          {errors?.email ? <p className="text-sm text-destructive">{errors.email}</p> : null}
         </div>
 
-        {/* Password */}
-        <div className="flex flex-col gap-2">
+        <div className="space-y-2">
           <Label>Password</Label>
           <Input
             type="password"
             value={password}
-            placeholder="Password"
+            placeholder="Create a password"
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
+            className="h-11 rounded-2xl border-slate-200"
           />
-          {errors?.password && (
-            <p className="text-sm text-destructive">{errors.password}</p>
-          )}
+          {errors?.password ? <p className="text-sm text-destructive">{errors.password}</p> : null}
         </div>
 
-        {/* Confirm Password */}
-        <div className="flex flex-col gap-2">
-          <Label>Confirm Password</Label>
+        <div className="space-y-2">
+          <Label>Confirm password</Label>
           <Input
             type="password"
             value={passwordConfirm}
-            placeholder="Confirm Password"
+            placeholder="Confirm your password"
             onChange={(e) => setPasswordConfirm(e.target.value)}
             disabled={isLoading}
+            className="h-11 rounded-2xl border-slate-200"
           />
-          {errors?.password_confirm && (
-            <p className="text-sm text-destructive">
-              {errors.password_confirm}
-            </p>
-          )}
+          {errors?.password_confirm ? (
+            <p className="text-sm text-destructive">{errors.password_confirm}</p>
+          ) : null}
         </div>
 
-        {/* Global Errors */}
-        {errors?.non_field_errors && (
-          <p className="text-sm text-destructive">
+        {errors?.non_field_errors ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {errors.non_field_errors}
-          </p>
-        )}
+          </div>
+        ) : null}
 
-        {/* Terms */}
         <div className="text-sm text-muted-foreground">
           By joining, you agree to our{" "}
           <a href="/terms" target="_blank" className="underline">
             Terms
           </a>{" "}
           and{" "}
-          <a
-            href="/privacy-policy"
-            target="_blank"
-            className="underline"
-          >
+          <a href="/privacy-policy" target="_blank" className="underline">
             Privacy Policy
           </a>
           .
         </div>
 
-        {/* Submit */}
-        <Button disabled={isLoading} type="submit">
-          {isLoading && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          )}
-          Sign Up
+        <Button disabled={isLoading} type="submit" className="h-11 w-full rounded-2xl">
+          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Create account
         </Button>
 
-        {/* Login */}
-        <div className="mt-4 flex justify-center text-sm text-muted-foreground">
-          Have an account already?
+        <div className="relative py-1">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase tracking-[0.2em] text-slate-400">
+            <span className="bg-white px-3">Already registered</span>
+          </div>
         </div>
 
-        <Link to="/login">
-          <Button disabled={isLoading} className="w-full" type="button">
-            Login
+        <Link to="/login" className="block">
+          <Button disabled={isLoading} className="h-11 w-full rounded-2xl" variant="outline" type="button">
+            Sign in instead
           </Button>
         </Link>
       </form>
     </FormWrapper>
-  );
-};
+  )
+}
 
-export default SignupPage;
+export default SignupPage

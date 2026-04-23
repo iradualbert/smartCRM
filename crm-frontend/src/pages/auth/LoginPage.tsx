@@ -129,7 +129,7 @@ const LoginPage = () => {
             variant="outline"
             type="button"
           >
-            Create an account
+            Create account
           </Button>
         </Link>
       </form>
