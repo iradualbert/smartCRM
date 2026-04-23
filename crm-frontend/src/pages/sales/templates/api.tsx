@@ -52,6 +52,8 @@ export async function listTemplates(params?: {
   company?: string | number
   search?: string
   document_type?: TemplateDocumentType
+  limit?: number
+  offset?: number
 }) {
   const response = await axios.get<PaginatedResponse<Template>>("/templates/", {
     params,
