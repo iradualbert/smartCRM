@@ -20,7 +20,7 @@ from googleapiclient.discovery import build
 from .utils import send_confirmation_email, send_mail_verification_code, send_password_reset_email
 from .tokens import account_activation_token
 from django.contrib.sites.shortcuts import get_current_site
-from billing.services.utils import ensure_free_subscription
+from billing.services.utils import ensure_business_trial_subscription
 from sales.models import Company, CompanyMembership
 import os 
 
@@ -46,7 +46,7 @@ def _ensure_signup_onboarding(user):
         .first()
     )
     if membership:
-        ensure_free_subscription(membership.company)
+        ensure_business_trial_subscription(membership.company)
         return membership.company
 
     company = Company.objects.create(
@@ -65,7 +65,7 @@ def _ensure_signup_onboarding(user):
         created_by=user,
         updated_by=user,
     )
-    ensure_free_subscription(company)
+    ensure_business_trial_subscription(company)
     return company
 
 

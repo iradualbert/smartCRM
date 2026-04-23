@@ -36,6 +36,7 @@ export type BillingSubscription = {
   company: Id
   company_name: string
   plan: BillingPlan
+  plan_type: "FREE" | "BUSINESS" | string
   status: "pending" | "active" | "cancelled" | "expired" | "past_due" | string
   billing_currency: "TRY" | "USD" | string
   billing_amount: string
@@ -45,6 +46,11 @@ export type BillingSubscription = {
   cancelled_at: string | null
   ended_at: string | null
   auto_renew: boolean
+  is_trial: boolean
+  trial_started_at: string | null
+  trial_ends_at: string | null
+  trial_days_remaining: number | null
+  trial_has_ended: boolean
   external_provider: string
   external_subscription_id: string
   external_customer_id: string
@@ -73,18 +79,6 @@ export type BillingOverview = {
   can_manage_billing: boolean
 }
 
-export type CreateCheckoutPayload = {
-  company: Id
-  plan_code: string
-  currency: "TRY" | "USD"
-}
-
-export type CreateCheckoutResponse = {
-  payment_url: string
-  token: string
-  subscription_id: Id
-}
-
 export async function listPlans(): Promise<BillingPlan[]> {
   const res = await api.get<BillingPlan[]>("/billing/plans/", {
     withCredentials: true,
@@ -103,15 +97,6 @@ export async function getBillingOverview(company: Id): Promise<BillingOverview> 
 export async function getBillingUsage(company: Id): Promise<BillingUsage> {
   const res = await api.get<BillingUsage>("/billing/usage/", {
     params: { company },
-    withCredentials: true,
-  })
-  return res.data
-}
-
-export async function startCheckout(
-  payload: CreateCheckoutPayload
-): Promise<CreateCheckoutResponse> {
-  const res = await api.post<CreateCheckoutResponse>("/billing/checkout/", payload, {
     withCredentials: true,
   })
   return res.data

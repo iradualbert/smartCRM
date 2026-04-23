@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import timezone
 
 from .models import BillingUsage, Plan, Subscription, SubscriptionEvent
 
@@ -36,6 +37,9 @@ class PlanSerializer(serializers.ModelSerializer):
 class SubscriptionSerializer(serializers.ModelSerializer):
     plan = PlanSerializer(read_only=True)
     company_name = serializers.CharField(source="company.name", read_only=True)
+    plan_type = serializers.SerializerMethodField()
+    trial_days_remaining = serializers.SerializerMethodField()
+    trial_has_ended = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
@@ -53,6 +57,12 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "cancelled_at",
             "ended_at",
             "auto_renew",
+            "is_trial",
+            "trial_started_at",
+            "trial_ends_at",
+            "trial_days_remaining",
+            "trial_has_ended",
+            "plan_type",
             "external_provider",
             "external_subscription_id",
             "external_customer_id",
@@ -61,6 +71,22 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "updated_at",
         )
         read_only_fields = fields
+
+    def get_plan_type(self, obj):
+        if getattr(obj.plan, "code", "") == "free":
+            return "FREE"
+        return "BUSINESS"
+
+    def get_trial_days_remaining(self, obj):
+        if not obj.is_trial or not obj.trial_ends_at:
+            return None
+        remaining = (obj.trial_ends_at.date() - timezone.now().date()).days
+        return max(remaining, 0)
+
+    def get_trial_has_ended(self, obj):
+        if not obj.is_trial or not obj.trial_ends_at:
+            return False
+        return obj.trial_ends_at < timezone.now()
 
 
 class BillingUsageSerializer(serializers.ModelSerializer):

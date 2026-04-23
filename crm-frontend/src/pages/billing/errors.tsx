@@ -7,14 +7,17 @@ type ErrorValue =
   | Array<string | Record<string, unknown>>
 
 function flattenErrorValue(value: ErrorValue, prefix?: string): string[] {
+  const normalizedPrefix =
+    prefix === "detail" || prefix === "non_field_errors" ? undefined : prefix
+
   if (typeof value === "string") {
-    return [prefix ? `${prefix}: ${value}` : value]
+    return [normalizedPrefix ? `${normalizedPrefix}: ${value}` : value]
   }
 
   if (Array.isArray(value)) {
     return value.flatMap((item) => {
       if (typeof item === "string") {
-        return [prefix ? `${prefix}: ${item}` : item]
+        return [normalizedPrefix ? `${normalizedPrefix}: ${item}` : item]
       }
 
       if (item && typeof item === "object") {
@@ -29,7 +32,10 @@ function flattenErrorValue(value: ErrorValue, prefix?: string): string[] {
 
   if (value && typeof value === "object") {
     return Object.entries(value).flatMap(([key, nested]) =>
-      flattenErrorValue(nested as ErrorValue, prefix ? `${prefix}.${key}` : key)
+      flattenErrorValue(
+        nested as ErrorValue,
+        normalizedPrefix ? `${normalizedPrefix}.${key}` : key
+      )
     )
   }
 

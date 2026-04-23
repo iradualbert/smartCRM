@@ -82,6 +82,9 @@ class Subscription(models.Model):
     ended_at = models.DateTimeField(null=True, blank=True)
 
     auto_renew = models.BooleanField(default=True)
+    is_trial = models.BooleanField(default=False)
+    trial_started_at = models.DateTimeField(null=True, blank=True)
+    trial_ends_at = models.DateTimeField(null=True, blank=True)
 
     external_provider = models.CharField(max_length=50, blank=True, default="iyzico")
     external_subscription_id = models.CharField(max_length=255, blank=True, default="")

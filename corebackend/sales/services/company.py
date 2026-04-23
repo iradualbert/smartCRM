@@ -4,6 +4,7 @@ from django.db.models import Count, Sum, Q
 from django.utils import timezone
 
 from  billing.models import BillingUsage, Plan, Subscription, SubscriptionEvent
+from billing.services.utils import get_effective_subscription
 from ..models import Company, DeliveryNote, DocumentEvent, Invoice, Proforma, Quotation, Receipt
 from ..models_email import EmailSendingConfig
 
@@ -28,7 +29,7 @@ def _build_company_dashboard_context(company):
         month=now.month,
     ).first()
 
-    subscription = company.subscriptions.order_by("-created_at").first()
+    subscription = get_effective_subscription(company)
 
     quote_pipeline_total = quotations.filter(
         status__in=["sent", "accepted"]
@@ -48,9 +49,10 @@ def _build_company_dashboard_context(company):
         Q(company=company) | Q(created_by__company_memberships__company=company)
     ).select_related("document").distinct().order_by("-created_at")[:8]
 
-    recent_subscription_events = SubscriptionEvent.objects.filter(
+    recent_subscription_events_qs = SubscriptionEvent.objects.filter(
         company=company
-    ).order_by("-created_at")[:5]
+    ).order_by("-created_at")
+    recent_subscription_events = list(recent_subscription_events_qs[:5])
 
     activity = [
         {
@@ -98,6 +100,25 @@ def _build_company_dashboard_context(company):
                 "label": f"Subscription status is {subscription.status.replace('_', ' ')}.",
             }
         )
+
+    if subscription and subscription.is_trial and subscription.trial_ends_at:
+        days_remaining = max((subscription.trial_ends_at.date() - now.date()).days, 0)
+        if days_remaining in {7, 2}:
+            attention.append(
+                {
+                    "type": "trial_warning",
+                    "label": f"Business plan trial ends in {days_remaining} day{'s' if days_remaining != 1 else ''}.",
+                }
+            )
+    elif subscription and subscription.plan.code == "free":
+        recent_trial_expired = recent_subscription_events_qs.filter(event_type="expired").exists()
+        if recent_trial_expired:
+            attention.append(
+                {
+                    "type": "trial_ended",
+                    "label": "Your trial has ended. The workspace is now on the Free plan.",
+                }
+            )
 
     recent_quotations = [
         {
@@ -205,11 +226,7 @@ def _build_company_dashboard_context(company):
     )
 
     # Resolve effective plan for limits (fall back to free plan when no active subscription)
-    active_sub = company.subscriptions.filter(status="active").select_related("plan").order_by("-created_at").first()
-    if active_sub:
-        effective_plan = active_sub.plan
-    else:
-        effective_plan = Plan.objects.filter(code="free").first()
+    effective_plan = subscription.plan if subscription else Plan.objects.filter(code="free").first()
 
     plan_limits = {
         "max_documents_per_month": effective_plan.max_documents_per_month if effective_plan else None,
@@ -238,10 +255,19 @@ def _build_company_dashboard_context(company):
         },
         "plan_limits": plan_limits,
         "subscription": {
-            "plan": subscription.plan if subscription else "",
+            "plan": subscription.plan.name if subscription else "",
             "status": subscription.status if subscription else "",
             "current_period_end": subscription.current_period_end if subscription else None,
             "auto_renew": subscription.auto_renew if subscription else False,
+            "is_trial": subscription.is_trial if subscription else False,
+            "trial_started_at": subscription.trial_started_at if subscription else None,
+            "trial_ends_at": subscription.trial_ends_at if subscription else None,
+            "trial_days_remaining": max((subscription.trial_ends_at.date() - now.date()).days, 0)
+            if subscription and subscription.is_trial and subscription.trial_ends_at
+            else None,
+            "trial_has_ended": bool(
+                subscription and subscription.is_trial and subscription.trial_ends_at and subscription.trial_ends_at < now
+            ),
         },
         "attention": attention,
         "activity": activity,

@@ -28,6 +28,11 @@ class DashboardSubscriptionSerializer(serializers.Serializer):
     status = serializers.CharField(allow_blank=True)
     current_period_end = serializers.DateTimeField(allow_null=True)
     auto_renew = serializers.BooleanField(required=False)
+    is_trial = serializers.BooleanField(required=False)
+    trial_started_at = serializers.DateTimeField(allow_null=True, required=False)
+    trial_ends_at = serializers.DateTimeField(allow_null=True, required=False)
+    trial_days_remaining = serializers.IntegerField(allow_null=True, required=False)
+    trial_has_ended = serializers.BooleanField(required=False)
 
 
 class DashboardResponseSerializer(serializers.Serializer):

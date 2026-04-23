@@ -7,6 +7,18 @@ from sales.models import Company, CompanyMembership
 
 from ..models import BillingUsage, Plan, Subscription, SubscriptionEvent
 
+TRIAL_DURATION_DAYS = 30
+FREE_PLAN_CODE = "free"
+BUSINESS_PLAN_CODE = "starter"
+
+
+def _free_plan() -> Plan:
+    return Plan.objects.get(code=FREE_PLAN_CODE)
+
+
+def _business_plan() -> Plan:
+    return Plan.objects.get(code=BUSINESS_PLAN_CODE)
+
 
 def user_can_manage_billing(user, company: Company) -> bool:
     if not user or not user.is_authenticated:
@@ -40,7 +52,7 @@ def get_current_usage(company: Company) -> BillingUsage:
 
 def get_active_subscription(company: Company) -> Subscription | None:
     now = timezone.now()
-    return (
+    subscription = (
         Subscription.objects.filter(
             company=company,
             status=Subscription.Status.ACTIVE,
@@ -50,6 +62,9 @@ def get_active_subscription(company: Company) -> Subscription | None:
         .order_by("-created_at")
         .first()
     )
+    if subscription and subscription.is_trial and subscription.trial_ends_at and subscription.trial_ends_at < now:
+        return downgrade_trial_to_free(company)
+    return subscription
 
 
 def get_effective_subscription(company: Company) -> Subscription:
@@ -57,19 +72,7 @@ def get_effective_subscription(company: Company) -> Subscription:
     if active:
         return active
 
-    free_plan = Plan.objects.get(code="free")
-    now = timezone.now()
-    return Subscription(
-        company=company,
-        plan=free_plan,
-        status=Subscription.Status.ACTIVE,
-        billing_currency="TRY",
-        billing_amount=free_plan.price_try,
-        started_at=now,
-        current_period_start=now,
-        current_period_end=now + timedelta(days=30),
-        auto_renew=False,
-    )
+    return ensure_free_subscription(company)
 
 
 @transaction.atomic
@@ -78,7 +81,7 @@ def ensure_free_subscription(company: Company) -> Subscription:
     if active:
         return active
 
-    free_plan = Plan.objects.get(code="free")
+    free_plan = _free_plan()
     now = timezone.now()
     subscription = Subscription.objects.create(
         company=company,
@@ -88,19 +91,97 @@ def ensure_free_subscription(company: Company) -> Subscription:
         billing_amount=free_plan.price_try,
         started_at=now,
         current_period_start=now,
-        current_period_end=now + timedelta(days=30),
+        current_period_end=now + timedelta(days=3650),
         auto_renew=False,
         external_provider="internal",
+        is_trial=False,
     )
     SubscriptionEvent.objects.create(
         company=company,
         subscription=subscription,
         event_type="created",
         plan_code=free_plan.code,
-        note="Free plan assigned during onboarding.",
-        metadata={"source": "signup_onboarding"},
+        note="Free plan is active.",
+        metadata={"source": "system"},
     )
     return subscription
+
+
+@transaction.atomic
+def ensure_business_trial_subscription(company: Company) -> Subscription:
+    active = get_active_subscription(company)
+    if active:
+        return active
+
+    business_plan = _business_plan()
+    now = timezone.now()
+    trial_end = now + timedelta(days=TRIAL_DURATION_DAYS)
+    subscription = Subscription.objects.create(
+        company=company,
+        plan=business_plan,
+        status=Subscription.Status.ACTIVE,
+        billing_currency="TRY",
+        billing_amount=0,
+        started_at=now,
+        current_period_start=now,
+        current_period_end=trial_end,
+        auto_renew=False,
+        external_provider="internal",
+        is_trial=True,
+        trial_started_at=now,
+        trial_ends_at=trial_end,
+    )
+    SubscriptionEvent.objects.create(
+        company=company,
+        subscription=subscription,
+        event_type="created",
+        plan_code=business_plan.code,
+        note="Business plan trial started.",
+        metadata={"source": "signup_onboarding", "trial_days": TRIAL_DURATION_DAYS},
+    )
+    return subscription
+
+
+@transaction.atomic
+def downgrade_trial_to_free(company: Company) -> Subscription:
+    now = timezone.now()
+    active_trial = (
+        Subscription.objects.select_for_update()
+        .filter(company=company, status=Subscription.Status.ACTIVE, is_trial=True)
+        .order_by("-created_at")
+        .first()
+    )
+
+    if not active_trial:
+        return ensure_free_subscription(company)
+
+    if active_trial.trial_ends_at and active_trial.trial_ends_at > now:
+        return active_trial
+
+    active_trial.status = Subscription.Status.EXPIRED
+    active_trial.ended_at = now
+    active_trial.auto_renew = False
+    active_trial.save(update_fields=["status", "ended_at", "auto_renew", "updated_at"])
+
+    SubscriptionEvent.objects.create(
+        company=company,
+        subscription=active_trial,
+        event_type="expired",
+        plan_code=active_trial.plan.code,
+        note="Business trial expired.",
+        metadata={"source": "trial_expiration"},
+    )
+
+    free_subscription = ensure_free_subscription(company)
+    SubscriptionEvent.objects.create(
+        company=company,
+        subscription=free_subscription,
+        event_type="downgraded",
+        plan_code=free_subscription.plan.code,
+        note="Trial ended. Workspace downgraded to the Free plan.",
+        metadata={"source": "trial_expiration"},
+    )
+    return free_subscription
 
 
 def can_create_document(company: Company) -> tuple[bool, str | None]:
