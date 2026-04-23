@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import axios from 'axios';
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import store from "./redux/store";
 import { checkAuthToken } from "./redux/actions/userActions";
 import BookingCalendar from "./pages/booking/BookingPage";
@@ -81,6 +81,15 @@ const prod = location.origin + "/api";
 
 axios.defaults.baseURL = location.hostname === "localhost" ? dev : prod
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+  }, [pathname])
+
+  return null
+}
 
 
 function App() {
@@ -93,6 +102,7 @@ function App() {
       <TooltipProvider delayDuration={200}>
       <div className="flex flex-col">
         <Router>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<RootRoute />} />
             <Route path="" element={<MainRoute />}>
