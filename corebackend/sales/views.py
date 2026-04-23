@@ -10,7 +10,8 @@ from django.utils.text import slugify
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .services.email_smtp import send_document_email
@@ -65,24 +66,83 @@ from .serializers_dashboard import WorkspaceDashboardSerializer, SalesDashboardS
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
 
-class DocumentLifecycleMixin:
+class OrganizationScopeMixin:
+    company_lookup = "company"
+
+    def _membership_filter(self):
+        return {
+            f"{self.company_lookup}__memberships__user": self.request.user,
+            f"{self.company_lookup}__memberships__is_active": True,
+        }
+
+    def _scope_queryset(self, queryset):
+        user = self.request.user
+        if user and user.is_superuser:
+            return queryset
+        return queryset.filter(**self._membership_filter())
+
+    def _scope_by_company_param(self, queryset):
+        company_id = self.request.query_params.get("company")
+        if company_id:
+            queryset = queryset.filter(**{f"{self.company_lookup}__id": company_id})
+        return queryset
+
+    def _can_access_company(self, company_id):
+        if self.request.user.is_superuser:
+            return True
+        return CompanyMembership.objects.filter(
+            company_id=company_id,
+            user=self.request.user,
+            is_active=True,
+        ).exists()
+
+    def _assert_company_access(self, company_id):
+        if not company_id or not self._can_access_company(company_id):
+            raise PermissionDenied("You do not have access to this organization.")
+
+
+class OrganizationScopedLineItemMixin(OrganizationScopeMixin):
+    parent_field_name = None
+
+    def _get_parent_from_serializer(self, serializer):
+        if not self.parent_field_name:
+            raise RuntimeError("parent_field_name must be configured.")
+
+        parent = serializer.validated_data.get(self.parent_field_name)
+        if parent is None and serializer.instance is not None:
+            parent = getattr(serializer.instance, self.parent_field_name, None)
+
+        if parent is None:
+            raise ValidationError({self.parent_field_name: "Parent document is required."})
+        return parent
+
+    def _validate_line_item_scope(self, serializer):
+        parent = self._get_parent_from_serializer(serializer)
+        self._assert_company_access(getattr(parent, "company_id", None))
+
+        product = serializer.validated_data.get("product")
+        if product is None and serializer.instance is not None:
+            product = getattr(serializer.instance, "product", None)
+
+        if (
+            product is not None
+            and getattr(product, "company_id", None) is not None
+            and getattr(parent, "company_id", None) is not None
+            and product.company_id != parent.company_id
+        ):
+            raise ValidationError({"product": "Selected product belongs to a different organization."})
+
+
+class DocumentLifecycleMixin(OrganizationScopeMixin):
     document_type = None
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        company_id = self.request.query_params.get("company")
-        if company_id:
-            queryset = queryset.filter(company_id=company_id)
-        else:
-            user = self.request.user
-            if not user.is_superuser:
-                queryset = queryset.filter(
-                    company__memberships__user=user,
-                    company__memberships__is_active=True,
-                )
+        queryset = self._scope_queryset(queryset)
+        queryset = self._scope_by_company_param(queryset)
         return queryset.distinct()
 
     def _build_download_filename(self, instance):
@@ -360,9 +420,40 @@ class DocumentLifecycleMixin:
         )
 
 
-class DocumentViewSet(BaseModelViewSet):
+class DocumentViewSet(OrganizationScopeMixin, BaseModelViewSet):
+    http_method_names = ["get", "head", "options"]
     queryset = Document.objects.select_related("template").all().order_by("-created_at")
     serializer_class = DocumentSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(
+            models.Q(quotation__isnull=False)
+            | models.Q(proforma__isnull=False)
+            | models.Q(invoice__isnull=False)
+            | models.Q(receipt__isnull=False)
+            | models.Q(deliverynote__isnull=False)
+        )
+
+        company_id = self.request.query_params.get("company")
+        if company_id:
+            queryset = queryset.filter(
+                models.Q(quotation__company__id=company_id)
+                | models.Q(proforma__company__id=company_id)
+                | models.Q(invoice__company__id=company_id)
+                | models.Q(receipt__company__id=company_id)
+                | models.Q(deliverynote__company__id=company_id)
+            )
+
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(
+                models.Q(quotation__company__memberships__user=self.request.user, quotation__company__memberships__is_active=True)
+                | models.Q(proforma__company__memberships__user=self.request.user, proforma__company__memberships__is_active=True)
+                | models.Q(invoice__company__memberships__user=self.request.user, invoice__company__memberships__is_active=True)
+                | models.Q(receipt__company__memberships__user=self.request.user, receipt__company__memberships__is_active=True)
+                | models.Q(deliverynote__company__memberships__user=self.request.user, deliverynote__company__memberships__is_active=True)
+            )
+
+        return queryset.distinct().order_by("-created_at")
 
 
 class TemplateViewSet(BaseModelViewSet):
@@ -377,6 +468,7 @@ class TemplateViewSet(BaseModelViewSet):
 
 
 class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
+    company_lookup = "company"
     document_type = "quotation"
     queryset = Quotation.objects.select_related(
         "customer", "company", "document", "selected_template", "created_by", "updated_by"
@@ -386,20 +478,9 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        company_id = self.request.query_params.get("company")
         status_value = self.request.query_params.get("status")
         customer_id = self.request.query_params.get("customer")
         search = (self.request.query_params.get("search") or "").strip()
-
-        if company_id:
-            queryset = queryset.filter(company_id=company_id)
-        else:
-            user = self.request.user
-            if not user.is_superuser:
-                queryset = queryset.filter(
-                    company__memberships__user=user,
-                    company__memberships__is_active=True,
-                )
 
         if status_value:
             queryset = queryset.filter(status=status_value)
@@ -665,20 +746,30 @@ class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):
         )
 
 
-class QuotationLineViewSet(BaseModelViewSet):
+class QuotationLineViewSet(OrganizationScopedLineItemMixin, BaseModelViewSet):
+    company_lookup = "quotation__company"
+    parent_field_name = "quotation"
     queryset = QuotationLine.objects.select_related(
         "quotation", "product", "created_by", "updated_by"
     ).all().order_by("-created_at")
     serializer_class = QuotationLineSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = self._scope_queryset(queryset)
+        queryset = self._scope_by_company_param(queryset)
+        return queryset.distinct().order_by("-created_at")
+
     def perform_create(self, serializer):
         user = self.request.user if self.request.user.is_authenticated else None
+        self._validate_line_item_scope(serializer)
         obj = serializer.save(created_by=user, updated_by=user)
         obj.quotation.recalculate_totals()
         log_event(obj.quotation, "updated", metadata={"action": "line_created"}, user=user)
 
     def perform_update(self, serializer):
         user = self.request.user if self.request.user.is_authenticated else None
+        self._validate_line_item_scope(serializer)
         obj = serializer.save(updated_by=user)
         obj.quotation.recalculate_totals()
         log_event(obj.quotation, "updated", metadata={"action": "line_updated"}, user=user)
@@ -779,19 +870,29 @@ class ProformaViewSet(DocumentLifecycleMixin, BaseModelViewSet):
         )
 
 
-class ProformaLineViewSet(BaseModelViewSet):
+class ProformaLineViewSet(OrganizationScopedLineItemMixin, BaseModelViewSet):
+    company_lookup = "proforma__company"
+    parent_field_name = "proforma"
     queryset = ProformaLine.objects.select_related(
         "proforma", "product", "created_by", "updated_by"
     ).all().order_by("-created_at")
     serializer_class = ProformaLineSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = self._scope_queryset(queryset)
+        queryset = self._scope_by_company_param(queryset)
+        return queryset.distinct().order_by("-created_at")
+
     def perform_create(self, serializer):
         user = self.request.user if self.request.user.is_authenticated else None
+        self._validate_line_item_scope(serializer)
         obj = serializer.save(created_by=user, updated_by=user)
         obj.proforma.recalculate_totals()
 
     def perform_update(self, serializer):
         user = self.request.user if self.request.user.is_authenticated else None
+        self._validate_line_item_scope(serializer)
         obj = serializer.save(updated_by=user)
         obj.proforma.recalculate_totals()
 
@@ -809,19 +910,29 @@ class InvoiceViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     serializer_class = InvoiceSerializer
 
 
-class InvoiceLineViewSet(BaseModelViewSet):
+class InvoiceLineViewSet(OrganizationScopedLineItemMixin, BaseModelViewSet):
+    company_lookup = "invoice__company"
+    parent_field_name = "invoice"
     queryset = InvoiceLine.objects.select_related(
         "invoice", "product", "created_by", "updated_by"
     ).all().order_by("-created_at")
     serializer_class = InvoiceLineSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = self._scope_queryset(queryset)
+        queryset = self._scope_by_company_param(queryset)
+        return queryset.distinct().order_by("-created_at")
+
     def perform_create(self, serializer):
         user = self.request.user if self.request.user.is_authenticated else None
+        self._validate_line_item_scope(serializer)
         obj = serializer.save(created_by=user, updated_by=user)
         obj.invoice.recalculate_totals()
 
     def perform_update(self, serializer):
         user = self.request.user if self.request.user.is_authenticated else None
+        self._validate_line_item_scope(serializer)
         obj = serializer.save(updated_by=user)
         obj.invoice.recalculate_totals()
 
@@ -847,11 +958,29 @@ class DeliveryNoteViewSet(DocumentLifecycleMixin, BaseModelViewSet):
     serializer_class = DeliveryNoteSerializer
 
 
-class DeliveryNoteLineViewSet(BaseModelViewSet):
+class DeliveryNoteLineViewSet(OrganizationScopedLineItemMixin, BaseModelViewSet):
+    company_lookup = "delivery_note__company"
+    parent_field_name = "delivery_note"
     queryset = DeliveryNoteLine.objects.select_related(
         "delivery_note", "product", "created_by", "updated_by"
     ).all().order_by("-created_at")
     serializer_class = DeliveryNoteLineSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = self._scope_queryset(queryset)
+        queryset = self._scope_by_company_param(queryset)
+        return queryset.distinct().order_by("-created_at")
+
+    def perform_create(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        self._validate_line_item_scope(serializer)
+        serializer.save(created_by=user, updated_by=user)
+
+    def perform_update(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        self._validate_line_item_scope(serializer)
+        serializer.save(updated_by=user)
 
 
 class CompanyViewSet(BaseModelViewSet):
