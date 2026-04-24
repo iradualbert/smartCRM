@@ -36,7 +36,7 @@ def get_company_payload(company):
     if not company:
         return {
             "name": "", "legal_name": "", "address": "",
-            "email": "", "phone": "", "website": "", "tax_number": "",
+            "email": "", "phone": "", "website": "", "tax_number": "", "logo_path": "",
         }
     return {
         "name": company.legal_name or company.name or "",
@@ -46,6 +46,7 @@ def get_company_payload(company):
         "phone": company.phone or "",
         "website": company.website or "",
         "tax_number": company.tax_number or "",
+        "logo_path": company.logo.path if file_exists(company.logo) else "",
     }
 
 
@@ -393,6 +394,10 @@ def build_standard_data_from_instance(instance, document_type: str):
             },
             "lines": [],
             "notes": "",
+            "custom": {
+                "invoice_number": instance.invoice.invoice_number if instance.invoice else "",
+                "payment_method": "",
+            },
             "document_type": "receipt",
         }
 

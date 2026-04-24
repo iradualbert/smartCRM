@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from docx import Document
+from docx.shared import Mm
 from docx.text.paragraph import Paragraph
 
 
@@ -32,6 +33,7 @@ DOCUMENT_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "CompanyPhone": "company.phone",
             "CompanyWebsite": "company.website",
             "CompanyTaxNumber": "company.tax_number",
+            "CompanyLogo": "company.logo_path",
             "ClientName": "client.name",
             "ClientDetails": "client.details",
             "Currency": "document.currency",
@@ -68,6 +70,7 @@ DOCUMENT_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "CompanyPhone": "company.phone",
             "CompanyWebsite": "company.website",
             "CompanyTaxNumber": "company.tax_number",
+            "CompanyLogo": "company.logo_path",
             "ClientName": "client.name",
             "ClientDetails": "client.details",
             "Currency": "document.currency",
@@ -104,6 +107,7 @@ DOCUMENT_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "CompanyPhone": "company.phone",
             "CompanyWebsite": "company.website",
             "CompanyTaxNumber": "company.tax_number",
+            "CompanyLogo": "company.logo_path",
             "ClientName": "client.name",
             "ClientDetails": "client.details",
             "Currency": "document.currency",
@@ -140,6 +144,7 @@ DOCUMENT_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "CompanyPhone": "company.phone",
             "CompanyWebsite": "company.website",
             "CompanyTaxNumber": "company.tax_number",
+            "CompanyLogo": "company.logo_path",
             "ClientName": "client.name",
             "ClientDetails": "client.details",
             "Warehouse": "document.warehouse",
@@ -168,6 +173,7 @@ DOCUMENT_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "CompanyPhone": "company.phone",
             "CompanyWebsite": "company.website",
             "CompanyTaxNumber": "company.tax_number",
+            "CompanyLogo": "company.logo_path",
             "ClientName": "client.name",
             "ClientDetails": "client.details",
             "Currency": "document.currency",
@@ -310,6 +316,7 @@ def build_standard_sales_document_data(data: Dict[str, Any], document_type: str 
             "phone": company.get("phone", ""),
             "website": company.get("website", ""),
             "tax_number": company.get("tax_number", ""),
+            "logo_path": company.get("logo_path", ""),
         },
         "client": {
             "name": client.get("name", ""),
@@ -366,6 +373,41 @@ def _replace_text_in_paragraph(paragraph: Paragraph, mapping: Dict[str, str], da
         run.text = ""
 
 
+def _replace_image_placeholder_in_paragraph(
+    paragraph: Paragraph,
+    mapping: Dict[str, str],
+    data: Dict[str, Any],
+    document_type: str,
+) -> bool:
+    full_text = "".join(run.text for run in paragraph.runs) if paragraph.runs else paragraph.text
+    match = PLACEHOLDER_PATTERN.fullmatch(full_text.strip())
+    if not match:
+        return False
+
+    raw_key = match.group(1)
+    key = normalize_placeholder_name(raw_key, document_type)
+    target = mapping.get(key)
+    if not target:
+        return False
+
+    value = get_value_from_path(data, target)
+    if key != "CompanyLogo":
+        return False
+
+    if paragraph.runs:
+        paragraph.runs[0].text = ""
+        for run in paragraph.runs[1:]:
+            run.text = ""
+        target_run = paragraph.runs[0]
+    else:
+        target_run = paragraph.add_run()
+
+    image_path = Path(str(value or "")).expanduser()
+    if image_path.exists():
+        target_run.add_picture(str(image_path), width=Mm(30))
+    return True
+
+
 def _remove_paragraph(paragraph: Paragraph) -> None:
     p = paragraph._element
     parent = p.getparent()
@@ -396,6 +438,8 @@ def render_docx_template(
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     for para in doc.paragraphs:
+        if _replace_image_placeholder_in_paragraph(para, mapping, data, document_type):
+            continue
         _replace_text_in_paragraph(para, mapping, data, document_type)
 
     for table in doc.tables:
@@ -430,7 +474,10 @@ def render_docx_template(
                 rows_to_remove.append(row)
             else:
                 for cell in row.cells:
-                    cell.text = replace_placeholders_in_text(cell.text, mapping, data, document_type)
+                    for para in cell.paragraphs:
+                        if _replace_image_placeholder_in_paragraph(para, mapping, data, document_type):
+                            continue
+                        _replace_text_in_paragraph(para, mapping, data, document_type)
 
         for row in rows_to_remove:
             table._tbl.remove(row._tr)
