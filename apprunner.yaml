@@ -1,9 +1,16 @@
 version: 1.0
 runtime: python3
+
 build:
   commands:
+    pre-build:
+      - curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+      - yum install -y nodejs
+      - cd crm-frontend && npm ci
     build:
+      - cd crm-frontend && npm run build
       - pip install -r requirements.txt
+
 run:
   runtime-version: 3.8.16
   command: sh startup.sh
