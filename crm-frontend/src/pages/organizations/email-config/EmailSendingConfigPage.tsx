@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Link } from "react-router-dom"
 import { Mail, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -142,6 +143,16 @@ export default function EmailSendingConfigPage() {
           <Plus className="mr-2 h-4 w-4" />
           Add sender account
         </Button>
+      </div>
+
+      <div className="rounded-2xl border bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+        Need SMTP details or an app password?{" "}
+        <Link
+          to="/guides/how-to-set-up-smtp-with-app-passwords"
+          className="font-medium text-slate-900 underline underline-offset-4"
+        >
+          View setup guide
+        </Link>
       </div>
 
       <div className="flex gap-3">

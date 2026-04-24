@@ -3,6 +3,7 @@ import sendQuotationEmailMd from "./content/how-to-send-a-quotation-by-email.md?
 import quotationVsInvoiceMd from "./content/quotation-vs-invoice.md?url"
 import proformaInvoiceMd from "./content/what-is-a-proforma-invoice.md?url"
 import invoiceFromQuotationMd from "./content/how-to-create-an-invoice-from-a-quotation.md?url"
+import smtpWithAppPasswordsMd from "./content/how-to-set-up-smtp-with-app-passwords.md?url"
 
 export type GuideEntry = {
   slug: string
@@ -59,6 +60,15 @@ export const guides: GuideEntry[] = [
     readingTime: "4 min read",
     lastUpdated: "April 23, 2026",
     markdownPath: invoiceFromQuotationMd,
+  },
+  {
+    slug: "how-to-set-up-smtp-with-app-passwords",
+    title: "How to Set Up SMTP with App Passwords",
+    description: "Connect your mailbox securely using SMTP settings and an app password so your team can send document emails from the app.",
+    category: "Email setup",
+    readingTime: "5 min read",
+    lastUpdated: "April 24, 2026",
+    markdownPath: smtpWithAppPasswordsMd,
   },
 ]
 

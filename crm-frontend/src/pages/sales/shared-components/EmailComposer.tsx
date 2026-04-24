@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Link } from "react-router-dom"
 import {
   ArrowLeft,
   Building2,
@@ -242,11 +243,21 @@ export default function EmailComposer({
               Sender account
             </CardTitle>
             <CardDescription>
-              Choose which configured mailbox will send this email.
+              Choose the sender for this email.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4 pt-6">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Need SMTP details or an app password?{" "}
+              <Link
+                to="/guides/how-to-set-up-smtp-with-app-passwords"
+                className="font-medium text-slate-900 underline underline-offset-4"
+              >
+                View setup guide
+              </Link>
+            </div>
+
             {loadingSendingConfigs ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
                 Loading sending accounts...
