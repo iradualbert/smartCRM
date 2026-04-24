@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import axios from "axios"
 
 import { Button } from "@/components/ui/button"
@@ -36,6 +36,10 @@ export default function DocumentEmailPage({
   const [sending, setSending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState<string | null>(null)
+
+  const templateDocumentType =
+    documentType === "delivery-note" ? "delivery_note" : documentType
+  const templateReturnTo = id ? `/${documentType}s/${id}/email` : `/${documentType}s`
 
   React.useEffect(() => {
     if (!id || !currentOrganizationId) return
@@ -105,6 +109,26 @@ export default function DocumentEmailPage({
           </div>
         </div>
       ) : null}
+
+      <div className="mx-auto max-w-7xl px-6 pt-6 md:px-8">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          PDFs use the default {documentLabel.toLowerCase()} template unless your organization selects a custom one.{" "}
+          <Link
+            to={`/templates/new?documentType=${templateDocumentType}&returnTo=${encodeURIComponent(templateReturnTo)}`}
+            className="font-medium text-slate-900 underline underline-offset-4"
+          >
+            Customize template
+          </Link>{" "}
+          or{" "}
+          <Link
+            to="/guides/how-to-create-and-customize-document-templates"
+            className="font-medium text-slate-900 underline underline-offset-4"
+          >
+            view the template guide
+          </Link>
+          .
+        </div>
+      </div>
 
       <EmailComposer
         title={`Send ${documentLabel.toLowerCase()} email${

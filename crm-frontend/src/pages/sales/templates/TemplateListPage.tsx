@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Link, useNavigate } from "react-router-dom"
 import {
+  ArrowDownToLine,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -22,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  downloadDefaultTemplate,
   listTemplates,
   type Template,
   type TemplateDocumentType,
@@ -45,6 +47,7 @@ export default function TemplateListPage() {
   const [offset, setOffset] = React.useState(0)
 
   const [loading, setLoading] = React.useState(true)
+  const [downloadingDefault, setDownloadingDefault] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
   const [search, setSearch] = React.useState("")
@@ -91,6 +94,21 @@ export default function TemplateListPage() {
   const page = Math.floor(offset / limit) + 1
   const totalPages = Math.max(1, Math.ceil(count / limit))
 
+  const handleDownloadDefault = async () => {
+    try {
+      setDownloadingDefault(true)
+      await downloadDefaultTemplate(
+        documentTypeFilter === "all" ? "invoice" : documentTypeFilter,
+        currentOrganizationId ? { company: currentOrganizationId } : undefined
+      )
+    } catch (err) {
+      console.error(err)
+      setError("Failed to download the default template.")
+    } finally {
+      setDownloadingDefault(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-7xl p-6 md:p-8">
       <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -105,11 +123,27 @@ export default function TemplateListPage() {
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm text-slate-600 md:text-base">
-            Upload, inspect, and manage document templates for every document type.
+            Use the system defaults, download them to customize in Word, or manage your organization templates here.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
+          <Button
+            variant="outline"
+            className="rounded-2xl"
+            onClick={() => void handleDownloadDefault()}
+            disabled={downloadingDefault}
+          >
+            <ArrowDownToLine className="mr-2 h-4 w-4" />
+            {downloadingDefault ? "Downloading..." : "Download default"}
+          </Button>
+
+          <Button asChild variant="outline" className="rounded-2xl">
+            <Link to="/guides/how-to-create-and-customize-document-templates">
+              Template guide
+            </Link>
+          </Button>
+
           <Button asChild className="rounded-2xl">
             <Link to="/templates/new">
               <Plus className="mr-2 h-4 w-4" />

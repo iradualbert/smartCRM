@@ -59,6 +59,7 @@ from .services.document_generation import (
     build_document_filename,
     file_exists,
     generate_document_for_instance,
+    get_builtin_template_path,
     get_existing_document_or_raise,
     inspect_template_file,
 )
@@ -590,6 +591,22 @@ class TemplateViewSet(OrganizationScopeMixin, BaseModelViewSet):
         template = self.get_object()
         result = inspect_template_file(template)
         return Response(result)
+
+    @action(detail=False, methods=["get"], url_path="default-file")
+    def default_file(self, request):
+        document_type = (request.query_params.get("document_type") or "").strip()
+        if document_type not in {"invoice", "quotation", "proforma", "delivery_note", "receipt"}:
+            raise ValidationError("A valid document_type is required.")
+
+        company_id = request.query_params.get("company")
+        if company_id:
+            self._assert_company_access(company_id)
+
+        template_path = get_builtin_template_path(document_type)
+        filename = f"beinpark_{document_type}_default_template.docx"
+        response = FileResponse(open(template_path, "rb"), as_attachment=True, filename=filename)
+        response["Content-Type"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        return response
 
 
 class QuotationViewSet(DocumentLifecycleMixin, BaseModelViewSet):

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { FilePlus2, FileText } from "lucide-react"
-import { useLocation, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
 import SearchSelect from "./SearchSelect"
@@ -66,7 +66,7 @@ export default function TemplatePicker({
       searchPlaceholder="Search templates..."
       items={filteredTemplates}
       open={open}
-      emptyMessage="No templates yet."
+      emptyMessage="No saved templates yet. The default template is ready to use."
       onOpenChange={setOpen}
       onSearch={setSearch}
       onSelect={(template) => onChange(Number(template.id))}
@@ -74,28 +74,39 @@ export default function TemplatePicker({
       getLabel={(item) => item.name}
       getDescription={(item) => (item.is_default ? "Organization default" : null)}
       renderFooter={
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            type="button"
-            variant="ghost"
-            className="justify-start rounded-xl"
-            onClick={() => {
-              onChange(null)
-              setOpen(false)
-            }}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Use default {DOCUMENT_TYPE_LABELS[documentType]} template
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="justify-start rounded-xl"
-            onClick={handleCreateTemplate}
-          >
-            <FilePlus2 className="mr-2 h-4 w-4" />
-            Create template
-          </Button>
+        <div className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              type="button"
+              variant="ghost"
+              className="justify-start rounded-xl"
+              onClick={() => {
+                onChange(null)
+                setOpen(false)
+              }}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Use default {DOCUMENT_TYPE_LABELS[documentType]} template
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="justify-start rounded-xl"
+              onClick={handleCreateTemplate}
+            >
+              <FilePlus2 className="mr-2 h-4 w-4" />
+              Customize template
+            </Button>
+          </div>
+          <div className="px-1 text-xs text-slate-500">
+            Default templates are ready to use.{" "}
+            <Link
+              to="/guides/how-to-create-and-customize-document-templates"
+              className="font-medium text-slate-700 underline underline-offset-4"
+            >
+              Learn how templates work
+            </Link>
+          </div>
         </div>
       }
     />

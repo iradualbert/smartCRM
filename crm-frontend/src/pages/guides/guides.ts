@@ -4,6 +4,7 @@ import quotationVsInvoiceMd from "./content/quotation-vs-invoice.md?url"
 import proformaInvoiceMd from "./content/what-is-a-proforma-invoice.md?url"
 import invoiceFromQuotationMd from "./content/how-to-create-an-invoice-from-a-quotation.md?url"
 import smtpWithAppPasswordsMd from "./content/how-to-set-up-smtp-with-app-passwords.md?url"
+import createTemplatesMd from "./content/how-to-create-and-customize-document-templates.md?url"
 
 export type GuideEntry = {
   slug: string
@@ -60,6 +61,15 @@ export const guides: GuideEntry[] = [
     readingTime: "4 min read",
     lastUpdated: "April 23, 2026",
     markdownPath: invoiceFromQuotationMd,
+  },
+  {
+    slug: "how-to-create-and-customize-document-templates",
+    title: "How to Create and Customize Document Templates",
+    description: "Start from the default template, adjust the layout in Word, and upload a polished version for your organization.",
+    category: "Templates",
+    readingTime: "5 min read",
+    lastUpdated: "April 24, 2026",
+    markdownPath: createTemplatesMd,
   },
   {
     slug: "how-to-set-up-smtp-with-app-passwords",

@@ -158,3 +158,29 @@ export async function inspectTemplate(
   )
   return response.data
 }
+
+export async function downloadDefaultTemplate(
+  documentType: TemplateDocumentType,
+  params?: { company?: string | number }
+) {
+  const response = await axios.get("/templates/default-file/", {
+    params: {
+      document_type: documentType,
+      ...params,
+    },
+    responseType: "blob",
+    withCredentials: true,
+  })
+
+  const blob = new Blob([response.data], {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = `beinpark_${documentType}_default_template.docx`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000)
+}

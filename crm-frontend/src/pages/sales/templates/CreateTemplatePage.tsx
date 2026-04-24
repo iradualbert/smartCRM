@@ -1,10 +1,10 @@
 import * as React from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
-import { ArrowLeft } from "lucide-react"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { ArrowDownToLine, ArrowLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import TemplateUploadCard, { type TemplateFormValues } from "./TemplateUploadCard"
-import { createTemplate, type TemplateDocumentType } from "./api"
+import { createTemplate, downloadDefaultTemplate, type TemplateDocumentType } from "./api"
 import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 const SUPPORTED_DOCUMENT_TYPES = new Set<TemplateDocumentType>([
@@ -51,6 +51,7 @@ export default function CreateTemplatePage() {
   }, [companyId, requestedDocumentType])
 
   const [saving, setSaving] = React.useState(false)
+  const [downloadingDefault, setDownloadingDefault] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
   const onChange = (patch: Partial<TemplateFormValues>) => {
@@ -88,6 +89,18 @@ export default function CreateTemplatePage() {
     }
   }
 
+  const handleDownloadDefault = async () => {
+    try {
+      setDownloadingDefault(true)
+      await downloadDefaultTemplate(values.document_type, values.company ? { company: values.company } : undefined)
+    } catch (err) {
+      console.error(err)
+      setError("Failed to download the default template.")
+    } finally {
+      setDownloadingDefault(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-7xl p-6 md:p-8">
       {!currentOrganizationId ? (
@@ -102,7 +115,7 @@ export default function CreateTemplatePage() {
             Create Template
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            Upload a new document template and configure it for inspection.
+            Start from the default template or upload your own branded file.
           </p>
         </div>
 
@@ -123,6 +136,36 @@ export default function CreateTemplatePage() {
       ) : null}
 
       <div className="space-y-6">
+        <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Start from the system default</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Download the default {values.document_type.replace('_', ' ')} template, adjust the layout in Word, then upload your version here.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => void handleDownloadDefault()}
+                disabled={downloadingDefault}
+              >
+                <ArrowDownToLine className="mr-2 h-4 w-4" />
+                {downloadingDefault ? "Downloading..." : "Download default"}
+              </Button>
+
+              <Button asChild variant="ghost" className="rounded-2xl">
+                <Link to="/guides/how-to-create-and-customize-document-templates">
+                  View template guide
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <TemplateUploadCard mode="create" values={values} onChange={onChange} />
 
         <div className="flex justify-end gap-3">
