@@ -179,8 +179,16 @@ const OrganizationDetailPage = () => {
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white shadow-sm backdrop-blur">
-                  <Building2 className="h-6 w-6" />
+                <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white/10 text-white shadow-sm backdrop-blur">
+                  {organization.logo_url || organization.logo ? (
+                    <img
+                      src={organization.logo_url || organization.logo || ""}
+                      alt={organization.name}
+                      className="h-full w-full rounded-2xl object-contain bg-white p-2"
+                    />
+                  ) : (
+                    <Building2 className="h-6 w-6" />
+                  )}
                 </div>
 
                 <div className="min-w-0">
@@ -225,6 +233,22 @@ const OrganizationDetailPage = () => {
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
+                      <InfoCard
+                        label="Logo"
+                        value={
+                          organization.logo_url || organization.logo ? (
+                            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                              <img
+                                src={organization.logo_url || organization.logo || ""}
+                                alt={organization.name}
+                                className="h-full w-full object-contain p-2"
+                              />
+                            </div>
+                          ) : (
+                            "—"
+                          )
+                        }
+                      />
                       <InfoCard label="Legal Name" value={organization.legal_name} />
                       <InfoCard label="Tax Number" value={organization.tax_number} />
                       <InfoCard

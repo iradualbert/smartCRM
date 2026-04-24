@@ -45,6 +45,8 @@ export const companySchema = z
     receipt_prefix: z.string().min(1).max(20),
     delivery_note_prefix: z.string().min(1).max(20),
     is_active: z.boolean().default(true),
+    logo_file: z.any().nullable().optional(),
+    logo_url: z.string().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     if (!data.supported_currencies.includes(data.default_currency)) {
@@ -89,6 +91,7 @@ export type Company = {
   website: string | null
   address: string | null
   logo: string | null
+  logo_url?: string | null
   supported_currencies: string[]
   default_currency: string
   invoice_prefix: string
@@ -152,23 +155,29 @@ function normalizeValidationError(error: unknown): never {
 }
 
 export function normalizeCompanyPayload(values: CompanyFormValues) {
-  return {
-    name: values.name,
-    legal_name: values.legal_name || "",
-    tax_number: values.tax_number || "",
-    email: values.email || "",
-    phone: values.phone || "",
-    website: values.website || "",
-    address: values.address || "",
-    supported_currencies: values.supported_currencies,
-    default_currency: values.default_currency,
-    invoice_prefix: values.invoice_prefix,
-    quotation_prefix: values.quotation_prefix,
-    proforma_prefix: values.proforma_prefix,
-    receipt_prefix: values.receipt_prefix,
-    delivery_note_prefix: values.delivery_note_prefix,
-    is_active: values.is_active,
+  const formData = new FormData()
+
+  formData.append("name", values.name)
+  formData.append("legal_name", values.legal_name || "")
+  formData.append("tax_number", values.tax_number || "")
+  formData.append("email", values.email || "")
+  formData.append("phone", values.phone || "")
+  formData.append("website", values.website || "")
+  formData.append("address", values.address || "")
+  formData.append("supported_currencies", JSON.stringify(values.supported_currencies))
+  formData.append("default_currency", values.default_currency)
+  formData.append("invoice_prefix", values.invoice_prefix)
+  formData.append("quotation_prefix", values.quotation_prefix)
+  formData.append("proforma_prefix", values.proforma_prefix)
+  formData.append("receipt_prefix", values.receipt_prefix)
+  formData.append("delivery_note_prefix", values.delivery_note_prefix)
+  formData.append("is_active", String(values.is_active))
+
+  if (values.logo_file instanceof File) {
+    formData.append("logo", values.logo_file)
   }
+
+  return formData
 }
 
 export async function createCompany(values: CompanyFormValues): Promise<Company> {

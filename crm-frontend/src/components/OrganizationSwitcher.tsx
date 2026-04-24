@@ -24,6 +24,8 @@ type Organization = {
   name?: string
   title?: string
   slug?: string
+  logo?: string | null
+  logo_url?: string | null
 }
 
 type OrganizationSwitcherProps = {
@@ -71,9 +73,17 @@ const OrganizationSwitcher = ({
           variant="outline"
           className="h-10 min-w-[220px] justify-between rounded-xl border-slate-200 bg-white px-3 text-sm font-medium shadow-sm hover:bg-slate-50"
         >
-          <span className="flex items-center gap-2 truncate">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100">
-              <Building2 className="h-4 w-4 text-slate-600" />
+            <span className="flex items-center gap-2 truncate">
+            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+              {selectedOrg?.logo_url || selectedOrg?.logo ? (
+                <img
+                  src={selectedOrg.logo_url || selectedOrg.logo || ""}
+                  alt={getOrgLabel(selectedOrg)}
+                  className="h-full w-full object-contain bg-white p-1"
+                />
+              ) : (
+                <Building2 className="h-4 w-4 text-slate-600" />
+              )}
             </span>
             <span className="truncate">{getOrgLabel(selectedOrg)}</span>
           </span>
@@ -112,6 +122,17 @@ const OrganizationSwitcher = ({
                         isActive ? "opacity-100" : "opacity-0"
                       )}
                     />
+                    <span className="mr-2 flex h-6 w-6 items-center justify-center overflow-hidden rounded-md bg-slate-100">
+                      {org.logo_url || org.logo ? (
+                        <img
+                          src={org.logo_url || org.logo || ""}
+                          alt={getOrgLabel(org)}
+                          className="h-full w-full object-contain bg-white p-0.5"
+                        />
+                      ) : (
+                        <Building2 className="h-3.5 w-3.5 text-slate-600" />
+                      )}
+                    </span>
                     <span className="truncate">{getOrgLabel(org)}</span>
                   </CommandItem>
                 )

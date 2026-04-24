@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Building2, ReceiptIcon as ReceiptText, Wallet } from "lucide-react"
+import { Building2, ImagePlus, ReceiptIcon as ReceiptText, Wallet } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -41,6 +41,8 @@ const defaultValues: CompanyFormValues = {
   receipt_prefix: "REC",
   delivery_note_prefix: "DN",
   is_active: true,
+  logo_file: null,
+  logo_url: null,
 }
 
 const prefixFields = [
@@ -80,6 +82,18 @@ const CompanyForm = ({ mode, initialValues, onSubmit }: Props) => {
     resolver: zodResolver(companySchema),
     defaultValues: initialValues ?? defaultValues,
   })
+  const watchedLogoFile = form.watch("logo_file")
+  const watchedLogoUrl = form.watch("logo_url")
+  const [logoPreview, setLogoPreview] = React.useState<string | null>(watchedLogoUrl ?? null)
+
+  React.useEffect(() => {
+    if (watchedLogoFile instanceof File) {
+      const nextUrl = URL.createObjectURL(watchedLogoFile)
+      setLogoPreview(nextUrl)
+      return () => URL.revokeObjectURL(nextUrl)
+    }
+    setLogoPreview(watchedLogoUrl ?? null)
+  }, [watchedLogoFile, watchedLogoUrl])
 
   const handleSubmit = async (values: CompanyFormValues) => {
     setNonFieldError(null)
@@ -126,6 +140,42 @@ const CompanyForm = ({ mode, initialValues, onSubmit }: Props) => {
         />
 
         <div className="grid gap-4 md:grid-cols-2">
+          <Controller
+            name="logo_file"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid} className="md:col-span-2">
+                <FieldLabel>Logo</FieldLabel>
+                <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center">
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Organization logo preview" className="h-full w-full object-contain" />
+                    ) : (
+                      <Building2 className="h-8 w-8 text-slate-400" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                      <ImagePlus className="h-4 w-4" />
+                      <span>{logoPreview ? "Replace logo" : "Upload logo"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0] ?? null
+                          field.onChange(file)
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+              </Field>
+            )}
+          />
+
           <Controller
             name="name"
             control={form.control}

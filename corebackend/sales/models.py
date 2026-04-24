@@ -108,10 +108,37 @@ class Company(TimeStampedModel):
             )
 
     def save(self, *args, **kwargs):
+        old_logo_name = None
+        if self.pk:
+            try:
+                old_logo_name = Company.objects.only("logo").get(pk=self.pk).logo.name
+            except Company.DoesNotExist:
+                old_logo_name = None
+
         if not self.supported_currencies:
             self.supported_currencies = [self.default_currency]
         self.full_clean()
         super().save(*args, **kwargs)
+
+        current_logo_name = self.logo.name if self.logo else None
+        if old_logo_name and old_logo_name != current_logo_name:
+            storage = self.logo.storage if self.logo else None
+            if storage is None:
+                field = Company._meta.get_field("logo")
+                storage = field.storage
+            if storage.exists(old_logo_name):
+                storage.delete(old_logo_name)
+
+    def delete(self, *args, **kwargs):
+        logo_name = self.logo.name if self.logo else None
+        storage = self.logo.storage if self.logo else None
+        super().delete(*args, **kwargs)
+        if logo_name:
+            if storage is None:
+                field = Company._meta.get_field("logo")
+                storage = field.storage
+            if storage.exists(logo_name):
+                storage.delete(logo_name)
 
     @property
     def currency_symbol(self):

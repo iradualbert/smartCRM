@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useDispatch } from "react-redux"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Building2, Settings2, Shield } from "lucide-react"
 
@@ -12,6 +13,7 @@ import {
   type Company,
   type CompanyFormValues,
 } from "./api"
+import { getMembershipOrganizations } from "@/redux/actions/userActions"
 
 function StatusBadge({ isActive }: { isActive: boolean }) {
   return (
@@ -30,6 +32,7 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
 const OrganizationSettingsPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const [organization, setOrganization] = React.useState<Company | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -62,6 +65,7 @@ const OrganizationSettingsPage = () => {
   const handleSubmit = async (values: CompanyFormValues) => {
     if (!id) return
     await updateCompany(id, values)
+    await (dispatch as any)(getMembershipOrganizations())
     navigate(`/settings/organizations/${id}`)
   }
 
@@ -101,6 +105,8 @@ const OrganizationSettingsPage = () => {
     receipt_prefix: organization.receipt_prefix ?? "REC",
     delivery_note_prefix: organization.delivery_note_prefix ?? "DN",
     is_active: organization.is_active ?? true,
+    logo_file: null,
+    logo_url: organization.logo_url ?? organization.logo ?? null,
   }
 
   return (
@@ -114,7 +120,15 @@ const OrganizationSettingsPage = () => {
 
           <div className="mt-4 flex items-start gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
-              <Building2 className="h-6 w-6" />
+              {organization.logo_url || organization.logo ? (
+                <img
+                  src={organization.logo_url || organization.logo || ""}
+                  alt={organization.name}
+                  className="h-full w-full rounded-2xl object-contain bg-white p-2"
+                />
+              ) : (
+                <Building2 className="h-6 w-6" />
+              )}
             </div>
 
             <div>

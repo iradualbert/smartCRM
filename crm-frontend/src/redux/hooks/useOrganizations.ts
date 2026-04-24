@@ -10,6 +10,8 @@ type Organization = {
   title?: string
   slug?: string
   plan_name?: string
+  logo?: string | null
+  logo_url?: string | null
 }
 
 const getOrgId = (org?: Organization | null) =>

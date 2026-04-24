@@ -146,8 +146,16 @@ export default function SideBar() {
               collapsed ? "justify-center" : ""
             }`}
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shrink-0">
-              O
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shrink-0">
+              {currentOrganization?.logo_url || currentOrganization?.logo ? (
+                <img
+                  src={currentOrganization.logo_url || currentOrganization.logo || ""}
+                  alt={currentOrganization?.name || "Organization"}
+                  className="h-full w-full object-contain bg-white p-1.5"
+                />
+              ) : (
+                "O"
+              )}
             </div>
 
             {!collapsed ? (

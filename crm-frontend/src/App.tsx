@@ -89,6 +89,108 @@ function ScrollToTop() {
   return null
 }
 
+function formatSegment(segment: string) {
+  if (!segment) return ""
+  return segment
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")
+}
+
+function getRouteTitle(pathname: string) {
+  const exactTitles: Record<string, string> = {
+    "/": "Beinpark",
+    "/landing": "Beinpark",
+    "/login": "Welcome back",
+    "/signup": "Create your account",
+    "/accounts/forgot-password": "Reset your password",
+    "/select-organization": "Select organization",
+    "/dashboard": "Dashboard",
+    "/sales-dashboard": "Sales Dashboard",
+    "/quotations": "Quotations",
+    "/quotations/new": "New quotation",
+    "/proformas": "Proformas",
+    "/proformas/new": "New proforma",
+    "/invoices": "Invoices",
+    "/invoices/new": "New invoice",
+    "/receipts": "Receipts",
+    "/receipts/new": "New receipt",
+    "/delivery-notes": "Delivery Notes",
+    "/delivery-notes/new": "New delivery note",
+    "/templates": "Document Templates",
+    "/templates/new": "New template",
+    "/products": "Products",
+    "/customers": "Customers",
+    "/emails": "Sent Emails",
+    "/catalogues": "Catalogues",
+    "/quote-requests": "Quote Requests",
+    "/email-templates": "Email Templates",
+    "/settings": "Settings",
+    "/settings/profile": "Profile",
+    "/settings/password-reset": "Change your password",
+    "/settings/integration": "Integrations",
+    "/settings/organizations": "Organizations",
+    "/settings/organizations/new": "New organization",
+    "/settings/email": "Email Configuration",
+    "/settings/billing": "Billing",
+    "/guides": "Guides",
+    "/contact-us": "Contact us",
+    "/terms": "Terms",
+    "/privacy-policy": "Privacy policy",
+    "/refund-policy": "Refund policy",
+    "/sales-workflow": "Sales workflow",
+  }
+
+  if (exactTitles[pathname]) return exactTitles[pathname]
+
+  const patterns: Array<[RegExp, string]> = [
+    [/^\/guides\/[^/]+$/, "Guides"],
+    [/^\/quotations\/[^/]+\/edit$/, "Edit quotation"],
+    [/^\/quotations\/[^/]+\/email$/, "Send quotation email"],
+    [/^\/quotations\/[^/]+$/, "Quotation"],
+    [/^\/proformas\/[^/]+\/edit$/, "Edit proforma"],
+    [/^\/proformas\/[^/]+\/email$/, "Send proforma email"],
+    [/^\/proformas\/[^/]+$/, "Proforma"],
+    [/^\/invoices\/[^/]+\/edit$/, "Edit invoice"],
+    [/^\/invoices\/[^/]+\/email$/, "Send invoice email"],
+    [/^\/invoices\/[^/]+$/, "Invoice"],
+    [/^\/receipts\/[^/]+\/edit$/, "Edit receipt"],
+    [/^\/receipts\/[^/]+\/email$/, "Send receipt email"],
+    [/^\/receipts\/[^/]+$/, "Receipt"],
+    [/^\/delivery-notes\/[^/]+\/edit$/, "Edit delivery note"],
+    [/^\/delivery-notes\/[^/]+\/email$/, "Send delivery note email"],
+    [/^\/delivery-notes\/[^/]+$/, "Delivery Note"],
+    [/^\/templates\/[^/]+\/edit$/, "Edit template"],
+    [/^\/templates\/[^/]+$/, "Template"],
+    [/^\/products\/[^/]+$/, "Product"],
+    [/^\/customers\/[^/]+$/, "Customer"],
+    [/^\/settings\/organizations\/[^/]+\/settings$/, "Organization settings"],
+    [/^\/settings\/organizations\/[^/]+$/, "Organization"],
+    [/^\/settings\/billing\/callback$/, "Billing"],
+    [/^\/accounts\/password-reset\/[^/]+\/[^/]+$/, "Choose a new password"],
+    [/^\/subs\/[^/]+$/, "Subscription"],
+  ]
+
+  for (const [pattern, title] of patterns) {
+    if (pattern.test(pathname)) return title
+  }
+
+  const segments = pathname.split("/").filter(Boolean)
+  const lastSegment = segments[segments.length - 1]
+  return formatSegment(lastSegment) || "Beinpark"
+}
+
+function RouteTitle() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    document.title = `${getRouteTitle(pathname)} | Beinpark`
+  }, [pathname])
+
+  return null
+}
+
 
 function App() {
   useEffect(() => {
@@ -107,6 +209,7 @@ function App() {
       <div className="flex flex-col">
         <Router>
           <ScrollToTop />
+          <RouteTitle />
           <Routes>
             <Route path="/" element={<RootRoute />} />
             <Route path="" element={<MainRoute />}>

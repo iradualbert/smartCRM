@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import serializers
 from .models import (
     Company,
@@ -32,6 +34,11 @@ class UserStampMixin:
 
 class CurrencyListValidationMixin:
     def validate_supported_currencies(self, value):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise serializers.ValidationError("supported_currencies must be valid JSON.") from exc
         valid_codes = {code for code, _ in SUPPORTED_CURRENCY_CHOICES}
         if not isinstance(value, list):
             raise serializers.ValidationError("supported_currencies must be a list.")
@@ -110,6 +117,7 @@ class CompanySerializer(UserStampMixin, CurrencyListValidationMixin, serializers
     member_count = serializers.SerializerMethodField()
     current_membership = serializers.SerializerMethodField()
     plan_name = serializers.SerializerMethodField()
+    logo_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Company
@@ -133,6 +141,13 @@ class CompanySerializer(UserStampMixin, CurrencyListValidationMixin, serializers
     def get_plan_name(self, obj):
         active_subscription = obj.subscriptions.filter(status=Subscription.Status.ACTIVE).order_by("-current_period_end").first()
         return active_subscription.plan.name if active_subscription else "Free Plan"
+
+    def get_logo_url(self, obj):
+        if not obj.logo:
+            return None
+        request = self.context.get("request")
+        url = obj.logo.url
+        return request.build_absolute_uri(url) if request else url
         
     def get_member_count(self, obj):
         return obj.memberships.filter(is_active=True).count()
@@ -156,6 +171,15 @@ class CompanySerializer(UserStampMixin, CurrencyListValidationMixin, serializers
     def validate(self, attrs):
         supported = attrs.get("supported_currencies", getattr(self.instance, "supported_currencies", []))
         default_currency = attrs.get("default_currency", getattr(self.instance, "default_currency", None))
+
+        if isinstance(supported, str):
+            try:
+                supported = json.loads(supported)
+            except json.JSONDecodeError as exc:
+                raise serializers.ValidationError(
+                    {"supported_currencies": "supported_currencies must be valid JSON."}
+                ) from exc
+            attrs["supported_currencies"] = supported
 
         if supported and default_currency and default_currency not in supported:
             raise serializers.ValidationError(
