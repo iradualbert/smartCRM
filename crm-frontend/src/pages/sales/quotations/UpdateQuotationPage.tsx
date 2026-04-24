@@ -13,10 +13,10 @@ import { useOrganizations } from "@/redux/hooks/useOrganizations"
 
 function buildInitialValues(quotation: Quotation): QuotationFormValues {
   return {
-    companyId: quotation.company ?? 0,
+    companyId: String(quotation.company ?? ""),
 
     customerMode: "existing",
-    existingCustomerId: quotation.customer ?? null,
+    existingCustomerId: quotation.customer ? String(quotation.customer) : null,
     manualCustomerName: "",
     manualCustomerEmail: "",
     manualCustomerPhone: "",
@@ -38,8 +38,8 @@ function buildInitialValues(quotation: Quotation): QuotationFormValues {
     lines:
       quotation.lines?.length
         ? quotation.lines.map((line) => ({
-            id: line.id,
-            product: line.product ?? null,
+            id: String(line.id),
+            product: line.product != null ? String(line.product) : null,
             description: line.description || "",
             quantity: String(line.quantity ?? "1"),
             unit_price: String(line.unit_price ?? "0.00"),
@@ -112,7 +112,7 @@ export default function UpdateQuotationPage() {
 
   const handleSubmit = async (
     values: QuotationFormValues,
-    removedLineIds: number[]
+    removedLineIds: string[]
   ) => {
     if (!id || !quotation) return
 
@@ -121,7 +121,7 @@ export default function UpdateQuotationPage() {
       setError(null)
 
       const quotationPayload = {
-        customer: values.existingCustomerId ?? quotation.customer,
+        customer: values.existingCustomerId ?? String(quotation.customer),
         name: values.name,
         description: values.description || "",
         quote_number: values.quote_number || "",

@@ -228,8 +228,8 @@ def build_standard_data_from_instance(instance, document_type: str):
             {
                 "document": {
                     "number": instance.quote_number,
-                    "date": instance.created_at.date().isoformat() if instance.created_at else "",
-                    "valid_until": "",
+                    "date": instance.issue_date.isoformat() if instance.issue_date else (instance.created_at.date().isoformat() if instance.created_at else ""),
+                    "valid_until": instance.valid_until.isoformat() if instance.valid_until else "",
                     "currency": currency,
                     "currency_symbol": currency_symbol,
                 },
@@ -258,8 +258,8 @@ def build_standard_data_from_instance(instance, document_type: str):
             {
                 "document": {
                     "number": instance.proforma_number,
-                    "date": instance.created_at.date().isoformat() if instance.created_at else "",
-                    "due_date": "",
+                    "date": instance.issue_date.isoformat() if instance.issue_date else (instance.created_at.date().isoformat() if instance.created_at else ""),
+                    "due_date": instance.valid_until.isoformat() if instance.valid_until else "",
                     "currency": currency,
                     "currency_symbol": currency_symbol,
                 },
@@ -292,8 +292,8 @@ def build_standard_data_from_instance(instance, document_type: str):
             {
                 "document": {
                     "number": instance.invoice_number,
-                    "date": instance.created_at.date().isoformat() if instance.created_at else "",
-                    "due_date": "",
+                    "date": instance.issue_date.isoformat() if instance.issue_date else (instance.created_at.date().isoformat() if instance.created_at else ""),
+                    "due_date": instance.valid_until.isoformat() if instance.valid_until else "",
                     "currency": currency,
                     "currency_symbol": currency_symbol,
                 },
@@ -334,7 +334,7 @@ def build_standard_data_from_instance(instance, document_type: str):
             {
                 "document": {
                     "number": instance.delivery_note_number,
-                    "date": instance.created_at.date().isoformat() if instance.created_at else "",
+                    "date": instance.issue_date.isoformat() if instance.issue_date else (instance.created_at.date().isoformat() if instance.created_at else ""),
                     "delivery_date": instance.delivery_date.isoformat() if instance.delivery_date else "",
                     "currency": currency,
                     "currency_symbol": currency_symbol,
@@ -376,7 +376,7 @@ def build_standard_data_from_instance(instance, document_type: str):
         return {
             "document": {
                 "number": instance.receipt_number,
-                "date": instance.created_at.date().isoformat() if instance.created_at else "",
+                "date": instance.issue_date.isoformat() if instance.issue_date else (instance.created_at.date().isoformat() if instance.created_at else ""),
                 "currency": currency,
                 "currency_symbol": currency_symbol,
             },
@@ -405,11 +405,10 @@ def build_standard_data_from_instance(instance, document_type: str):
 
 
 def create_or_replace_document(instance, template, pdf_path, user=None, force=False):
-    if force and instance.document:
-        instance.document.is_current = False
-        instance.document.save(update_fields=["is_current", "updated_at"])
+    old_file_name = None
+    old_storage = None
 
-    if instance.document and not force:
+    if instance.document:
         document = instance.document
         document.name = str(instance)
         document.description = f"Generated PDF for {instance}"
@@ -417,6 +416,9 @@ def create_or_replace_document(instance, template, pdf_path, user=None, force=Fa
         document.is_current = True
         if user and user.is_authenticated:
             document.updated_by = user
+        if document.file:
+            old_file_name = document.file.name
+            old_storage = document.file.storage
     else:
         document = Document(
             name=str(instance),
@@ -430,6 +432,9 @@ def create_or_replace_document(instance, template, pdf_path, user=None, force=Fa
     with open(pdf_path, "rb") as pdf_file:
         filename = build_document_filename(instance)
         document.file.save(filename, File(pdf_file), save=True)
+
+    if old_file_name and old_file_name != document.file.name and old_storage and old_storage.exists(old_file_name):
+        old_storage.delete(old_file_name)
 
     instance.document = document
     instance.pdf_generated_at = timezone.now()

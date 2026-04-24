@@ -338,7 +338,8 @@ export default function QuotationForm({
     return () => clearTimeout(timeout)
   }, [productOpenIndex, productSearch, initialValues.companyId])
 
-  const selectedCustomer = customerResults.find((item) => item.id === selectedCustomerId) || null
+  const selectedCustomer =
+    customerResults.find((item) => String(item.id) === String(selectedCustomerId)) || null
 
   const subtotalRaw = lines.reduce((sum, line) => {
     const qty = Number(line.quantity || 0)
@@ -371,8 +372,10 @@ export default function QuotationForm({
     const line = form.getValues(`lines.${index}`)
     const lineId = line?.id
 
-    if (typeof lineId === "number") {
+    if (typeof lineId === "string" && lineId.trim()) {
       setRemovedLineIds((prev) => [...prev, lineId])
+    } else if (typeof lineId === "number") {
+      setRemovedLineIds((prev) => [...prev, String(lineId)])
     }
     remove(index)
   }
@@ -402,7 +405,7 @@ export default function QuotationForm({
         prev.some((item) => item.id === customer.id) ? prev : [customer, ...prev]
       )
       form.setValue("customerMode", "existing")
-      form.setValue("existingCustomerId", customer.id)
+      form.setValue("existingCustomerId", String(customer.id))
       setCustomerDialogOpen(false)
       setManualCustomer({ name: "", email: "", phone_number: "", address: "" })
     } catch (error) {
@@ -422,7 +425,7 @@ export default function QuotationForm({
         default_price: manualProduct.default_price,
       })
 
-      form.setValue(`lines.${productDialogLineIndex}.product`, product.id)
+      form.setValue(`lines.${productDialogLineIndex}.product`, String(product.id))
       form.setValue(
         `lines.${productDialogLineIndex}.description`,
         product.description?.trim() || product.name
@@ -485,7 +488,7 @@ export default function QuotationForm({
                   onSearch={setCustomerSearch}
                   onSelect={(customer) => {
                     hydratedCustomerIdRef.current = customer.id
-                    form.setValue("existingCustomerId", customer.id)
+                    form.setValue("existingCustomerId", String(customer.id))
                     setCustomerResults((prev) =>
                       prev.some((item) => item.id === customer.id) ? prev : [customer, ...prev]
                     )
@@ -777,7 +780,7 @@ export default function QuotationForm({
               const currentProducts = productResults[index] || []
               const selectedProductId = form.watch(`lines.${index}.product`)
               const selectedProduct =
-                currentProducts.find((item) => item.id === selectedProductId) || null
+                currentProducts.find((item) => String(item.id) === String(selectedProductId)) || null
 
               return (
                 <div
@@ -817,7 +820,7 @@ export default function QuotationForm({
                             setProductSearch((prev) => ({ ...prev, [index]: term }))
                           }
                           onSelect={(product) => {
-                            form.setValue(`lines.${index}.product`, product.id)
+                            form.setValue(`lines.${index}.product`, String(product.id))
                             form.setValue(
                               `lines.${index}.description`,
                               product.description?.trim() || product.name

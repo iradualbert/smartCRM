@@ -233,8 +233,35 @@ class Template(TimeStampedModel):
             )
 
     def save(self, *args, **kwargs):
+        old_file_name = None
+        if self.pk:
+            try:
+                old_file_name = Template.objects.only("file").get(pk=self.pk).file.name
+            except Template.DoesNotExist:
+                old_file_name = None
+
         self.full_clean()
         super().save(*args, **kwargs)
+
+        current_file_name = self.file.name if self.file else None
+        if old_file_name and old_file_name != current_file_name:
+            storage = self.file.storage if self.file else None
+            if storage is None:
+                field = Template._meta.get_field("file")
+                storage = field.storage
+            if storage.exists(old_file_name):
+                storage.delete(old_file_name)
+
+    def delete(self, *args, **kwargs):
+        file_name = self.file.name if self.file else None
+        storage = self.file.storage if self.file else None
+        super().delete(*args, **kwargs)
+        if file_name:
+            if storage is None:
+                field = Template._meta.get_field("file")
+                storage = field.storage
+            if storage.exists(file_name):
+                storage.delete(file_name)
 
     def __str__(self):
         company_name = self.company.name if self.company else "Global"
