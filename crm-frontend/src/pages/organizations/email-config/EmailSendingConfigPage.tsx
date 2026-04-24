@@ -130,13 +130,9 @@ export default function EmailSendingConfigPage() {
               <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
                 Sender accounts
               </h1>
-              <p className="mt-2 max-w-2xl text-sm text-slate-600">
-                Choose which mailbox your team sends from and keep delivery settings ready for live emails.
-              </p>
+              <p className="mt-2 max-w-2xl text-sm text-slate-600">Manage sender accounts.</p>
               {currentOrganization ? (
-                <p className="mt-2 text-sm text-slate-500">
-                  Current organization: {currentOrganization.name || "Organization"}
-                </p>
+                <p className="mt-2 text-sm text-slate-500">{currentOrganization.name || "Organization"}</p>
               ) : null}
             </div>
           </div>

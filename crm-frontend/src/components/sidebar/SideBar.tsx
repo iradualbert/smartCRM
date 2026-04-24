@@ -232,9 +232,11 @@ function SideBarLink({
 }) {
   const location = useLocation()
 
-  const active =
-    location.pathname === to ||
-    (to !== "/" && location.pathname.startsWith(to))
+  const active = React.useMemo(() => {
+    if (location.pathname === to) return true
+    if (to === "/" || to === "/settings") return false
+    return location.pathname.startsWith(`${to}/`)
+  }, [location.pathname, to])
 
   const linkEl = (
     <Link

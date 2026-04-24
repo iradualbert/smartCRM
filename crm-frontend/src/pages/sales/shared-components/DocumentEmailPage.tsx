@@ -110,7 +110,7 @@ export default function DocumentEmailPage({
         title={`Send ${documentLabel.toLowerCase()} email${
           draft?.[numberField] ? ` · ${draft[numberField]}` : ""
         }`}
-        description={`The email template is prefilled from the ${documentLabel.toLowerCase()} and can be edited before sending.`}
+        description={`Review and send ${documentLabel.toLowerCase()} email.`}
         documentLabel={documentLabel}
         companyId={currentOrganizationId}
         loading={loading}

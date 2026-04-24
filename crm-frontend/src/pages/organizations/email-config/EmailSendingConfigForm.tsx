@@ -5,12 +5,7 @@ import * as z from "zod"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 
 import type {
   EmailSendingConfig,
@@ -193,9 +188,6 @@ export default function EmailSendingConfigForm({
 
       <section className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
         <h2 className="text-base font-semibold text-slate-900">Account</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Choose whether this sender is shared with the organization or only visible to you.
-        </p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <Controller
@@ -212,9 +204,6 @@ export default function EmailSendingConfigForm({
                   <option value="company">Organization</option>
                   <option value="user">Personal</option>
                 </select>
-                <FieldDescription>
-                  Organization senders can be used by the team. Personal senders stay private to your account.
-                </FieldDescription>
               </Field>
             )}
           />
@@ -232,9 +221,6 @@ export default function EmailSendingConfigForm({
 
       <section className="rounded-3xl border border-slate-200 bg-white p-4">
         <h2 className="text-base font-semibold text-slate-900">Sender details</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          These details appear to recipients when email is sent from this account.
-        </p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <Controller
@@ -256,9 +242,6 @@ export default function EmailSendingConfigForm({
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel>Sender name</FieldLabel>
                 <Input {...field} className="rounded-2xl" placeholder="Acme Sales" />
-                <FieldDescription>
-                  Leave blank to send with the email address only.
-                </FieldDescription>
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
               </Field>
             )}
@@ -280,9 +263,6 @@ export default function EmailSendingConfigForm({
 
       <section className="rounded-3xl border border-slate-200 bg-white p-4">
         <h2 className="text-base font-semibold text-slate-900">Connection details</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Enter the mail server details provided by your email provider.
-        </p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <Controller
@@ -356,19 +336,8 @@ export default function EmailSendingConfigForm({
                   {...field}
                   type="password"
                   className="rounded-2xl"
-                  placeholder={
-                    mode === "edit"
-                      ? "Leave blank to keep the current password"
-                      : "Enter password"
-                  }
+                  placeholder={mode === "edit" ? "Leave blank to keep current password" : "Enter password"}
                 />
-                <FieldDescription>
-                  {mode === "edit"
-                    ? initialConfig?.masked_password
-                      ? "A password is already stored. Add a new one only if it has changed."
-                      : "No password has been saved yet."
-                    : "Saved securely and hidden after setup."}
-                </FieldDescription>
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
               </Field>
             )}
@@ -389,9 +358,6 @@ export default function EmailSendingConfigForm({
               />
               <div>
                 <div className="text-sm font-medium text-slate-900">Ready to send</div>
-                <div className="text-xs text-slate-500">
-                  Allow this sender account to appear in email flows.
-                </div>
               </div>
             </label>
           )}
@@ -409,9 +375,6 @@ export default function EmailSendingConfigForm({
               />
               <div>
                 <div className="text-sm font-medium text-slate-900">Use as default</div>
-                <div className="text-xs text-slate-500">
-                  Preselect this sender when composing email.
-                </div>
               </div>
             </label>
           )}

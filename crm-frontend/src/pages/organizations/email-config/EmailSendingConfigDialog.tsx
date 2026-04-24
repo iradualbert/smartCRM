@@ -1,7 +1,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -44,9 +43,6 @@ export default function EmailSendingConfigDialog({
           <DialogTitle>
             {mode === "create" ? "Add sender account" : "Edit sender account"}
           </DialogTitle>
-          <DialogDescription>
-            Save the mailbox details this workspace will use when sending email.
-          </DialogDescription>
         </DialogHeader>
 
         <EmailSendingConfigForm

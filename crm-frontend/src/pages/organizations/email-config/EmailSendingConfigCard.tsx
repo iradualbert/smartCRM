@@ -20,7 +20,7 @@ function formatTestLabel(config: EmailSendingConfig) {
 }
 
 function formatScopeLabel(ownerType: EmailSendingConfig["owner_type"]) {
-  return ownerType === "company" ? "Organization sender" : "Personal sender"
+  return ownerType === "company" ? "Organization" : "Personal"
 }
 
 export default function EmailSendingConfigCard({
@@ -68,14 +68,8 @@ export default function EmailSendingConfigCard({
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
               <div className="text-xs uppercase tracking-wide text-slate-400">Connection</div>
               <div className="mt-1 font-medium text-slate-900">{connectionLabel}</div>
-              <div className="mt-1 text-sm text-slate-600">Username: {config.smtp_username}</div>
+              <div className="mt-1 text-sm text-slate-600">{config.smtp_username}</div>
             </div>
-          </div>
-
-          <div className="mt-3 text-sm text-slate-600">
-            {config.masked_password
-              ? "Password is stored securely."
-              : "No password has been saved yet."}
           </div>
 
           {config.last_test_error ? (
