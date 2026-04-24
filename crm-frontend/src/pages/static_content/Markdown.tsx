@@ -69,6 +69,54 @@ const MarkdownListItem = (props: any) => {
   );
 };
 
+function MarkdownPre(props: any) {
+  return (
+    <pre className="my-6 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-950 p-4 text-sm text-slate-100">
+      {props.children}
+    </pre>
+  );
+}
+
+function MarkdownCode(props: any) {
+  const { inline, children } = props;
+
+  if (inline) {
+    return (
+      <code className="rounded bg-slate-100 px-1.5 py-0.5 text-[0.95em] text-slate-800">
+        {children}
+      </code>
+    );
+  }
+
+  return <code className="font-mono text-sm">{children}</code>;
+}
+
+function MarkdownBlockquote(props: any) {
+  return (
+    <blockquote className="my-6 rounded-r-2xl border-l-4 border-sky-200 bg-sky-50 px-5 py-4 text-slate-700">
+      {props.children}
+    </blockquote>
+  );
+}
+
+function MarkdownImage(props: any) {
+  return (
+    <figure className="my-8 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <img
+        src={props.src}
+        alt={props.alt || ""}
+        className="w-full"
+        loading="lazy"
+      />
+      {props.alt ? (
+        <figcaption className="border-t border-slate-200 px-4 py-3 text-sm text-slate-500">
+          {props.alt}
+        </figcaption>
+      ) : null}
+    </figure>
+  );
+}
+
 function MarkdownTable(props: any) {
   return (
     <div className="my-6 w-full overflow-x-auto rounded-lg border border-slate-200">
@@ -125,6 +173,10 @@ const components = {
   p: MarkdownParagraph,
   a: MarkdownLink,
   li: MarkdownListItem,
+  blockquote: MarkdownBlockquote,
+  pre: MarkdownPre,
+  code: MarkdownCode,
+  img: MarkdownImage,
   table: MarkdownTable,
   thead: MarkdownTableHead,
   tbody: MarkdownTableBody,

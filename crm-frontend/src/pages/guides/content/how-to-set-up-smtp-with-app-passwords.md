@@ -54,6 +54,21 @@ These are common examples. Always confirm with your provider.
 - Username: your full email address
 - Password: app password or provider-approved mailbox password
 
+## Example setup
+
+For a Gmail sender account, your settings will usually look like this:
+
+```text
+Account name: Sales mailbox
+Sender name: Acme Sales
+Sender email: sales@yourcompany.com
+SMTP host: smtp.gmail.com
+Port: 587
+Security: TLS
+Username: sales@yourcompany.com
+Password: your app password
+```
+
 ## How to create an app password
 
 The exact steps depend on your provider, but the pattern is usually the same:

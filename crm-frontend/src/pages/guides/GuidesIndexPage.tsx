@@ -23,39 +23,42 @@ const GuidesIndexPage = () => {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-10 space-y-4">
             {guides.map((guide) => (
               <article
                 key={guide.slug}
-                className="flex h-full flex-col rounded-3xl border border-slate-200 bg-slate-50 p-6"
+                className="rounded-3xl border border-slate-200 bg-slate-50 p-6"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
-                    {guide.category}
+                <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                  <div className="flex min-w-0 flex-1 items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
+                      <BookOpenText className="h-5 w-5" />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
+                          {guide.category}
+                        </div>
+                        <span className="text-xs text-slate-500">{guide.readingTime}</span>
+                        <span className="text-xs text-slate-400">Updated {guide.lastUpdated}</span>
+                      </div>
+
+                      <h2 className="mt-4 text-xl font-semibold text-slate-900">{guide.title}</h2>
+                      <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+                        {guide.description}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs text-slate-500">{guide.readingTime}</span>
-                </div>
 
-                <div className="mt-5 flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm">
-                    <BookOpenText className="h-5 w-5" />
+                  <div className="md:shrink-0">
+                    <Button asChild variant="outline" className="w-full rounded-2xl bg-white md:w-auto">
+                      <Link to={`/guides/${guide.slug}`}>
+                        Read guide
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
                   </div>
-                  <h2 className="text-lg font-semibold text-slate-900">{guide.title}</h2>
-                </div>
-
-                <p className="mt-4 flex-1 text-sm leading-6 text-slate-600">{guide.description}</p>
-
-                <div className="mt-5 flex items-center justify-between text-sm text-slate-500">
-                  <span>Updated {guide.lastUpdated}</span>
-                </div>
-
-                <div className="mt-6">
-                  <Button asChild variant="outline" className="w-full rounded-2xl bg-white">
-                    <Link to={`/guides/${guide.slug}`}>
-                      Read guide
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
                 </div>
               </article>
             ))}
