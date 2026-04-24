@@ -68,6 +68,7 @@ import BillingCallbackPage from "./pages/billing/BillingCallbackPage";
 import BillingPage from "./pages/billing/BillingPage";
 import OrganizationDetailPage from "./pages/organizations/OrganizationDetailPage";
 import EmailsListPage from "./pages/emails/EmailsListPage";
+import EnterpriseFeaturePage from "./pages/enterprise/EnterpriseFeaturePage";
 
 const GuidesIndexPage = lazy(() => import("./pages/guides/GuidesIndexPage"));
 const GuideDetailPage = lazy(() => import("./pages/guides/GuideDetailPage"));
@@ -199,6 +200,10 @@ function App() {
 
               <Route path="/customers" element={<CustomerListPage />} />
               <Route path="/customers/:id" element={<CustomerDetailPage />} />
+
+              <Route path="/catalogues" element={<EnterpriseFeaturePage />} />
+              <Route path="/quote-requests" element={<EnterpriseFeaturePage />} />
+              <Route path="/email-templates" element={<EnterpriseFeaturePage />} />
 
               
               <Route path="/emails" element={<EmailsListPage />} />

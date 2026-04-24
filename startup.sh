@@ -1,5 +1,16 @@
-python3 python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-apt-get install libreoffice
-python3 corebackend/manage.py runserver 0.0.0.0:8000
+#!/usr/bin/env sh
+set -eu
+
+PORT="${PORT:-8000}"
+GUNICORN_WORKERS="${GUNICORN_WORKERS:-3}"
+GUNICORN_TIMEOUT="${GUNICORN_TIMEOUT:-120}"
+
+cd corebackend
+
+python3 manage.py migrate --noinput
+python3 manage.py collectstatic --noinput
+
+exec gunicorn corebackend.wsgi:application \
+  --bind "0.0.0.0:${PORT}" \
+  --workers "${GUNICORN_WORKERS}" \
+  --timeout "${GUNICORN_TIMEOUT}"
